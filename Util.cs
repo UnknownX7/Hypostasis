@@ -1,0 +1,64 @@
+﻿using System.Linq.Expressions;
+using System;
+using System.Reflection;
+using System.IO.Compression;
+using System.IO;
+using System.Text;
+
+namespace Hypostasis;
+
+public static class Util
+{
+    public class AssignableInfo
+    {
+        public readonly object obj;
+        public readonly MemberInfo memberInfo;
+        private readonly FieldInfo fieldInfo;
+        private readonly PropertyInfo propertyInfo;
+
+        public string Name => fieldInfo?.Name ?? propertyInfo?.Name ?? string.Empty;
+        public Type Type => fieldInfo?.FieldType ?? propertyInfo?.PropertyType ?? default;
+
+        public AssignableInfo(object o, MemberInfo memberInfo)
+        {
+            obj = o;
+            fieldInfo = memberInfo as FieldInfo;
+            propertyInfo = memberInfo as PropertyInfo;
+        }
+
+        public object GetValue(object o) => fieldInfo?.GetValue(o) ?? propertyInfo?.GetValue(o);
+
+        public void SetValue(object o, object v)
+        {
+            fieldInfo?.SetValue(o, v);
+            propertyInfo?.SetValue(o, v);
+        }
+    }
+
+    public static string CompressString(string s, string prefix = "")
+    {
+        var bytes = Encoding.UTF8.GetBytes(s);
+        using var ms = new MemoryStream();
+        using (var gs = new GZipStream(ms, CompressionMode.Compress))
+            gs.Write(bytes, 0, bytes.Length);
+        return prefix + Convert.ToBase64String(ms.ToArray());
+    }
+
+    public static string DecompressString(string s, string prefix = "")
+    {
+        if (!s.StartsWith(prefix))
+            throw new ApplicationException("This export is for a different plugin.");
+        var data = Convert.FromBase64String(s);
+        using var ms = new MemoryStream(data);
+        using var gs = new GZipStream(ms, CompressionMode.Decompress);
+        using var r = new StreamReader(gs);
+        return r.ReadToEnd();
+    }
+
+    public static object Cast(this Type type, object data)
+    {
+        var dataParam = Expression.Parameter(typeof(object), "data");
+        var body = Expression.Block(Expression.Convert(Expression.Convert(dataParam, data.GetType()), type));
+        return Expression.Lambda(body, dataParam).Compile().DynamicInvoke(data);
+    }
+}
