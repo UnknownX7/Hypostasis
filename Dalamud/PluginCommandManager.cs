@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Dalamud.Game.Command;
-using Dalamud.Logging;
-using Dalamud.Plugin;
 
-namespace Hypostasis;
+namespace Hypostasis.Dalamud;
 
 [AttributeUsage(AttributeTargets.Method)]
 public class PluginCommandAttribute : Attribute

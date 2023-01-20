@@ -5,7 +5,7 @@ using System.Reflection;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 
-namespace Hypostasis;
+namespace Hypostasis.Game;
 
 public static class Memory
 {
@@ -17,7 +17,7 @@ public static class Memory
         private readonly AsmHook hook = null;
         public bool IsEnabled { get; private set; } = false;
         public bool IsValid => Address != nint.Zero;
-        public string ReadBytes => !IsValid ? string.Empty : oldBytes.Aggregate(string.Empty, (current, b) => current + (b.ToString("X2") + " "));
+        public string ReadBytes => !IsValid ? string.Empty : oldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
 
         public Replacer(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
         {

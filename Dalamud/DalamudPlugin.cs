@@ -2,10 +2,12 @@
 using System.Reflection;
 using Dalamud.Configuration;
 using Dalamud.Game;
+using Dalamud.Game.Gui.Toast;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 
-namespace Hypostasis;
+namespace Hypostasis.Dalamud;
 
 public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamudPlugin where C : PluginConfiguration<C>, IPluginConfiguration, new()
 {
@@ -15,27 +17,25 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
     public static P Plugin { get; private set; }
     public static C Config { get; private set; }
 
-    private static string printHeader;
+    private static string printName, printHeader;
     private readonly bool addedUpdate, addedDraw, addedConfig;
     private readonly PluginCommandManager pluginCommandManager;
 
-    public DalamudPlugin(DalamudPluginInterface pluginInterface)
+    protected DalamudPlugin(DalamudPluginInterface pluginInterface)
     {
         Plugin = this as P;
-        printHeader = $"[{Name}] ";
+        printName = Name;
+        printHeader = $"[{printName}] ";
 
-        Hypostasis.Initialize(pluginInterface);
-
+        Hypostasis.Initialize(printName, pluginInterface);
         Config = PluginConfiguration<C>.LoadConfig();
-        Config.Initialize();
-
         pluginCommandManager = new(Plugin);
 
         try
         {
             var derivedType = typeof(P);
 
-            if (derivedType.GetMethod("Update", bindingFlags, new Type[] { typeof(Framework) })?.DeclaringType == derivedType)
+            if (derivedType.GetMethod("Update", bindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
             {
                 DalamudApi.Framework.Update += Update;
                 addedUpdate = true;
@@ -55,13 +55,21 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         }
         catch (Exception e)
         {
-            PluginLog.Error($"Failed loading {Name}\n{e}");
+            PluginLog.Error($"Failed loading {printName}\n{e}");
         }
     }
 
     public static void PrintEcho(string message) => DalamudApi.ChatGui.Print(printHeader + message);
 
     public static void PrintError(string message) => DalamudApi.ChatGui.PrintError(printHeader + message);
+
+    public static void ShowNotification(string message, NotificationType type, uint msDelay) => DalamudApi.PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
+
+    public static void ShowToast(string message, ToastOptions options = null) => DalamudApi.ToastGui.ShowNormal(printHeader + message, options);
+
+    public static void ShowQuestToast(string message, QuestToastOptions options = null) => DalamudApi.ToastGui.ShowQuest(printHeader + message, options);
+
+    public static void ShowErrorToast(string message) => DalamudApi.ToastGui.ShowError(printHeader + message);
 
     protected virtual void ToggleConfig() { }
 

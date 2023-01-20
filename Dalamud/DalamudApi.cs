@@ -22,7 +22,7 @@ using Dalamud.Plugin;
 // ReSharper disable CheckNamespace
 // ReSharper disable UnusedAutoPropertyAccessor.Local
 
-namespace Hypostasis;
+namespace Hypostasis.Dalamud;
 
 public class DalamudApi
 {
@@ -109,7 +109,7 @@ public class DalamudApi
         set => SigScanner = new(value);
     }
 
-    public static SigWrapper SigScanner { get; private set; }
+    public static SigScannerWrapper SigScanner { get; private set; }
 
     [PluginService]
     //[RequiredVersion("1.0")]
@@ -140,4 +140,6 @@ public class DalamudApi
     }
 
     public static void Initialize(DalamudPluginInterface pluginInterface) => _ = new DalamudApi(pluginInterface);
+
+    public static void Dispose() => SigScanner.Dispose();
 }

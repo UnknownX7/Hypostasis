@@ -1,18 +1,24 @@
 ﻿global using Dalamud;
 global using Hypostasis;
+global using Hypostasis.Dalamud;
+global using Hypostasis.Game;
 using Dalamud.Plugin;
 
 namespace Hypostasis;
 
 public static class Hypostasis
 {
-    public static void Initialize(DalamudPluginInterface pluginInterface)
+    public static string PluginName { get; private set; }
+
+    public static void Initialize(string pluginName, DalamudPluginInterface pluginInterface)
     {
+        PluginName = pluginName;
         DalamudApi.Initialize(pluginInterface);
     }
 
     public static void Dispose()
     {
+        DalamudApi.Dispose();
         Memory.Dispose();
     }
 }

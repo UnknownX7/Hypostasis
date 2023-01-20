@@ -9,37 +9,44 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Hypostasis;
+namespace Hypostasis.Game;
 
-public class SigWrapper
+public class SigScannerWrapper : IDisposable
 {
     public class SigInfo
     {
         public enum SigType
         {
             None,
+            Text,
+            Static,
             Pointer,
             Primitive,
-            Hook
+            Hook,
+            AsmHook
         }
 
-        public Util.AssignableInfo assignableInfo;
-        public SignatureAttribute attribute;
-        public nint pointer;
-        public SigType sigType;
+        public Util.AssignableInfo assignableInfo = null;
+        public SignatureAttribute attribute = null;
+        public SignatureExAttribute exAttribute = null;
+        public string signature = string.Empty;
+        public int offset = 0;
+        public nint address = nint.Zero;
+        public SigType sigType = SigType.None;
     }
 
-    const BindingFlags defaultBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+    private const BindingFlags defaultBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
     private readonly SigScanner sigScanner;
     private readonly Dictionary<string, nint> sigCache = new();
     private readonly Dictionary<string, nint> staticSigCache = new();
-    private readonly List<SigInfo> sigInfos = new();
+    private readonly List<IDisposable> disposableHooks = new();
 
     public ProcessModule Module => sigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
+    public List<SigInfo> SigInfos { get; } = new();
 
-    public SigWrapper(SigScanner s) => sigScanner = s;
+    public SigScannerWrapper(SigScanner s) => sigScanner = s;
 
     public nint ScanText(string signature)
     {
@@ -47,7 +54,7 @@ public class SigWrapper
             return ptr;
 
         ptr = sigScanner.ScanText(signature);
-        sigCache[signature] = ptr;
+        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
         return ptr;
     }
 
@@ -57,10 +64,7 @@ public class SigWrapper
             return true;
 
         var b = sigScanner.TryScanText(signature, out result);
-
-        if (b)
-            sigCache[signature] = result;
-
+        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
         return b;
     }
 
@@ -70,7 +74,7 @@ public class SigWrapper
             return ptr;
 
         ptr = sigScanner.ScanData(signature);
-        sigCache[signature] = ptr;
+        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
         return ptr;
     }
 
@@ -80,10 +84,7 @@ public class SigWrapper
             return true;
 
         var b = sigScanner.TryScanData(signature, out result);
-
-        if (b)
-            sigCache[signature] = result;
-
+        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
         return b;
     }
 
@@ -93,7 +94,7 @@ public class SigWrapper
             return ptr;
 
         ptr = sigScanner.ScanModule(signature);
-        sigCache[signature] = ptr;
+        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
         return ptr;
     }
 
@@ -103,10 +104,7 @@ public class SigWrapper
             return true;
 
         var b = sigScanner.TryScanModule(signature, out result);
-
-        if (b)
-            sigCache[signature] = result;
-
+        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
         return b;
     }
 
@@ -116,10 +114,7 @@ public class SigWrapper
             return ptr;
 
         ptr = sigScanner.GetStaticAddressFromSig(signature, offset);
-
-        if (offset == 0)
-            staticSigCache[signature] = ptr;
-
+        AddSignatureInfo(signature, ptr, offset, SigInfo.SigType.Static);
         return ptr;
     }
 
@@ -129,11 +124,58 @@ public class SigWrapper
             return true;
 
         var b = sigScanner.TryGetStaticAddressFromSig(signature, out result, offset);
-
-        if (b && offset == 0)
-            staticSigCache[signature] = result;
-
+        AddSignatureInfo(signature, result, offset, SigInfo.SigType.Static);
         return b;
+    }
+
+    private void AddSignatureInfo(string signature, nint ptr, int offset, SigInfo.SigType type)
+    {
+        switch (type)
+        {
+            case SigInfo.SigType.Text when offset == 0:
+                sigCache[signature] = ptr;
+                break;
+            case SigInfo.SigType.Static when offset == 0:
+                staticSigCache[signature] = ptr;
+                break;
+        }
+
+        SigInfos.Add(new SigInfo
+        {
+            signature = signature,
+            offset = offset,
+            address = ptr,
+            sigType = type
+        });
+    }
+
+    private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
+    {
+        var hook = Hook<T>.FromAddress(address, detour, useMinHook);
+        AddSignatureInfo(string.Empty, address, 0, SigInfo.SigType.Hook);
+
+        if (startEnabled)
+            hook.Enable();
+
+        if (autoDispose)
+            disposableHooks.Add(hook);
+
+        return hook;
+    }
+
+    private Hook<T> HookSignature<T>(string signature, T detour, bool scanModule = false, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
+    {
+        var address = !scanModule ? sigScanner.ScanText(signature) : sigScanner.ScanModule(signature);
+        var hook = Hook<T>.FromAddress(address, detour, useMinHook);
+        AddSignatureInfo(signature, address, 0, SigInfo.SigType.Hook);
+
+        if (startEnabled)
+            hook.Enable();
+
+        if (autoDispose)
+            disposableHooks.Add(hook);
+
+        return hook;
     }
 
     public void Inject(object o) => Inject(o.GetType(), o);
@@ -149,20 +191,23 @@ public class SigWrapper
         var sigAttribute = memberInfo.GetCustomAttribute<SignatureAttribute>();
         if (sigAttribute == null) return;
 
+        var exAttribute = memberInfo.GetCustomAttribute<SignatureExAttribute>() ?? new();
         var assignableInfo = new Util.AssignableInfo(o, memberInfo);
         var type = assignableInfo.Type;
         var name = assignableInfo.Name;
-        var throwOnFail = sigAttribute.Fallibility != Fallibility.Fallible;
-
-        var sigInfo = new SigInfo { assignableInfo = assignableInfo, attribute = sigAttribute, pointer = nint.Zero, sigType = SigInfo.SigType.None };
-        sigInfos.Add(sigInfo);
-
+        var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
         var signature = sigAttribute.Signature;
+
+        var sigInfo = new SigInfo { assignableInfo = assignableInfo, attribute = sigAttribute, exAttribute = exAttribute, signature = signature };
+        SigInfos.Add(sigInfo);
+
         if (sigAttribute.ScanType == ScanType.Text ? !sigScanner.TryScanText(signature, out var ptr) : !sigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
             LogSignatureAttributeError(type, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", throwOnFail);
             return;
         }
+
+        sigInfo.address = ptr;
 
         switch (sigAttribute.UseFlags)
         {
@@ -170,16 +215,16 @@ public class SigWrapper
             case SignatureUseFlags.Pointer:
                 sigInfo.sigType = SigInfo.SigType.Pointer;
                 if (type.IsAssignableTo(typeof(Delegate)))
-                    assignableInfo.SetValue(o, Marshal.GetDelegateForFunctionPointer(ptr, type));
+                    assignableInfo.SetValue(Marshal.GetDelegateForFunctionPointer(ptr, type));
                 else
-                    assignableInfo.SetValue(o, ptr);
+                    assignableInfo.SetValue(ptr);
                 break;
             case SignatureUseFlags.Auto when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Hook<>):
             case SignatureUseFlags.Hook:
                 sigInfo.sigType = SigInfo.SigType.Hook;
                 if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Hook<>))
                 {
-                    LogSignatureAttributeError(type, name, $"{type.Name} is not a Hook<T>", throwOnFail);
+                    LogSignatureAttributeError(type, name, $"{type.Name} is not a Hook", throwOnFail);
                     return;
                 }
 
@@ -234,13 +279,19 @@ public class SigWrapper
                 }
 
                 var hook = ctor.Invoke(new object[] { ptr, detour });
-                assignableInfo.SetValue(o, hook);
+                assignableInfo.SetValue(hook);
+
+                if (exAttribute.EnableHook == EnableHook.Auto)
+                    type.GetMethod("Enable")?.Invoke(hook, null);
+
+                if (exAttribute.DisposeHook == DisposeHook.Auto)
+                    disposableHooks.Add(hook as IDisposable);
                 break;
             case SignatureUseFlags.Auto when type.IsPrimitive:
             case SignatureUseFlags.Offset:
                 sigInfo.sigType = SigInfo.SigType.Primitive;
                 var offset = Marshal.PtrToStructure(ptr + sigAttribute.Offset, type);
-                assignableInfo.SetValue(o, offset);
+                assignableInfo.SetValue(offset);
                 break;
             default:
                 LogSignatureAttributeError(type, name, "Unable to detect SignatureUseFlags", throwOnFail);
@@ -254,7 +305,14 @@ public class SigWrapper
 
         if (doThrow)
             throw new ApplicationException(errorMsg);
-        else
-            PluginLog.Warning(errorMsg);
+
+        PluginLog.Warning(errorMsg);
+    }
+
+    public void Dispose()
+    {
+        foreach (var hook in disposableHooks)
+            hook?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

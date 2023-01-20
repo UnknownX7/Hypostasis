@@ -4,6 +4,9 @@ using System.Reflection;
 using System.IO.Compression;
 using System.IO;
 using System.Text;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using Dalamud.Logging;
 
 namespace Hypostasis;
 
@@ -17,22 +20,64 @@ public static class Util
         private readonly PropertyInfo propertyInfo;
 
         public string Name => fieldInfo?.Name ?? propertyInfo?.Name ?? string.Empty;
-        public Type Type => fieldInfo?.FieldType ?? propertyInfo?.PropertyType ?? default;
+        public Type Type => fieldInfo?.FieldType ?? propertyInfo?.PropertyType;
 
-        public AssignableInfo(object o, MemberInfo memberInfo)
+        public AssignableInfo(object o, MemberInfo info)
         {
             obj = o;
-            fieldInfo = memberInfo as FieldInfo;
-            propertyInfo = memberInfo as PropertyInfo;
+            memberInfo = info;
+            fieldInfo = info as FieldInfo;
+            propertyInfo = info as PropertyInfo;
         }
 
-        public object GetValue(object o) => fieldInfo?.GetValue(o) ?? propertyInfo?.GetValue(o);
+        public object GetValue() => fieldInfo?.GetValue(obj) ?? propertyInfo?.GetValue(obj);
 
-        public void SetValue(object o, object v)
+        public void SetValue(object v)
         {
-            fieldInfo?.SetValue(o, v);
-            propertyInfo?.SetValue(o, v);
+            fieldInfo?.SetValue(obj, v);
+            propertyInfo?.SetValue(obj, v);
         }
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)] private static extern nint GetForegroundWindow();
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)] private static extern int GetWindowThreadProcessId(nint handle, out int processId);
+    public static bool IsWindowFocused
+    {
+        get
+        {
+            var activatedHandle = GetForegroundWindow();
+            if (activatedHandle == nint.Zero)
+                return false;
+
+            var procId = Environment.ProcessId;
+            _ = GetWindowThreadProcessId(activatedHandle, out var activeProcId);
+
+            return activeProcId == procId;
+        }
+    }
+
+    public static bool StartProcess(ProcessStartInfo startInfo)
+    {
+        try
+        {
+            Process.Start(startInfo);
+            return true;
+        }
+        catch (Exception e)
+        {
+            PluginLog.Error(e, "Failed to start process!");
+            return false;
+        }
+    }
+
+    public static bool StartProcess(string process, bool admin = false)
+    {
+        return StartProcess(new ProcessStartInfo
+        {
+            FileName = process,
+            UseShellExecute = true,
+            Verb = admin ? "runas" : string.Empty
+        });
     }
 
     public static string CompressString(string s, string prefix = "")
