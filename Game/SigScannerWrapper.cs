@@ -27,8 +27,9 @@ public class SigScannerWrapper : IDisposable
         }
 
         public Util.AssignableInfo assignableInfo = null;
-        public SignatureAttribute attribute = null;
+        public SignatureAttribute sigAttribute = null;
         public SignatureExAttribute exAttribute = null;
+        public ClientStructsAttribute csAttribute = null;
         public string signature = string.Empty;
         public int offset = 0;
         public nint address = nint.Zero;
@@ -178,19 +179,28 @@ public class SigScannerWrapper : IDisposable
         return hook;
     }
 
-    public void Inject(object o) => Inject(o.GetType(), o);
-
     public void Inject(Type type, object o = null)
     {
         foreach (var memberInfo in type.GetFields(defaultBindingFlags).Concat<MemberInfo>(type.GetProperties(defaultBindingFlags)))
             InjectMember(o, memberInfo);
     }
 
-    private void InjectMember(object o, MemberInfo memberInfo)
-    {
-        var sigAttribute = memberInfo.GetCustomAttribute<SignatureAttribute>();
-        if (sigAttribute == null) return;
+    public void Inject(object o) => Inject(o.GetType(), o);
 
+    public void InjectMember(object o, MemberInfo memberInfo)
+    {
+        if (memberInfo.GetCustomAttribute<SignatureAttribute>() is { } sigAttribute)
+        {
+            InjectMember(o, memberInfo, sigAttribute);
+            return;
+        }
+
+        if (memberInfo.GetCustomAttribute<ClientStructsAttribute>() is { } csAttribute)
+            InjectMember(o, memberInfo, csAttribute);
+    }
+
+    public void InjectMember(object o, MemberInfo memberInfo, SignatureAttribute sigAttribute)
+    {
         var exAttribute = memberInfo.GetCustomAttribute<SignatureExAttribute>() ?? new();
         var assignableInfo = new Util.AssignableInfo(o, memberInfo);
         var type = assignableInfo.Type;
@@ -198,7 +208,7 @@ public class SigScannerWrapper : IDisposable
         var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
         var signature = sigAttribute.Signature;
 
-        var sigInfo = new SigInfo { assignableInfo = assignableInfo, attribute = sigAttribute, exAttribute = exAttribute, signature = signature };
+        var sigInfo = new SigInfo { assignableInfo = assignableInfo, sigAttribute = sigAttribute, exAttribute = exAttribute, signature = signature };
         SigInfos.Add(sigInfo);
 
         if (sigAttribute.ScanType == ScanType.Text ? !sigScanner.TryScanText(signature, out var ptr) : !sigScanner.TryGetStaticAddressFromSig(signature, out ptr))
@@ -281,10 +291,10 @@ public class SigScannerWrapper : IDisposable
                 var hook = ctor.Invoke(new object[] { ptr, detour });
                 assignableInfo.SetValue(hook);
 
-                if (exAttribute.EnableHook == EnableHook.Auto)
+                if (exAttribute.EnableHook)
                     type.GetMethod("Enable")?.Invoke(hook, null);
 
-                if (exAttribute.DisposeHook == DisposeHook.Auto)
+                if (exAttribute.DisposeHook)
                     disposableHooks.Add(hook as IDisposable);
                 break;
             case SignatureUseFlags.Auto when type.IsPrimitive:
@@ -298,6 +308,39 @@ public class SigScannerWrapper : IDisposable
                 return;
         }
     }
+
+    public unsafe void InjectMember(object o, MemberInfo memberInfo, ClientStructsAttribute csAttribute)
+    {
+        var csMember = csAttribute.ClientStructsType.GetMember(csAttribute.MemberName)[0];
+        var assignableInfo = new Util.AssignableInfo(o, memberInfo);
+        var sigInfo = new SigInfo { assignableInfo = assignableInfo, csAttribute = csAttribute };
+        SigInfos.Add(sigInfo);
+
+        var retrievedValue = csMember switch
+        {
+            FieldInfo f => f.GetValue(null),
+            PropertyInfo p => p.GetValue(null),
+            MethodInfo m => m.Invoke(null, Array.Empty<object>()),
+            _ => throw new NotImplementedException("Member type is unsupported")
+        };
+
+        switch (retrievedValue)
+        {
+            case null:
+                throw new ApplicationException("Retrieved value was null");
+            case Pointer p:
+                var ptr = (nint)Pointer.Unbox(p);
+                sigInfo.address = ptr;
+                sigInfo.sigType = SigInfo.SigType.Pointer;
+                assignableInfo.SetValue(ptr);
+                break;
+            default:
+                assignableInfo.SetValue(retrievedValue);
+                break;
+        }
+    }
+
+    public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, defaultBindingFlags)[0]);
 
     private static void LogSignatureAttributeError(Type classType, string memberName, string message, bool doThrow)
     {

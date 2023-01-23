@@ -14,11 +14,13 @@ public static class Hypostasis
     {
         PluginName = pluginName;
         DalamudApi.Initialize(pluginInterface);
+        Common.Initialize();
     }
 
     public static void Dispose()
     {
         DalamudApi.Dispose();
-        Memory.Dispose();
+        Common.Dispose();
+        ASMReplacer.DisposeAll();
     }
 }
