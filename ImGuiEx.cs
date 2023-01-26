@@ -220,6 +220,22 @@ public static partial class ImGuiEx
         return false;
     }
 
+    public static bool FontButton(string label, ImFontPtr font)
+    {
+        ImGui.PushFont(font);
+        var ret = ImGui.Button(label);
+        ImGui.PopFont();
+        return ret;
+    }
+
+    public static bool FontButton(string label, ImFontPtr font, Vector2 size)
+    {
+        ImGui.PushFont(font);
+        var ret = ImGui.Button(label, size);
+        ImGui.PopFont();
+        return ret;
+    }
+
     public class HeaderIconOptions
     {
         public int Position { get; init; } = 1;
