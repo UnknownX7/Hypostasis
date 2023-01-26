@@ -19,6 +19,9 @@ public static partial class ImGuiEx
     public static bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton.Left, ImGuiHoveredFlags flags = ImGuiHoveredFlags.None) =>
         ImGui.IsMouseDoubleClicked(button) && ImGui.IsItemHovered(flags);
 
+    public static bool IsItemReleased(ImGuiMouseButton button = ImGuiMouseButton.Left, ImGuiHoveredFlags flags = ImGuiHoveredFlags.None) =>
+        ImGui.IsMouseReleased(button) && ImGui.IsItemHovered(flags);
+
     // Why is this not a basic feature of ImGui...
     private static readonly Stack<float> fontScaleStack = new();
     private static float curScale = 1;
@@ -156,6 +159,16 @@ public static partial class ImGuiEx
             ImGui.SetClipboardText(text);
     }
 
+    public static void TextCopyable(Vector4 color, string text)
+    {
+        ImGui.TextColored(color, text);
+
+        if (!ImGui.IsItemHovered()) return;
+        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        if (ImGui.IsItemClicked())
+            ImGui.SetClipboardText(text);
+    }
+
     public static Vector2 RotateVector(Vector2 v, float a)
     {
         var aCos = (float)Math.Cos(a);
@@ -261,7 +274,7 @@ public static partial class ImGuiEx
 
     public static void AddDonationHeader(int position)
     {
-        if (AddHeaderIcon("_Donate", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF00007F, MouseButton = ImGuiMouseButton.Right, Tooltip = "Right click to open the donation page.", ToastTooltipOnClick = true }))
+        if (AddHeaderIcon("_Donate", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = "Right click to open the donation page.", ToastTooltipOnClick = true }))
             Util.StartProcess(@"https://ko-fi.com/unknownx7");
     }
 }

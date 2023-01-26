@@ -6,10 +6,13 @@ namespace Dalamud.Utility.Signatures;
 public class ClientStructsAttribute : Attribute
 {
     public Type ClientStructsType { get; init; }
-    public string MemberName { get; init; }
-    public ClientStructsAttribute(Type type, string memberName)
-    {
-        ClientStructsType = type;
-        MemberName = memberName;
-    }
+    public string MemberName { get; init; } = "Instance";
+    public ClientStructsAttribute(Type type) => ClientStructsType = type;
+    public ClientStructsAttribute() { }
+
+}
+
+public class ClientStructsAttribute<T> : ClientStructsAttribute
+{
+    public ClientStructsAttribute() => ClientStructsType = typeof(T);
 }

@@ -19,8 +19,8 @@ public static unsafe class Common
         }
     }
 
-    [ClientStructs(typeof(FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager), "Instance")]
-    private static CameraManager* cameraManager; // g_ControlSystem_CameraManager
+    [ClientStructs<FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager>]
+    private static CameraManager* cameraManager;
     public static CameraManager* CameraManager
     {
         get
@@ -31,7 +31,7 @@ public static unsafe class Common
         }
     }
 
-    [ClientStructs(typeof(FFXIVClientStructs.FFXIV.Client.Game.ActionManager), "Instance")]
+    [ClientStructs<FFXIVClientStructs.FFXIV.Client.Game.ActionManager>]
     private static ActionManager* actionManager;
     public static ActionManager* ActionManager
     {
@@ -42,7 +42,6 @@ public static unsafe class Common
             return actionManager;
         }
     }
-
 
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
 
