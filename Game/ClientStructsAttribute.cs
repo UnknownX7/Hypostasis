@@ -9,7 +9,6 @@ public class ClientStructsAttribute : Attribute
     public string MemberName { get; init; } = "Instance";
     public ClientStructsAttribute(Type type) => ClientStructsType = type;
     public ClientStructsAttribute() { }
-
 }
 
 public class ClientStructsAttribute<T> : ClientStructsAttribute

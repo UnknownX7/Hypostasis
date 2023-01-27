@@ -46,6 +46,7 @@ public class SigScannerWrapper : IDisposable
     public ProcessModule Module => sigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
     public List<SigInfo> SigInfos { get; } = new();
+    public Dictionary<int, (object, MemberInfo)> MemberInfos { get; } = new();
 
     public SigScannerWrapper(SigScanner s) => sigScanner = s;
 
@@ -141,13 +142,14 @@ public class SigScannerWrapper : IDisposable
                 break;
         }
 
-        SigInfos.Add(new SigInfo
+        var sigInfo = new SigInfo
         {
             signature = signature,
             offset = offset,
             address = ptr,
             sigType = type
-        });
+        };
+        SigInfos.Add(sigInfo);
     }
 
     private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
@@ -201,19 +203,28 @@ public class SigScannerWrapper : IDisposable
 
     public void InjectMember(object o, MemberInfo memberInfo, SignatureAttribute sigAttribute)
     {
+        var ownerType = memberInfo.ReflectedType;
         var exAttribute = memberInfo.GetCustomAttribute<SignatureExAttribute>() ?? new();
         var assignableInfo = new Util.AssignableInfo(o, memberInfo);
         var type = assignableInfo.Type;
         var name = assignableInfo.Name;
+
+        if (ownerType == null)
+        {
+            LogSignatureAttributeError(null, name, "ReflectedType was null!", true);
+            return;
+        }
+
         var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
         var signature = sigAttribute.Signature;
 
-        var sigInfo = new SigInfo { assignableInfo = assignableInfo, sigAttribute = sigAttribute, exAttribute = exAttribute, signature = signature };
+        var sigInfo = new SigInfo { sigAttribute = sigAttribute, exAttribute = exAttribute, signature = signature };
+        MemberInfos.Add(SigInfos.Count, (o, memberInfo));
         SigInfos.Add(sigInfo);
 
         if (sigAttribute.ScanType == ScanType.Text ? !sigScanner.TryScanText(signature, out var ptr) : !sigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
-            LogSignatureAttributeError(type, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", throwOnFail);
+            LogSignatureAttributeError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", throwOnFail);
             return;
         }
 
@@ -234,12 +245,12 @@ public class SigScannerWrapper : IDisposable
                 sigInfo.sigType = SigInfo.SigType.Hook;
                 if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Hook<>))
                 {
-                    LogSignatureAttributeError(type, name, $"{type.Name} is not a Hook", throwOnFail);
+                    LogSignatureAttributeError(ownerType, name, $"{type.Name} is not a Hook", throwOnFail);
                     return;
                 }
 
                 var hookDelegateType = type.GenericTypeArguments[0];
-                var detourMethod = sigAttribute.DetourName == null ? type.GetMethod(name.Replace("Hook", "Detour"), defaultBindingFlags) : null;
+                var detourMethod = sigAttribute.DetourName == null ? ownerType.GetMethod(name.Replace("Hook", "Detour"), defaultBindingFlags) : null;
                 var detour = detourMethod != null
                     ? detourMethod.IsStatic ? Delegate.CreateDelegate(hookDelegateType, detourMethod, false) : Delegate.CreateDelegate(hookDelegateType, o, detourMethod, false)
                     : null;
@@ -248,17 +259,17 @@ public class SigScannerWrapper : IDisposable
                 {
                     if (sigAttribute.DetourName != null)
                     {
-                        var method = type.GetMethod(sigAttribute.DetourName, defaultBindingFlags);
+                        var method = ownerType.GetMethod(sigAttribute.DetourName, defaultBindingFlags);
                         if (method == null)
                         {
-                            LogSignatureAttributeError(type, name, $"Could not find detour \"{sigAttribute.DetourName}\"", throwOnFail);
+                            LogSignatureAttributeError(ownerType, name, $"Could not find detour \"{sigAttribute.DetourName}\"", throwOnFail);
                             return;
                         }
 
                         var del = method.IsStatic ? Delegate.CreateDelegate(hookDelegateType, method, false) : Delegate.CreateDelegate(hookDelegateType, o, method, false);
                         if (del == null)
                         {
-                            LogSignatureAttributeError(type, name, $"Method {sigAttribute.DetourName} was not compatible with delegate {hookDelegateType.Name}", throwOnFail);
+                            LogSignatureAttributeError(ownerType, name, $"Method {sigAttribute.DetourName} was not compatible with delegate {hookDelegateType.Name}", throwOnFail);
                             return;
                         }
 
@@ -266,14 +277,14 @@ public class SigScannerWrapper : IDisposable
                     }
                     else
                     {
-                        var matches = type.GetMethods(defaultBindingFlags)
+                        var matches = ownerType.GetMethods(defaultBindingFlags)
                             .Select(method => method.IsStatic ? Delegate.CreateDelegate(hookDelegateType, method, false) : Delegate.CreateDelegate(hookDelegateType, o, method, false))
                             .Where(del => del != null)
                             .ToArray();
 
                         if (matches.Length != 1)
                         {
-                            LogSignatureAttributeError(type, name, "Either found no matching detours or found more than one: specify a detour name", throwOnFail);
+                            LogSignatureAttributeError(ownerType, name, $"Found {matches.Length} matching detours: specify a detour name", throwOnFail);
                             return;
                         }
 
@@ -284,7 +295,7 @@ public class SigScannerWrapper : IDisposable
                 var ctor = type.GetConstructor(new[] { typeof(nint), hookDelegateType });
                 if (ctor == null)
                 {
-                    LogSignatureAttributeError(type, name, "Could not find Hook constructor", throwOnFail);
+                    LogSignatureAttributeError(ownerType, name, "Could not find Hook constructor", throwOnFail);
                     return;
                 }
 
@@ -304,7 +315,7 @@ public class SigScannerWrapper : IDisposable
                 assignableInfo.SetValue(offset);
                 break;
             default:
-                LogSignatureAttributeError(type, name, "Unable to detect SignatureUseFlags", throwOnFail);
+                LogSignatureAttributeError(ownerType, name, "Unable to detect SignatureUseFlags", throwOnFail);
                 return;
         }
     }
@@ -313,7 +324,8 @@ public class SigScannerWrapper : IDisposable
     {
         var csMember = csAttribute.ClientStructsType.GetMember(csAttribute.MemberName)[0];
         var assignableInfo = new Util.AssignableInfo(o, memberInfo);
-        var sigInfo = new SigInfo { assignableInfo = assignableInfo, csAttribute = csAttribute };
+        var sigInfo = new SigInfo { csAttribute = csAttribute };
+        MemberInfos.Add(SigInfos.Count, (o, memberInfo));
         SigInfos.Add(sigInfo);
 
         var retrievedValue = csMember switch
@@ -344,7 +356,7 @@ public class SigScannerWrapper : IDisposable
 
     private static void LogSignatureAttributeError(Type classType, string memberName, string message, bool doThrow)
     {
-        var errorMsg = $"Signature attribute error in {classType.FullName}.{memberName}: {message}";
+        var errorMsg = $"Signature attribute error in {classType?.FullName}.{memberName}:\n{message}";
 
         if (doThrow)
             throw new ApplicationException(errorMsg);
