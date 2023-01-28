@@ -13,9 +13,9 @@ namespace Hypostasis.Game;
 
 public class SigScannerWrapper : IDisposable
 {
-    public class SigInfo
+    public class SignatureInfo
     {
-        public enum SigType
+        public enum SignatureType
         {
             None,
             Text,
@@ -26,14 +26,25 @@ public class SigScannerWrapper : IDisposable
             AsmHook
         }
 
-        public Util.AssignableInfo assignableInfo = null;
-        public SignatureAttribute sigAttribute = null;
-        public SignatureExAttribute exAttribute = null;
-        public ClientStructsAttribute csAttribute = null;
-        public string signature = string.Empty;
-        public int offset = 0;
-        public nint address = nint.Zero;
-        public SigType sigType = SigType.None;
+        public Util.AssignableInfo AssignableInfo { get; set; }
+        public SignatureAttribute SigAttribute { get; set; }
+        public SignatureExAttribute ExAttribute { get; set; }
+        public ClientStructsAttribute CSAttribute { get; set; }
+        public string Signature { get; set; } = string.Empty;
+        public int Offset { get; set; }
+
+        private nint address;
+        public unsafe nint Address
+        {
+            get
+            {
+                if (address != nint.Zero || !string.IsNullOrEmpty(Signature)) return address;
+                return address = Util.ConvertObjectToIntPtr(AssignableInfo?.GetValue());
+            }
+            set => address = value;
+        }
+
+        public SignatureType SigType { get; set; }
     }
 
     private const BindingFlags defaultBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
@@ -45,7 +56,7 @@ public class SigScannerWrapper : IDisposable
 
     public ProcessModule Module => sigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
-    public List<SigInfo> SigInfos { get; } = new();
+    public List<SignatureInfo> SignatureInfos { get; } = new();
     public Dictionary<int, (object, MemberInfo)> MemberInfos { get; } = new();
 
     public SigScannerWrapper(SigScanner s) => sigScanner = s;
@@ -56,7 +67,7 @@ public class SigScannerWrapper : IDisposable
             return ptr;
 
         ptr = sigScanner.ScanText(signature);
-        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
 
@@ -66,7 +77,7 @@ public class SigScannerWrapper : IDisposable
             return true;
 
         var b = sigScanner.TryScanText(signature, out result);
-        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
 
@@ -76,7 +87,7 @@ public class SigScannerWrapper : IDisposable
             return ptr;
 
         ptr = sigScanner.ScanData(signature);
-        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
 
@@ -86,7 +97,7 @@ public class SigScannerWrapper : IDisposable
             return true;
 
         var b = sigScanner.TryScanData(signature, out result);
-        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
 
@@ -96,7 +107,7 @@ public class SigScannerWrapper : IDisposable
             return ptr;
 
         ptr = sigScanner.ScanModule(signature);
-        AddSignatureInfo(signature, ptr, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
 
@@ -106,7 +117,7 @@ public class SigScannerWrapper : IDisposable
             return true;
 
         var b = sigScanner.TryScanModule(signature, out result);
-        AddSignatureInfo(signature, result, 0, SigInfo.SigType.Text);
+        AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
 
@@ -116,7 +127,7 @@ public class SigScannerWrapper : IDisposable
             return ptr;
 
         ptr = sigScanner.GetStaticAddressFromSig(signature, offset);
-        AddSignatureInfo(signature, ptr, offset, SigInfo.SigType.Static);
+        AddSignatureInfo(signature, ptr, offset, SignatureInfo.SignatureType.Static);
         return ptr;
     }
 
@@ -126,43 +137,37 @@ public class SigScannerWrapper : IDisposable
             return true;
 
         var b = sigScanner.TryGetStaticAddressFromSig(signature, out result, offset);
-        AddSignatureInfo(signature, result, offset, SigInfo.SigType.Static);
+        AddSignatureInfo(signature, result, offset, SignatureInfo.SignatureType.Static);
         return b;
     }
 
-    private void AddSignatureInfo(string signature, nint ptr, int offset, SigInfo.SigType type)
+    private void AddSignatureInfo(string signature, nint ptr, int offset, SignatureInfo.SignatureType type)
     {
         switch (type)
         {
-            case SigInfo.SigType.Text when offset == 0:
+            case SignatureInfo.SignatureType.Text when offset == 0:
                 sigCache[signature] = ptr;
                 break;
-            case SigInfo.SigType.Static when offset == 0:
+            case SignatureInfo.SignatureType.Static when offset == 0:
                 staticSigCache[signature] = ptr;
                 break;
         }
 
-        var sigInfo = new SigInfo
+        var sigInfo = new SignatureInfo
         {
-            signature = signature,
-            offset = offset,
-            address = ptr,
-            sigType = type
+            Signature = signature,
+            Offset = offset,
+            Address = ptr,
+            SigType = type
         };
-        SigInfos.Add(sigInfo);
+        SignatureInfos.Add(sigInfo);
     }
 
     private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
     {
         var hook = Hook<T>.FromAddress(address, detour, useMinHook);
-        AddSignatureInfo(string.Empty, address, 0, SigInfo.SigType.Hook);
-
-        if (startEnabled)
-            hook.Enable();
-
-        if (autoDispose)
-            disposableHooks.Add(hook);
-
+        AddSignatureInfo(string.Empty, address, 0, SignatureInfo.SignatureType.Hook);
+        AddHook(hook, startEnabled, autoDispose);
         return hook;
     }
 
@@ -170,35 +175,27 @@ public class SigScannerWrapper : IDisposable
     {
         var address = !scanModule ? sigScanner.ScanText(signature) : sigScanner.ScanModule(signature);
         var hook = Hook<T>.FromAddress(address, detour, useMinHook);
-        AddSignatureInfo(signature, address, 0, SigInfo.SigType.Hook);
-
-        if (startEnabled)
-            hook.Enable();
-
-        if (autoDispose)
-            disposableHooks.Add(hook);
-
+        AddSignatureInfo(signature, address, 0, SignatureInfo.SignatureType.Hook);
+        AddHook(hook, startEnabled, autoDispose);
         return hook;
     }
 
-    public void Inject(Type type, object o = null)
+    public void Inject(Type type, object o = null, bool addAllMembers = true)
     {
         foreach (var memberInfo in type.GetFields(defaultBindingFlags).Concat<MemberInfo>(type.GetProperties(defaultBindingFlags)))
-            InjectMember(o, memberInfo);
+            InjectMember(o, memberInfo, addAllMembers);
     }
 
-    public void Inject(object o) => Inject(o.GetType(), o);
+    public void Inject(object o, bool addAllMembers = true) => Inject(o.GetType(), o, addAllMembers);
 
-    public void InjectMember(object o, MemberInfo memberInfo)
+    public void InjectMember(object o, MemberInfo memberInfo, bool addAllMembers = true)
     {
-        if (memberInfo.GetCustomAttribute<SignatureAttribute>() is { } sigAttribute)
-        {
-            InjectMember(o, memberInfo, sigAttribute);
-            return;
-        }
-
         if (memberInfo.GetCustomAttribute<ClientStructsAttribute>() is { } csAttribute)
             InjectMember(o, memberInfo, csAttribute);
+        else if (memberInfo.GetCustomAttribute<SignatureAttribute>() is { } sigAttribute)
+            InjectMember(o, memberInfo, sigAttribute);
+        else if (addAllMembers)
+            AddMember(o, memberInfo);
     }
 
     public void InjectMember(object o, MemberInfo memberInfo, SignatureAttribute sigAttribute)
@@ -218,9 +215,9 @@ public class SigScannerWrapper : IDisposable
         var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
         var signature = sigAttribute.Signature;
 
-        var sigInfo = new SigInfo { sigAttribute = sigAttribute, exAttribute = exAttribute, signature = signature };
-        MemberInfos.Add(SigInfos.Count, (o, memberInfo));
-        SigInfos.Add(sigInfo);
+        var sigInfo = new SignatureInfo { SigAttribute = sigAttribute, ExAttribute = exAttribute, Signature = signature };
+        MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+        SignatureInfos.Add(sigInfo);
 
         if (sigAttribute.ScanType == ScanType.Text ? !sigScanner.TryScanText(signature, out var ptr) : !sigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
@@ -228,13 +225,13 @@ public class SigScannerWrapper : IDisposable
             return;
         }
 
-        sigInfo.address = ptr;
+        sigInfo.Address = ptr;
 
         switch (sigAttribute.UseFlags)
         {
             case SignatureUseFlags.Auto when type == typeof(nint) || type.IsPointer || type.IsAssignableTo(typeof(Delegate)):
             case SignatureUseFlags.Pointer:
-                sigInfo.sigType = SigInfo.SigType.Pointer;
+                sigInfo.SigType = SignatureInfo.SignatureType.Pointer;
                 if (type.IsAssignableTo(typeof(Delegate)))
                     assignableInfo.SetValue(Marshal.GetDelegateForFunctionPointer(ptr, type));
                 else
@@ -242,75 +239,17 @@ public class SigScannerWrapper : IDisposable
                 break;
             case SignatureUseFlags.Auto when type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Hook<>):
             case SignatureUseFlags.Hook:
-                sigInfo.sigType = SigInfo.SigType.Hook;
+                sigInfo.SigType = SignatureInfo.SignatureType.Hook;
                 if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Hook<>))
                 {
                     LogSignatureAttributeError(ownerType, name, $"{type.Name} is not a Hook", throwOnFail);
                     return;
                 }
-
-                var hookDelegateType = type.GenericTypeArguments[0];
-                var detourMethod = sigAttribute.DetourName == null ? ownerType.GetMethod(name.Replace("Hook", "Detour"), defaultBindingFlags) : null;
-                var detour = detourMethod != null
-                    ? detourMethod.IsStatic ? Delegate.CreateDelegate(hookDelegateType, detourMethod, false) : Delegate.CreateDelegate(hookDelegateType, o, detourMethod, false)
-                    : null;
-
-                if (detour == null)
-                {
-                    if (sigAttribute.DetourName != null)
-                    {
-                        var method = ownerType.GetMethod(sigAttribute.DetourName, defaultBindingFlags);
-                        if (method == null)
-                        {
-                            LogSignatureAttributeError(ownerType, name, $"Could not find detour \"{sigAttribute.DetourName}\"", throwOnFail);
-                            return;
-                        }
-
-                        var del = method.IsStatic ? Delegate.CreateDelegate(hookDelegateType, method, false) : Delegate.CreateDelegate(hookDelegateType, o, method, false);
-                        if (del == null)
-                        {
-                            LogSignatureAttributeError(ownerType, name, $"Method {sigAttribute.DetourName} was not compatible with delegate {hookDelegateType.Name}", throwOnFail);
-                            return;
-                        }
-
-                        detour = del;
-                    }
-                    else
-                    {
-                        var matches = ownerType.GetMethods(defaultBindingFlags)
-                            .Select(method => method.IsStatic ? Delegate.CreateDelegate(hookDelegateType, method, false) : Delegate.CreateDelegate(hookDelegateType, o, method, false))
-                            .Where(del => del != null)
-                            .ToArray();
-
-                        if (matches.Length != 1)
-                        {
-                            LogSignatureAttributeError(ownerType, name, $"Found {matches.Length} matching detours: specify a detour name", throwOnFail);
-                            return;
-                        }
-
-                        detour = matches[0]!;
-                    }
-                }
-
-                var ctor = type.GetConstructor(new[] { typeof(nint), hookDelegateType });
-                if (ctor == null)
-                {
-                    LogSignatureAttributeError(ownerType, name, "Could not find Hook constructor", throwOnFail);
-                    return;
-                }
-
-                var hook = ctor.Invoke(new object[] { ptr, detour });
-                assignableInfo.SetValue(hook);
-
-                if (exAttribute.EnableHook)
-                    type.GetMethod("Enable")?.Invoke(hook, null);
-
-                if (exAttribute.DisposeHook)
-                    disposableHooks.Add(hook as IDisposable);
+                InjectHook(type, assignableInfo, o, ptr, sigAttribute, exAttribute);
                 break;
             case SignatureUseFlags.Auto when type.IsPrimitive:
             case SignatureUseFlags.Offset:
-                sigInfo.sigType = SigInfo.SigType.Primitive;
+                sigInfo.SigType = SignatureInfo.SignatureType.Primitive;
                 var offset = Marshal.PtrToStructure(ptr + sigAttribute.Offset, type);
                 assignableInfo.SetValue(offset);
                 break;
@@ -322,34 +261,131 @@ public class SigScannerWrapper : IDisposable
 
     public unsafe void InjectMember(object o, MemberInfo memberInfo, ClientStructsAttribute csAttribute)
     {
-        var csMember = csAttribute.ClientStructsType.GetMember(csAttribute.MemberName)[0];
+        var memberName = memberInfo.Name.EndsWith("Hook") ? memberInfo.Name.Replace("Hook", string.Empty) : csAttribute.MemberName;
+        var csMember = csAttribute.ClientStructsType.GetMember(memberName)[0];
+        var sigAttribute = memberInfo.GetCustomAttribute<SignatureAttribute>() ?? new("");
+        var exAttribute = memberInfo.GetCustomAttribute<SignatureExAttribute>() ?? new();
         var assignableInfo = new Util.AssignableInfo(o, memberInfo);
-        var sigInfo = new SigInfo { csAttribute = csAttribute };
-        MemberInfos.Add(SigInfos.Count, (o, memberInfo));
-        SigInfos.Add(sigInfo);
+        var type = assignableInfo.Type;
+        var sigInfo = new SignatureInfo { ExAttribute = exAttribute, CSAttribute = csAttribute };
+        MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+        SignatureInfos.Add(sigInfo);
 
         var retrievedValue = csMember switch
         {
             FieldInfo f => f.GetValue(null),
             PropertyInfo p => p.GetValue(null),
             MethodInfo m => m.Invoke(null, Array.Empty<object>()),
-            _ => throw new NotImplementedException("Member type is unsupported")
+            _ => throw new ApplicationException("Member type is unsupported")
         };
 
-        switch (retrievedValue)
+        sigInfo.Address = Util.ConvertObjectToIntPtr(retrievedValue);
+
+        if (type == typeof(nint) || type.IsPointer || type.IsAssignableTo(typeof(Delegate)))
         {
-            case null:
-                throw new ApplicationException("Retrieved value was null");
-            case Pointer p:
-                var ptr = (nint)Pointer.Unbox(p);
-                sigInfo.address = ptr;
-                sigInfo.sigType = SigInfo.SigType.Pointer;
-                assignableInfo.SetValue(ptr);
-                break;
-            default:
-                assignableInfo.SetValue(retrievedValue);
-                break;
+            sigInfo.SigType = SignatureInfo.SignatureType.Pointer;
+            assignableInfo.SetValue(sigInfo.Address);
         }
+        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Hook<>))
+        {
+            sigInfo.SigType = SignatureInfo.SignatureType.Hook;
+            InjectHook(type, assignableInfo, o, sigInfo.Address, sigAttribute, exAttribute);
+        }
+    }
+
+    private void InjectHook(Type type, Util.AssignableInfo assignableInfo, object o, nint ptr, SignatureAttribute sigAttribute, SignatureExAttribute exAttribute)
+    {
+        var ownerType = assignableInfo.MemberInfo.DeclaringType;
+        var hookDelegateType = type.GenericTypeArguments[0];
+        var name = assignableInfo.Name;
+        var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
+        var detour = GetMethodDelegate(ownerType, hookDelegateType, o, name.Replace("Hook", "Detour"));
+
+        if (detour == null)
+        {
+            var detourName = sigAttribute.DetourName;
+            if (detourName != null)
+            {
+                detour = GetMethodDelegate(ownerType, hookDelegateType, o, detourName);
+                if (detour == null)
+                {
+                    LogSignatureAttributeError(ownerType, name, $"Detour not found or was incompatible with delegate \"{detourName}\" {hookDelegateType.Name}", throwOnFail);
+                    return;
+                }
+            }
+            else
+            {
+                var matches = GetMethodDelegates(ownerType, hookDelegateType, o);
+                if (matches.Length != 1)
+                {
+                    LogSignatureAttributeError(ownerType, name, $"Found {matches.Length} matching detours: specify a detour name", throwOnFail);
+                    return;
+                }
+
+                detour = matches[0]!;
+            }
+        }
+
+        var ctor = type.GetConstructor(new[] { typeof(nint), hookDelegateType });
+        if (ctor == null)
+        {
+            LogSignatureAttributeError(ownerType, name, "Could not find Hook constructor", throwOnFail);
+            return;
+        }
+
+        var hook = ctor.Invoke(new object[] { ptr, detour });
+        assignableInfo.SetValue(hook);
+
+        if (exAttribute.EnableHook)
+            type.GetMethod("Enable")?.Invoke(hook, null);
+        if (exAttribute.DisposeHook)
+            disposableHooks.Add(hook as IDisposable);
+    }
+
+    private static Delegate GetMethodDelegate(IReflect ownerType, Type delegateType, object o, string methodName)
+    {
+        var detourMethod = ownerType.GetMethod(methodName, defaultBindingFlags);
+        return CreateDelegate(delegateType, o, detourMethod);
+    }
+
+    private static Delegate[] GetMethodDelegates(IReflect ownerType, Type delegateType, object o) => ownerType.GetMethods(defaultBindingFlags)
+        .Select(methodInfo => CreateDelegate(delegateType, o, methodInfo)).Where(del => del != null).ToArray();
+
+    private static Delegate CreateDelegate(Type delegateType, object o, MethodInfo delegateMethod)
+    {
+        if (delegateType == null) return null;
+        return delegateMethod.IsStatic
+            ? Delegate.CreateDelegate(delegateType, delegateMethod, false)
+            : Delegate.CreateDelegate(delegateType, o, delegateMethod, false);
+    }
+
+    public unsafe void AddMember(object o, MemberInfo memberInfo)
+    {
+        if (MemberInfos.Any(kv => kv.Value.Item2 == memberInfo)) return;
+
+        var assignableInfo = new Util.AssignableInfo(o, memberInfo);
+        var type = assignableInfo.Type;
+        if (type == typeof(nint) || type.IsPointer || type.IsAssignableTo(typeof(Delegate)))
+        {
+            var address = Util.ConvertObjectToIntPtr(assignableInfo.GetValue());
+            MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.Pointer, Address = address });
+        }
+        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Hook<>) && assignableInfo.GetValue() is IDalamudHook hook)
+        {
+            MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.Hook, Address = hook.Address });
+        }
+    }
+
+    public void AddMember(Type type, object o, string member) => AddMember(o, type.GetMember(member, defaultBindingFlags)[0]);
+
+    public void AddHook<T>(Hook<T> hook, bool enable = true, bool dispose = true) where T : Delegate
+    {
+        if (enable)
+            hook.Enable();
+        if (dispose)
+            disposableHooks.Add(hook);
     }
 
     public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, defaultBindingFlags)[0]);

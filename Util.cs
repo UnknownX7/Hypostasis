@@ -10,12 +10,12 @@ using Dalamud.Logging;
 
 namespace Hypostasis;
 
-public static class Util
+public static partial class Util
 {
     public class AssignableInfo
     {
-        public readonly object obj;
-        public readonly MemberInfo memberInfo;
+        public object Object { get; init; }
+        public MemberInfo MemberInfo { get; init; }
         private readonly FieldInfo fieldInfo;
         private readonly PropertyInfo propertyInfo;
 
@@ -24,23 +24,27 @@ public static class Util
 
         public AssignableInfo(object o, MemberInfo info)
         {
-            obj = o;
-            memberInfo = info;
+            Object = o;
+            MemberInfo = info;
             fieldInfo = info as FieldInfo;
             propertyInfo = info as PropertyInfo;
         }
 
-        public object GetValue() => fieldInfo?.GetValue(obj) ?? propertyInfo?.GetValue(obj);
+        public object GetValue() => fieldInfo?.GetValue(Object) ?? propertyInfo?.GetValue(Object);
 
         public void SetValue(object v)
         {
-            fieldInfo?.SetValue(obj, v);
-            propertyInfo?.SetValue(obj, v);
+            fieldInfo?.SetValue(Object, v);
+            propertyInfo?.SetValue(Object, v);
         }
     }
 
-    [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)] private static extern nint GetForegroundWindow();
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)] private static extern int GetWindowThreadProcessId(nint handle, out int processId);
+    [LibraryImport("user32.dll")]
+    private static partial nint GetForegroundWindow();
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    private static partial int GetWindowThreadProcessId(nint handle, out int processId);
+
     public static bool IsWindowFocused
     {
         get
@@ -99,6 +103,27 @@ public static class Util
         using var r = new StreamReader(gs);
         return r.ReadToEnd();
     }
+
+    public static unsafe nint ConvertObjectToIntPtr(object o) => o switch
+        {
+            Pointer p => (nint)Pointer.Unbox(p),
+            nint p => p,
+            nuint p => (nint)p,
+            { } when o.IsNumeric() => (nint)Convert.ToInt64(o),
+            _ => nint.Zero
+        };
+
+    public static bool IsNumeric(this object o) => o switch
+        {
+            //Int128 => true, UInt128 => true,
+            //nint => true, nuint => true,
+            long => true, ulong => true,
+            int => true, uint => true,
+            short => true, ushort => true,
+            sbyte => true, byte => true,
+            double => true, float => true, decimal => true,
+            _ => false
+        };
 
     public static object Cast(this Type type, object data)
     {

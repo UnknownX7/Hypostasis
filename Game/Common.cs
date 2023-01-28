@@ -1,4 +1,9 @@
 ﻿using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using Hypostasis.Game.Structures;
 
 #pragma warning disable CS0649
@@ -38,16 +43,79 @@ public static unsafe class Common
         get
         {
             if (actionManager == null)
-                InjectMember("Instance");
+                InjectMember("actionManager");
             return actionManager;
         }
     }
 
+    [ClientStructs<Framework>]
+    private static Framework* framework;
+    public static Framework* Framework
+    {
+        get
+        {
+            if (framework == null)
+                InjectMember("framework");
+            return framework;
+        }
+    }
+
+    private static UIModule* uiModule;
+    public static UIModule* UIModule
+    {
+        get
+        {
+            if (uiModule != null) return uiModule;
+            uiModule = Framework->UIModule;
+            AddMember("uiModule");
+            return uiModule;
+        }
+    }
+
+    private static RaptureShellModule* raptureShellModule;
+    public static RaptureShellModule* RaptureShellModule
+    {
+        get
+        {
+            if (raptureShellModule != null) return raptureShellModule;
+            raptureShellModule = UIModule->GetRaptureShellModule();
+            AddMember("raptureShellModule");
+            return raptureShellModule;
+        }
+    }
+
+    private static PronounModule* pronounModule;
+    public static PronounModule* PronounModule
+    {
+        get
+        {
+            if (pronounModule != null) return pronounModule;
+            pronounModule = UIModule->GetPronounModule();
+            AddMember("pronounModule");
+            return pronounModule;
+        }
+    }
+
+    [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
+    private static delegate* unmanaged<PronounModule*, uint, GameObject*> getGameObjectFromPronounID;
+    public static GameObject* GetGameObjectFromPronounID(uint id)
+    {
+        if (getGameObjectFromPronounID == null)
+            InjectMember("getGameObjectFromPronounID");
+        return getGameObjectFromPronounID(PronounModule, id);
+    }
+
+    public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
+
+    public static GameObject* UITarget => (GameObject*)*(nint*)((nint)PronounModule + 0x290);
+
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
+
+    private static void AddMember(string member) => DalamudApi.SigScanner.AddMember(typeof(Common), null, member);
 
     public static void Initialize()
     {
-        DalamudApi.SigScanner.Inject(typeof(Common));
+
     }
 
     public static void Dispose()

@@ -6,6 +6,7 @@ using Dalamud.Game.Gui.Toast;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+#pragma warning disable CA1816
 
 namespace Hypostasis.Dalamud;
 
@@ -23,16 +24,26 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     protected DalamudPlugin(DalamudPluginInterface pluginInterface)
     {
-        Plugin = this as P;
-        printName = Name;
-        printHeader = $"[{printName}] ";
+        try
+        {
+            Plugin = this as P;
+            printName = Name;
+            printHeader = $"[{printName}] ";
 
-        Hypostasis.Initialize(printName, pluginInterface);
-        Config = PluginConfiguration<C>.LoadConfig();
-        pluginCommandManager = new(Plugin);
+            Hypostasis.Initialize(printName, pluginInterface);
+            Config = PluginConfiguration<C>.LoadConfig();
+            pluginCommandManager = new(Plugin);
+        }
+        catch (Exception e)
+        {
+            PluginLog.Error(e, $"Failed loading Hypostasis for {printName}");
+            return;
+        }
 
         try
         {
+            Initialize();
+
             var derivedType = typeof(P);
 
             if (derivedType.GetMethod("Update", bindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
@@ -55,7 +66,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         }
         catch (Exception e)
         {
-            PluginLog.Error($"Failed loading {printName}\n{e}");
+            PluginLog.Error(e, $"Failed loading {printName}");
         }
     }
 
@@ -70,6 +81,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
     public static void ShowQuestToast(string message, QuestToastOptions options = null) => DalamudApi.ToastGui.ShowQuest(printHeader + message, options);
 
     public static void ShowErrorToast(string message) => DalamudApi.ToastGui.ShowError(printHeader + message);
+
+    protected virtual void Initialize() { }
 
     protected virtual void ToggleConfig() { }
 
@@ -92,7 +105,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         if (addedConfig)
             DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfig;
 
-        pluginCommandManager.Dispose();
+        pluginCommandManager?.Dispose();
         Hypostasis.Dispose();
 
         GC.SuppressFinalize(this);

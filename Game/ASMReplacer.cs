@@ -116,6 +116,6 @@ public class ASMReplacer : IDisposable
     public static void DisposeAll()
     {
         foreach (var rep in createdReplacers)
-            rep.Dispose();
+            rep?.Dispose();
     }
 }

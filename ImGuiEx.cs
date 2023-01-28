@@ -288,9 +288,9 @@ public static partial class ImGuiEx
         return pressed;
     }
 
-    public static void AddDonationHeader(int position)
+    public static void AddDonationHeader(int position, string link = @"https://ko-fi.com/unknownx7")
     {
-        if (AddHeaderIcon("_Donate", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = "Right click to open the donation page.", ToastTooltipOnClick = true }))
-            Util.StartProcess(@"https://ko-fi.com/unknownx7");
+        if (AddHeaderIcon("_DONATE", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = $"Right click to go to {link}", ToastTooltipOnClick = true }))
+            Util.StartProcess(link);
     }
 }

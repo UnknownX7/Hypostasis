@@ -141,5 +141,5 @@ public class DalamudApi
 
     public static void Initialize(DalamudPluginInterface pluginInterface) => _ = new DalamudApi(pluginInterface);
 
-    public static void Dispose() => SigScanner.Dispose();
+    public static void Dispose() => SigScanner?.Dispose();
 }
