@@ -10,18 +10,24 @@ public static class Hypostasis
 {
     public static string PluginName { get; private set; }
     public static bool FailState { get; set; }
+    public static bool Debug { get; }
+#if DEBUG
+    = true;
+#endif
 
     public static void Initialize(string pluginName, DalamudPluginInterface pluginInterface)
     {
         PluginName = pluginName;
         DalamudApi.Initialize(pluginInterface);
         Common.Initialize();
+        if (!Debug) return;
         IPC.Initialize(pluginName);
     }
 
     public static void Dispose()
     {
-        IPC.Dispose();
+        if (Debug)
+            IPC.Dispose();
         DalamudApi.Dispose();
         Common.Dispose();
         ASMReplacer.DisposeAll();
