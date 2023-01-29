@@ -97,7 +97,7 @@ public static partial class Util
     {
         if (!s.StartsWith(prefix))
             throw new ApplicationException("This export is for a different plugin.");
-        var data = Convert.FromBase64String(s);
+        var data = Convert.FromBase64String(s[prefix.Length..]);
         using var ms = new MemoryStream(data);
         using var gs = new GZipStream(ms, CompressionMode.Decompress);
         using var r = new StreamReader(gs);

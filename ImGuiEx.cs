@@ -178,18 +178,30 @@ public static partial class ImGuiEx
 
     public static Vector2 RotateVector(Vector2 v, float aCos, float aSin) => new(v.X * aCos - v.Y * aSin, v.X * aSin + v.Y * aCos);
 
-    private static string search = string.Empty;
-    private static HashSet<ExcelRow> filtered;
-    public static bool ExcelSheetCombo<T>(string id, out T selected, Func<ExcelSheet<T>, string> getPreview, ImGuiComboFlags flags, Func<T, string, bool> searchPredicate, Func<T, bool> selectableDrawing) where T : ExcelRow
+    public class ExcelSheetOptions<T> where T : ExcelRow
     {
-        var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
-        return ExcelSheetCombo(id, out selected, getPreview(sheet), flags, sheet, searchPredicate, selectableDrawing);
+        public Func<T, string> FormatRow { get; init; } = row => row.ToString();
+        public Func<T, string, bool> SearchPredicate { get; init; } = null;
+        public Func<T, bool, bool> DrawSelectable { get; init; } = null;
+        public IEnumerable<T> FilteredSheet { get; init; } = null;
     }
 
-    public static bool ExcelSheetCombo<T>(string id, out T selected, string preview, ImGuiComboFlags flags, ExcelSheet<T> sheet, Func<T, string, bool> searchPredicate, Func<T, bool> drawRow) where T : ExcelRow
+    public class ExcelSheetComboOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
     {
-        selected = null;
-        if (!ImGui.BeginCombo(id, preview, flags)) return false;
+        public Func<T, string> GetPreview { get; init; } = null;
+        public ImGuiComboFlags ComboFlags { get; init; } = ImGuiComboFlags.None;
+    }
+
+    private static string search = string.Empty;
+    private static HashSet<ExcelRow> filtered;
+    public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : ExcelRow
+    {
+        options ??= new ExcelSheetComboOptions<T>();
+        var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
+        if (sheet == null) return false;
+
+        var getPreview = options.GetPreview ?? options.FormatRow;
+        if (!ImGui.BeginCombo(id, getPreview(sheet.GetRow(selectedRow)), options.ComboFlags)) return false;
 
         if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
         {
@@ -198,26 +210,77 @@ public static partial class ImGuiEx
             ImGui.SetKeyboardFocusHere(0);
         }
 
-        if (ImGui.InputText("##ExcelSheetComboSearch", ref search, 128))
+        if (ImGui.InputText("##ExcelSheetSearch", ref search, 128))
             filtered = null;
 
-        filtered ??= sheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
+        var filteredSheet = options.FilteredSheet ?? sheet;
+        var searchPredicate = options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase));
+        filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
+        var prevSelection = selectedRow;
+        var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
         foreach (var row in filtered.Cast<T>())
         {
             ImGui.PushID(i++);
-            if (drawRow(row))
-                selected = row;
+            if (drawSelectable(row, selectedRow == row.RowId))
+                selectedRow = row.RowId;
             ImGui.PopID();
 
-            if (selected == null) continue;
+            if (selectedRow == prevSelection) continue;
             ImGui.EndCombo();
             return true;
         }
 
         ImGui.EndCombo();
         return false;
+    }
+
+    public class ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
+    {
+        public Vector2? PopupSize { get; init; } = null;
+        public ImGuiWindowFlags WindowFlags { get; init; } = ImGuiWindowFlags.None;
+        public bool CloseOnSelection { get; init; } = false;
+    }
+
+    public static bool ExcelSheetPopup<T>(string id, out uint selectedRow, ExcelSheetPopupOptions<T> options = null) where T : ExcelRow
+    {
+        options ??= new ExcelSheetPopupOptions<T>();
+        var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
+        selectedRow = 0;
+        if (sheet == null) return false;
+
+        ImGui.SetNextWindowSize(options.PopupSize ?? new Vector2(0, 200 * ImGuiHelpers.GlobalScale));
+        if (!ImGui.BeginPopup(id, options.WindowFlags)) return false;
+
+        if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
+        {
+            search = string.Empty;
+            filtered = null;
+            ImGui.SetKeyboardFocusHere(0);
+        }
+
+        if (ImGui.InputText("##ExcelSheetSearch", ref search, 128))
+            filtered = null;
+
+        var filteredSheet = options.FilteredSheet ?? sheet;
+        var searchPredicate = options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase));
+        filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
+
+        var i = 0;
+        var prevSelection = selectedRow;
+        var selectableFlags = options.CloseOnSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.DontClosePopups;
+        var drawSelectable = options.DrawSelectable ?? ((row, _) => ImGui.Selectable(options.FormatRow(row), false, selectableFlags));
+        foreach (var row in filtered.Cast<T>())
+        {
+            ImGui.PushID(i++);
+            if (drawSelectable(row, false))
+                selectedRow = row.RowId;
+            ImGui.PopID();
+        }
+
+        ImGui.EndPopup();
+        return selectedRow != prevSelection;
     }
 
     public static bool FontButton(string label, ImFontPtr font)
