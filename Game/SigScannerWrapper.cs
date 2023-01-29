@@ -56,6 +56,9 @@ public class SigScannerWrapper : IDisposable
 
     public ProcessModule Module => sigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
+    public nint BaseTextAddress => (nint)(BaseAddress + sigScanner.TextSectionOffset);
+    public nint BaseDataAddress => (nint)(BaseAddress + sigScanner.DataSectionOffset);
+    public nint BaseRDataAddress => (nint)(BaseAddress + sigScanner.RDataSectionOffset);
     public List<SignatureInfo> SignatureInfos { get; } = new();
     public Dictionary<int, (object, MemberInfo)> MemberInfos { get; } = new();
 
