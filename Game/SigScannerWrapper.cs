@@ -34,7 +34,7 @@ public class SigScannerWrapper : IDisposable
         public int Offset { get; set; }
 
         private nint address;
-        public unsafe nint Address
+        public nint Address
         {
             get
             {
@@ -262,7 +262,7 @@ public class SigScannerWrapper : IDisposable
         }
     }
 
-    public unsafe void InjectMember(object o, MemberInfo memberInfo, ClientStructsAttribute csAttribute)
+    public void InjectMember(object o, MemberInfo memberInfo, ClientStructsAttribute csAttribute)
     {
         var memberName = memberInfo.Name.EndsWith("Hook") ? memberInfo.Name.Replace("Hook", string.Empty) : csAttribute.MemberName;
         var csMember = csAttribute.ClientStructsType.GetMember(memberName)[0];
@@ -362,7 +362,7 @@ public class SigScannerWrapper : IDisposable
             : Delegate.CreateDelegate(delegateType, o, delegateMethod, false);
     }
 
-    public unsafe void AddMember(object o, MemberInfo memberInfo)
+    public void AddMember(object o, MemberInfo memberInfo)
     {
         if (MemberInfos.Any(kv => kv.Value.Item2 == memberInfo)) return;
 

@@ -23,6 +23,8 @@ public static class IPC
 
     public static void Dispose()
     {
+        if (Hypostasis.FailState) return;
+
         if (DalamudApi.PluginInterface.TryGetData<HashSet<string>>(HypostasisTag, out var plugins))
             lock (plugins)
                 plugins.Remove(Hypostasis.PluginName);

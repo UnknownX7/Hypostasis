@@ -9,6 +9,7 @@ namespace Hypostasis;
 public static class Hypostasis
 {
     public static string PluginName { get; private set; }
+    public static bool FailState { get; set; }
 
     public static void Initialize(string pluginName, DalamudPluginInterface pluginInterface)
     {
@@ -24,5 +25,6 @@ public static class Hypostasis
         DalamudApi.Dispose();
         Common.Dispose();
         ASMReplacer.DisposeAll();
+        FailState = false;
     }
 }

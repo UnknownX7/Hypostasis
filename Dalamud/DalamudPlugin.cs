@@ -37,6 +37,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         catch (Exception e)
         {
             PluginLog.Error(e, $"Failed loading Hypostasis for {printName}");
+            Dispose();
             return;
         }
 
@@ -66,7 +67,14 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, $"Failed loading {printName}");
+            // Excessive? Yes.
+            var msg = $"Failed loading {printName}";
+            PluginLog.Error(e, msg);
+            ShowNotification($"\t\t\t{msg}\t\t\t\n\n", NotificationType.Error, 10_000);
+            ShowErrorToast(msg);
+            PrintError(msg);
+            Hypostasis.FailState = true;
+            Dispose();
         }
     }
 
@@ -74,7 +82,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     public static void PrintError(string message) => DalamudApi.ChatGui.PrintError(printHeader + message);
 
-    public static void ShowNotification(string message, NotificationType type, uint msDelay) => DalamudApi.PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
+    public static void ShowNotification(string message, NotificationType type = NotificationType.None, uint msDelay = 3_000u) => DalamudApi.PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
 
     public static void ShowToast(string message, ToastOptions options = null) => DalamudApi.ToastGui.ShowNormal(printHeader + message, options);
 
@@ -94,7 +102,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     public void Dispose()
     {
-        Config.Save();
+        Config?.Save();
 
         if (addedUpdate)
             DalamudApi.Framework.Update -= Update;
@@ -104,6 +112,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
         if (addedConfig)
             DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfig;
+
+        Dispose(true);
 
         pluginCommandManager?.Dispose();
         Hypostasis.Dispose();
