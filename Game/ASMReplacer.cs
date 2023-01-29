@@ -7,18 +7,19 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
-public class ASMReplacer : IDisposable
+public class AsmReplacer : IDisposable
 {
     public nint Address { get; private set; } = nint.Zero;
+    public string Signature { get; private set; } = string.Empty;
     private readonly byte[] newBytes;
     private readonly byte[] oldBytes;
     private readonly AsmHook hook = null;
     public bool IsEnabled { get; private set; } = false;
     public bool IsValid => Address != nint.Zero;
     public string ReadBytes => !IsValid ? string.Empty : oldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
-    private static readonly List<ASMReplacer> createdReplacers = new();
+    private static readonly List<AsmReplacer> createdReplacers = new();
 
-    public ASMReplacer(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmReplacer(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
     {
         if (addr == nint.Zero) return;
 
@@ -34,10 +35,11 @@ public class ASMReplacer : IDisposable
             Enable();
     }
 
-    public ASMReplacer(string sig, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmReplacer(string sig, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
     {
         var addr = nint.Zero;
-        try { addr = DalamudApi.SigScanner.ScanModule(sig); }
+        Signature = sig;
+        try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
         catch { PluginLog.LogError($"Failed to find signature {sig}"); }
         if (addr == nint.Zero) return;
 
@@ -53,10 +55,11 @@ public class ASMReplacer : IDisposable
             Enable();
     }
 
-    public ASMReplacer(string sig, string[] asm, bool startEnabled = false)
+    public AsmReplacer(string sig, string[] asm, bool startEnabled = false)
     {
         var addr = nint.Zero;
-        try { addr = DalamudApi.SigScanner.ScanModule(sig); }
+        Signature = sig;
+        try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
         catch { PluginLog.LogError($"Failed to find signature {sig}"); }
         if (addr == nint.Zero) return;
 

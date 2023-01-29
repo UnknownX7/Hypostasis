@@ -42,6 +42,6 @@ public static class Hypostasis
 #endif
         DalamudApi.Dispose();
         Common.Dispose();
-        ASMReplacer.DisposeAll();
+        AsmReplacer.DisposeAll();
     }
 }

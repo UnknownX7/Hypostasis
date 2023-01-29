@@ -23,7 +23,8 @@ public class SigScannerWrapper : IDisposable
             Pointer,
             Primitive,
             Hook,
-            AsmHook
+            AsmHook,
+            AsmReplacer
         }
 
         public Util.AssignableInfo AssignableInfo { get; set; }
@@ -49,27 +50,27 @@ public class SigScannerWrapper : IDisposable
 
     private const BindingFlags defaultBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-    private readonly SigScanner sigScanner;
     private readonly Dictionary<string, nint> sigCache = new();
     private readonly Dictionary<string, nint> staticSigCache = new();
     private readonly List<IDisposable> disposableHooks = new();
 
-    public ProcessModule Module => sigScanner.Module;
+    public SigScanner DalamudSigScanner { get; init; }
+    public ProcessModule Module => DalamudSigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
-    public nint BaseTextAddress => (nint)(BaseAddress + sigScanner.TextSectionOffset);
-    public nint BaseDataAddress => (nint)(BaseAddress + sigScanner.DataSectionOffset);
-    public nint BaseRDataAddress => (nint)(BaseAddress + sigScanner.RDataSectionOffset);
+    public nint BaseTextAddress => (nint)(BaseAddress + DalamudSigScanner.TextSectionOffset);
+    public nint BaseDataAddress => (nint)(BaseAddress + DalamudSigScanner.DataSectionOffset);
+    public nint BaseRDataAddress => (nint)(BaseAddress + DalamudSigScanner.RDataSectionOffset);
     public List<SignatureInfo> SignatureInfos { get; } = new();
     public Dictionary<int, (object, MemberInfo)> MemberInfos { get; } = new();
 
-    public SigScannerWrapper(SigScanner s) => sigScanner = s;
+    public SigScannerWrapper(SigScanner s) => DalamudSigScanner = s;
 
     public nint ScanText(string signature)
     {
         if (sigCache.TryGetValue(signature, out var ptr))
             return ptr;
 
-        ptr = sigScanner.ScanText(signature);
+        ptr = DalamudSigScanner.ScanText(signature);
         AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
@@ -79,7 +80,7 @@ public class SigScannerWrapper : IDisposable
         if (sigCache.TryGetValue(signature, out result))
             return true;
 
-        var b = sigScanner.TryScanText(signature, out result);
+        var b = DalamudSigScanner.TryScanText(signature, out result);
         AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
@@ -89,7 +90,7 @@ public class SigScannerWrapper : IDisposable
         if (sigCache.TryGetValue(signature, out var ptr))
             return ptr;
 
-        ptr = sigScanner.ScanData(signature);
+        ptr = DalamudSigScanner.ScanData(signature);
         AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
@@ -99,7 +100,7 @@ public class SigScannerWrapper : IDisposable
         if (sigCache.TryGetValue(signature, out result))
             return true;
 
-        var b = sigScanner.TryScanData(signature, out result);
+        var b = DalamudSigScanner.TryScanData(signature, out result);
         AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
@@ -109,7 +110,7 @@ public class SigScannerWrapper : IDisposable
         if (sigCache.TryGetValue(signature, out var ptr))
             return ptr;
 
-        ptr = sigScanner.ScanModule(signature);
+        ptr = DalamudSigScanner.ScanModule(signature);
         AddSignatureInfo(signature, ptr, 0, SignatureInfo.SignatureType.Text);
         return ptr;
     }
@@ -119,7 +120,7 @@ public class SigScannerWrapper : IDisposable
         if (sigCache.TryGetValue(signature, out result))
             return true;
 
-        var b = sigScanner.TryScanModule(signature, out result);
+        var b = DalamudSigScanner.TryScanModule(signature, out result);
         AddSignatureInfo(signature, result, 0, SignatureInfo.SignatureType.Text);
         return b;
     }
@@ -129,7 +130,7 @@ public class SigScannerWrapper : IDisposable
         if (offset == 0 && staticSigCache.TryGetValue(signature, out var ptr))
             return ptr;
 
-        ptr = sigScanner.GetStaticAddressFromSig(signature, offset);
+        ptr = DalamudSigScanner.GetStaticAddressFromSig(signature, offset);
         AddSignatureInfo(signature, ptr, offset, SignatureInfo.SignatureType.Static);
         return ptr;
     }
@@ -139,7 +140,7 @@ public class SigScannerWrapper : IDisposable
         if (offset == 0 && staticSigCache.TryGetValue(signature, out result))
             return true;
 
-        var b = sigScanner.TryGetStaticAddressFromSig(signature, out result, offset);
+        var b = DalamudSigScanner.TryGetStaticAddressFromSig(signature, out result, offset);
         AddSignatureInfo(signature, result, offset, SignatureInfo.SignatureType.Static);
         return b;
     }
@@ -176,7 +177,7 @@ public class SigScannerWrapper : IDisposable
 
     private Hook<T> HookSignature<T>(string signature, T detour, bool scanModule = false, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
     {
-        var address = !scanModule ? sigScanner.ScanText(signature) : sigScanner.ScanModule(signature);
+        var address = !scanModule ? DalamudSigScanner.ScanText(signature) : DalamudSigScanner.ScanModule(signature);
         var hook = Hook<T>.FromAddress(address, detour, useMinHook);
         AddSignatureInfo(signature, address, 0, SignatureInfo.SignatureType.Hook);
         AddHook(hook, startEnabled, autoDispose);
@@ -222,7 +223,7 @@ public class SigScannerWrapper : IDisposable
         MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
         SignatureInfos.Add(sigInfo);
 
-        if (sigAttribute.ScanType == ScanType.Text ? !sigScanner.TryScanText(signature, out var ptr) : !sigScanner.TryGetStaticAddressFromSig(signature, out ptr))
+        if (sigAttribute.ScanType == ScanType.Text ? !DalamudSigScanner.TryScanText(signature, out var ptr) : !DalamudSigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
             LogSignatureAttributeError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", throwOnFail);
             return;
@@ -378,6 +379,11 @@ public class SigScannerWrapper : IDisposable
         {
             MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
             SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.Hook, Address = hook.Address });
+        }
+        else if (assignableInfo.GetValue() is AsmReplacer replacer)
+        {
+            MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.AsmReplacer, Signature = replacer.Signature, Address = replacer.Address });
         }
     }
 
