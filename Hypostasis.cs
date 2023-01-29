@@ -8,11 +8,20 @@ namespace Hypostasis;
 
 public static class Hypostasis
 {
+    public enum PluginState
+    {
+        Loading,
+        Loaded,
+        Unloading,
+        Unloaded,
+        Failed
+    }
+
     public static string PluginName { get; private set; }
-    public static bool FailState { get; set; }
-    public static bool Debug { get; }
+    public static PluginState State { get; set; }
+    public static bool IsDebug { get; }
 #if DEBUG
-    = true;
+        = true;
 #endif
 
     public static void Initialize(string pluginName, DalamudPluginInterface pluginInterface)
@@ -20,17 +29,19 @@ public static class Hypostasis
         PluginName = pluginName;
         DalamudApi.Initialize(pluginInterface);
         Common.Initialize();
-        if (!Debug) return;
-        IPC.Initialize(pluginName);
+#if DEBUG
+        Debug.Initialize(pluginName);
+#endif
     }
 
-    public static void Dispose()
+    public static void Dispose(bool failed)
     {
-        if (Debug)
-            IPC.Dispose();
+#if DEBUG
+        if (!failed)
+            Debug.Dispose();
+#endif
         DalamudApi.Dispose();
         Common.Dispose();
         ASMReplacer.DisposeAll();
-        FailState = false;
     }
 }

@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿#if DEBUG
+using System.Collections.Generic;
 using System.Reflection;
 using Dalamud.Plugin.Ipc;
 
 namespace Hypostasis;
 
-public static class IPC
+public static class Debug
 {
     public const string HypostasisTag = "_HYPOSTASISPLUGINS";
     public static ICallGateProvider<List<SigScannerWrapper.SignatureInfo>> GetSigInfosProvider { get; private set; }
@@ -23,8 +24,6 @@ public static class IPC
 
     public static void Dispose()
     {
-        if (Hypostasis.FailState) return;
-
         if (DalamudApi.PluginInterface.TryGetData<HashSet<string>>(HypostasisTag, out var plugins))
             lock (plugins)
                 plugins.Remove(Hypostasis.PluginName);
@@ -34,3 +33,4 @@ public static class IPC
         GetMemberInfosProvider?.UnregisterFunc();
     }
 }
+#endif

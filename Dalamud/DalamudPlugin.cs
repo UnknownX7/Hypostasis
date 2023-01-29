@@ -38,6 +38,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         {
             PluginLog.Error(e, $"Failed loading Hypostasis for {printName}");
             Dispose();
+            Hypostasis.State = Hypostasis.PluginState.Failed;
             return;
         }
 
@@ -64,6 +65,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
                 addedConfig = true;
             }
+
+            Hypostasis.State = Hypostasis.PluginState.Loaded;
         }
         catch (Exception e)
         {
@@ -73,8 +76,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             ShowNotification($"\t\t\t{msg}\t\t\t\n\n", NotificationType.Error, 10_000);
             ShowErrorToast(msg);
             PrintError(msg);
-            Hypostasis.FailState = true;
             Dispose();
+            Hypostasis.State = Hypostasis.PluginState.Failed;
         }
     }
 
@@ -102,6 +105,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     public void Dispose()
     {
+        var failed = Hypostasis.State == Hypostasis.PluginState.Loading;
+        Hypostasis.State = Hypostasis.PluginState.Unloading;
         Config?.Save();
 
         if (addedUpdate)
@@ -116,8 +121,9 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         Dispose(true);
 
         pluginCommandManager?.Dispose();
-        Hypostasis.Dispose();
+        Hypostasis.Dispose(failed);
 
+        Hypostasis.State = Hypostasis.PluginState.Unloaded;
         GC.SuppressFinalize(this);
     }
 }
