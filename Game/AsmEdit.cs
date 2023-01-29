@@ -9,14 +9,14 @@ namespace Hypostasis.Game;
 
 public class AsmEdit : IDisposable
 {
-    public nint Address { get; private set; } = nint.Zero;
-    public string Signature { get; private set; } = string.Empty;
-    private readonly byte[] newBytes;
-    private readonly byte[] oldBytes;
-    private readonly AsmHook hook = null;
+    public nint Address { get; } = nint.Zero;
+    public string Signature { get; } = string.Empty;
+    public byte[] NewBytes { get; }
+    public byte[] OldBytes { get; }
     public bool IsEnabled { get; private set; } = false;
     public bool IsValid => Address != nint.Zero;
-    public string ReadBytes => !IsValid ? string.Empty : oldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
+    public string ReadBytes => !IsValid ? string.Empty : OldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
+    private readonly AsmHook hook = null;
     private static readonly List<AsmEdit> asmEdits = new();
 
     public AsmEdit(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
@@ -24,12 +24,13 @@ public class AsmEdit : IDisposable
         if (addr == nint.Zero) return;
 
         Address = addr;
-        newBytes = bytes;
-        SafeMemory.ReadBytes(addr, bytes.Length, out oldBytes);
+        NewBytes = bytes;
+        SafeMemory.ReadBytes(addr, bytes.Length, out var oldBytes);
+        OldBytes = oldBytes;
         asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, NewBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
@@ -44,12 +45,13 @@ public class AsmEdit : IDisposable
         if (addr == nint.Zero) return;
 
         Address = addr;
-        newBytes = bytes;
-        SafeMemory.ReadBytes(addr, bytes.Length, out oldBytes);
+        NewBytes = bytes;
+        SafeMemory.ReadBytes(addr, bytes.Length, out var oldBytes);
+        OldBytes = oldBytes;
         asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, NewBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
@@ -64,7 +66,8 @@ public class AsmEdit : IDisposable
         if (addr == nint.Zero) return;
 
         Address = addr;
-        SafeMemory.ReadBytes(addr, 7, out oldBytes);
+        SafeMemory.ReadBytes(addr, 7, out var oldBytes);
+        OldBytes = oldBytes;
         asmEdits.Add(this);
         hook = new(addr, asm, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
@@ -77,7 +80,7 @@ public class AsmEdit : IDisposable
         if (!IsValid) return;
 
         if (hook == null)
-            SafeMemory.WriteBytes(Address, newBytes);
+            SafeMemory.WriteBytes(Address, NewBytes);
         else
             hook.Enable();
 
@@ -89,7 +92,7 @@ public class AsmEdit : IDisposable
         if (!IsValid) return;
 
         if (hook == null)
-            SafeMemory.WriteBytes(Address, oldBytes);
+            SafeMemory.WriteBytes(Address, OldBytes);
         else
             hook.Disable();
 
@@ -111,7 +114,7 @@ public class AsmEdit : IDisposable
 
         if (hook == null) return;
         hook.Dispose();
-        SafeMemory.WriteBytes(Address, oldBytes);
+        SafeMemory.WriteBytes(Address, OldBytes);
 
         GC.SuppressFinalize(this);
     }
