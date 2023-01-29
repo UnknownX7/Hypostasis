@@ -7,7 +7,7 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
-public class AsmReplacer : IDisposable
+public class AsmEdit : IDisposable
 {
     public nint Address { get; private set; } = nint.Zero;
     public string Signature { get; private set; } = string.Empty;
@@ -17,25 +17,25 @@ public class AsmReplacer : IDisposable
     public bool IsEnabled { get; private set; } = false;
     public bool IsValid => Address != nint.Zero;
     public string ReadBytes => !IsValid ? string.Empty : oldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
-    private static readonly List<AsmReplacer> createdReplacers = new();
+    private static readonly List<AsmEdit> asmEdits = new();
 
-    public AsmReplacer(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmEdit(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
     {
         if (addr == nint.Zero) return;
 
         Address = addr;
         newBytes = bytes;
         SafeMemory.ReadBytes(addr, bytes.Length, out oldBytes);
-        createdReplacers.Add(this);
+        asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} Replacer#{createdReplacers.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
     }
 
-    public AsmReplacer(string sig, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmEdit(string sig, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
     {
         var addr = nint.Zero;
         Signature = sig;
@@ -46,16 +46,16 @@ public class AsmReplacer : IDisposable
         Address = addr;
         newBytes = bytes;
         SafeMemory.ReadBytes(addr, bytes.Length, out oldBytes);
-        createdReplacers.Add(this);
+        asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} Replacer#{createdReplacers.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, newBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
     }
 
-    public AsmReplacer(string sig, string[] asm, bool startEnabled = false)
+    public AsmEdit(string sig, string[] asm, bool startEnabled = false)
     {
         var addr = nint.Zero;
         Signature = sig;
@@ -65,8 +65,8 @@ public class AsmReplacer : IDisposable
 
         Address = addr;
         SafeMemory.ReadBytes(addr, 7, out oldBytes);
-        createdReplacers.Add(this);
-        hook = new(addr, asm, $"{Assembly.GetExecutingAssembly().GetName().Name} Replacer#{createdReplacers.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+        asmEdits.Add(this);
+        hook = new(addr, asm, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
@@ -118,7 +118,7 @@ public class AsmReplacer : IDisposable
 
     public static void DisposeAll()
     {
-        foreach (var rep in createdReplacers)
-            rep?.Dispose();
+        foreach (var edit in asmEdits)
+            edit?.Dispose();
     }
 }
