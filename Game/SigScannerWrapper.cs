@@ -216,7 +216,7 @@ public class SigScannerWrapper : IDisposable
             return;
         }
 
-        var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
+        var infallible = sigAttribute.Fallibility == Fallibility.Infallible;
         var signature = sigAttribute.Signature;
 
         var sigInfo = new SignatureInfo { SigAttribute = sigAttribute, ExAttribute = exAttribute, Signature = signature };
@@ -225,7 +225,7 @@ public class SigScannerWrapper : IDisposable
 
         if (sigAttribute.ScanType == ScanType.Text ? !DalamudSigScanner.TryScanText(signature, out var ptr) : !DalamudSigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
-            LogSignatureAttributeError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", throwOnFail);
+            LogSignatureAttributeError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", infallible);
             return;
         }
 
@@ -246,7 +246,7 @@ public class SigScannerWrapper : IDisposable
                 sigInfo.SigType = SignatureInfo.SignatureType.Hook;
                 if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Hook<>))
                 {
-                    LogSignatureAttributeError(ownerType, name, $"{type.Name} is not a Hook", throwOnFail);
+                    LogSignatureAttributeError(ownerType, name, $"{type.Name} is not a Hook", infallible);
                     return;
                 }
                 InjectHook(type, assignableInfo, o, ptr, sigAttribute, exAttribute);
@@ -258,7 +258,7 @@ public class SigScannerWrapper : IDisposable
                 assignableInfo.SetValue(offset);
                 break;
             default:
-                LogSignatureAttributeError(ownerType, name, "Unable to detect SignatureUseFlags", throwOnFail);
+                LogSignatureAttributeError(ownerType, name, "Unable to detect SignatureUseFlags", infallible);
                 return;
         }
     }
@@ -399,11 +399,11 @@ public class SigScannerWrapper : IDisposable
 
     public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, defaultBindingFlags)[0]);
 
-    private static void LogSignatureAttributeError(Type classType, string memberName, string message, bool doThrow)
+    private static void LogSignatureAttributeError(Type classType, string memberName, string message, bool infallible)
     {
         var errorMsg = $"Signature attribute error in {classType?.FullName}.{memberName}:\n{message}";
 
-        if (doThrow)
+        if (infallible)
             throw new ApplicationException(errorMsg);
 
         PluginLog.Warning(errorMsg);

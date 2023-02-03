@@ -2,8 +2,8 @@
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit)]
-public unsafe struct CameraManager
+[StructLayout(LayoutKind.Explicit), GameStructure("48 89 5C 24 08 57 48 83 EC 20 33 FF 48 8D 05 ?? ?? ?? ?? 48 89 79 28 48 8B D9")]
+public unsafe partial struct CameraManager : IHypostasisStructure
 {
     [FieldOffset(0x0)] public FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager CS;
     [FieldOffset(0x0)] public GameCamera* WorldCamera;

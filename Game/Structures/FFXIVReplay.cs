@@ -3,8 +3,8 @@ using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit, Size = 0x720), GameStructure("")]
-public unsafe struct FFXIVReplay
+[StructLayout(LayoutKind.Explicit, Size = 0x720), GameStructure("48 89 5C 24 08 57 48 83 EC 20 33 FF 48 8B D9 89 39 48 89 79 08")]
+public unsafe partial struct FFXIVReplay : IHypostasisStructure
 {
     [StructLayout(LayoutKind.Explicit, Size = 0x60)]
     public struct Header

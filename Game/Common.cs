@@ -1,4 +1,6 @@
-﻿using Dalamud.Utility.Signatures;
+﻿using System;
+using Dalamud.Logging;
+using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -112,6 +114,35 @@ public static unsafe class Common
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
 
     private static void AddMember(string member) => DalamudApi.SigScanner.AddMember(typeof(Common), null, member);
+
+    public static void InitializeStructure<T>(bool infallible = true) where T : IHypostasisStructure
+    {
+        try
+        {
+            DalamudApi.SigScanner.Inject(typeof(T), null, false);
+        }
+        catch (Exception e)
+        {
+            if (infallible)
+                throw;
+            PluginLog.Warning(e, "Failed loading structure");
+        }
+    }
+
+    public static void InitializeStructures(bool infallible, params Type[] types)
+    {
+        try
+        {
+            foreach (var type in types)
+                DalamudApi.SigScanner.Inject(type, null, false);
+        }
+        catch (Exception e)
+        {
+            if (infallible)
+                throw;
+            PluginLog.Warning(e, "Failed loading structure");
+        }
+    }
 
     public static void Initialize()
     {

@@ -1,9 +1,13 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
+using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+#pragma warning disable CA2211
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit)]
-public struct ActionManager
+[StructLayout(LayoutKind.Explicit), GameStructure("48 89 7C 24 08 45 33 C0 B8 00 00 00 E0")]
+public unsafe partial struct ActionManager : IHypostasisStructure
 {
     [FieldOffset(0x0)] public FFXIVClientStructs.FFXIV.Client.Game.ActionManager CS;
     [FieldOffset(0x8)] public float animationLock;
@@ -23,4 +27,25 @@ public struct ActionManager
     [FieldOffset(0x5EC)] public uint currentGCDAction;
     [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;
     [FieldOffset(0x5F4)] public float gcdRecastTime;
+
+    [Signature("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3", Fallibility = Fallibility.Infallible)]
+    public static delegate* unmanaged<uint, GameObject*, Bool> fpCanUseActionOnGameObject;
+    public static bool CanUseActionOnGameObject(uint actionID, GameObject* o)
+    {
+        if (fpCanUseActionOnGameObject == null)
+            throw new InvalidOperationException("InitializeStructure was not called on ActionManager");
+        return fpCanUseActionOnGameObject(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
+    }
+
+    [Signature("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00", Fallibility = Fallibility.Infallible)]
+    public static delegate* unmanaged<ActionManager*, uint, uint, Bool> fpCanActionQueue;
+    public bool CanActionQueue(uint actionType, uint actionID)
+    {
+        if (fpCanActionQueue == null)
+            throw new InvalidOperationException("InitializeStructure was not called on ActionManager");
+        fixed (ActionManager* ptr = &this)
+        {
+            return fpCanActionQueue(ptr, actionType, actionID);
+        }
+    }
 }

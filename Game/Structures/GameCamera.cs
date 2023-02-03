@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit)]
-public unsafe struct GameCamera
+[StructLayout(LayoutKind.Explicit), GameStructure("40 53 48 83 EC 20 48 8D 05 ?? ?? ?? ?? 48 8B D9 48 89 01 48 83 C1 10 E8 ?? ?? ?? ?? 0F B6 83 08 01 00 00 33 C9 24 FD")]
+public unsafe partial struct GameCamera : IHypostasisStructure
 {
     [FieldOffset(0x0)] public nint* vtbl;
     [FieldOffset(0x60)] public float x;
