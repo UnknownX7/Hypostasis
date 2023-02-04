@@ -212,7 +212,7 @@ public static partial class ImGuiEx
             ImGui.SetKeyboardFocusHere(0);
         }
 
-        if (ImGui.InputText("##ExcelSheetSearch", ref search, 128))
+        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref search, 128))
             filtered = null;
 
         ImGui.BeginChild("ExcelSheetSearchList", options.Size ?? new Vector2(0, 200 * ImGuiHelpers.GlobalScale), true);
@@ -222,7 +222,7 @@ public static partial class ImGuiEx
         filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
-        var selected = false;
+        var ret = false;
         var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
         foreach (var row in filtered.Cast<T>())
         {
@@ -230,19 +230,19 @@ public static partial class ImGuiEx
             if (drawSelectable(row, selectedRow == row.RowId))
             {
                 selectedRow = row.RowId;
-                selected = true;
+                ret = true;
                 break;
             }
             ImGui.PopID();
         }
 
         // ImGui issue #273849, children keep combos from closing automatically
-        if (selected)
+        if (ret)
             ImGui.CloseCurrentPopup();
 
         ImGui.EndChild();
         ImGui.EndCombo();
-        return selected;
+        return ret;
     }
 
     public class ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
@@ -268,7 +268,7 @@ public static partial class ImGuiEx
             ImGui.SetKeyboardFocusHere(0);
         }
 
-        if (ImGui.InputText("##ExcelSheetSearch", ref search, 128))
+        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref search, 128))
             filtered = null;
 
         ImGui.BeginChild("ExcelSheetSearchList", Vector2.Zero, true);
@@ -278,7 +278,7 @@ public static partial class ImGuiEx
         filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
-        var selected = false;
+        var ret = false;
         var selectableFlags = options.CloseOnSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.DontClosePopups;
         var drawSelectable = options.DrawSelectable ?? ((row, _) => ImGui.Selectable(options.FormatRow(row), false, selectableFlags));
         foreach (var row in filtered.Cast<T>())
@@ -287,14 +287,14 @@ public static partial class ImGuiEx
             if (drawSelectable(row, false))
             {
                 selectedRow = row.RowId;
-                selected = true;
+                ret = true;
             }
             ImGui.PopID();
         }
 
         ImGui.EndChild();
         ImGui.EndPopup();
-        return selected;
+        return ret;
     }
 
     public static bool FontButton(string label, ImFontPtr font)
