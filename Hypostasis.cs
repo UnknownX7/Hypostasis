@@ -40,6 +40,7 @@ public static class Hypostasis
         if (!failed)
             Debug.Dispose();
 #endif
+        ModuleManager.Dispose();
         DalamudApi.Dispose();
         Common.Dispose();
         AsmEdit.DisposeAll();
