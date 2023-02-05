@@ -202,8 +202,7 @@ public static partial class ImGuiEx
         if (sheet == null) return false;
 
         var getPreview = options.GetPreview ?? options.FormatRow;
-        if (!ImGui.BeginCombo(id, getPreview(sheet.GetRow(selectedRow)), options.ComboFlags | ImGuiComboFlags.HeightLargest)) return false;
-
+        if (!ImGui.BeginCombo(id, sheet.GetRow(selectedRow) is { } r ? getPreview(r) : selectedRow.ToString(), options.ComboFlags | ImGuiComboFlags.HeightLargest)) return false;
 
         if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
         {
@@ -254,7 +253,7 @@ public static partial class ImGuiEx
     public static bool ExcelSheetPopup<T>(string id, out uint selectedRow, ExcelSheetPopupOptions<T> options = null) where T : ExcelRow
     {
         options ??= new ExcelSheetPopupOptions<T>();
-        var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
+        var sheet = options.FilteredSheet ?? DalamudApi.DataManager.GetExcelSheet<T>();
         selectedRow = 0;
         if (sheet == null) return false;
 
@@ -273,9 +272,8 @@ public static partial class ImGuiEx
 
         ImGui.BeginChild("ExcelSheetSearchList", Vector2.Zero, true);
 
-        var filteredSheet = options.FilteredSheet ?? sheet;
         var searchPredicate = options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase));
-        filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
+        filtered ??= sheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
         var ret = false;
