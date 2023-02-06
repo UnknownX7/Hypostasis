@@ -18,6 +18,7 @@ public class SigScannerWrapper : IDisposable
         public enum SignatureType
         {
             None,
+            Scan,
             Text,
             Static,
             Pointer,
@@ -64,6 +65,38 @@ public class SigScannerWrapper : IDisposable
     public Dictionary<int, (object, MemberInfo)> MemberInfos { get; } = new();
 
     public SigScannerWrapper(SigScanner s) => DalamudSigScanner = s;
+
+    public nint Scan(nint address, int size, string signature)
+    {
+        var ptr = SigScanner.Scan(address, size, signature);
+
+        SignatureInfos.Add(new SignatureInfo
+        {
+            Signature = signature,
+            Address = ptr,
+            SigType = SignatureInfo.SignatureType.Scan
+        });
+
+        return ptr;
+    }
+
+    public nint Scan(nint address, nint endAddress, string signature) => Scan(address, (int)(endAddress - address), signature);
+
+    public bool TryScan(nint address, int size, string signature, out nint result)
+    {
+        var b = SigScanner.TryScan(address, size, signature, out result);
+
+        SignatureInfos.Add(new SignatureInfo
+        {
+            Signature = signature,
+            Address = result,
+            SigType = SignatureInfo.SignatureType.Scan
+        });
+
+        return b;
+    }
+
+    public bool TryScan(nint address, nint endAddress, string signature, out nint result) => TryScan(address, (int)(endAddress - address), signature, out result);
 
     public nint ScanText(string signature)
     {
@@ -157,14 +190,13 @@ public class SigScannerWrapper : IDisposable
                 break;
         }
 
-        var sigInfo = new SignatureInfo
+        SignatureInfos.Add(new SignatureInfo
         {
             Signature = signature,
             Offset = offset,
             Address = ptr,
             SigType = type
-        };
-        SignatureInfos.Add(sigInfo);
+        });
     }
 
     private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate

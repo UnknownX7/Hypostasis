@@ -132,19 +132,19 @@ public static partial class Util
             _ => false
         };
 
-    public static Vector2 RotateVector(Vector2 v, float a)
-    {
-        var aCos = (float)Math.Cos(a);
-        var aSin = (float)Math.Sin(a);
-        return RotateVector(v, aCos, aSin);
-    }
-
-    public static Vector2 RotateVector(Vector2 v, float aCos, float aSin) => new(v.X * aCos - v.Y * aSin, v.X * aSin + v.Y * aCos);
-
     public static object Cast(this Type type, object data)
     {
         var dataParam = Expression.Parameter(typeof(object), "data");
         var body = Expression.Block(Expression.Convert(Expression.Convert(dataParam, data.GetType()), type));
         return Expression.Lambda(body, dataParam).Compile().DynamicInvoke(data);
     }
+
+    public static Vector2 Rotate(this Vector2 v, float a)
+    {
+        var aCos = (float)Math.Cos(a);
+        var aSin = (float)Math.Sin(a);
+        return v.Rotate(aCos, aSin);
+    }
+
+    public static Vector2 Rotate(this Vector2 v, float aCos, float aSin) => new(v.X * aCos - v.Y * aSin, v.X * aSin + v.Y * aCos);
 }
