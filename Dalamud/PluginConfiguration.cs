@@ -53,7 +53,7 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
 
     private void UpdateVersion()
     {
-        var pluginVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        var pluginVersion = Util.AssemblyName.Version;
         if (PluginVersion == pluginVersion) return;
 
         var prevVersion = PluginVersion;

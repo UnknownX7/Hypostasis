@@ -61,6 +61,12 @@ public static partial class Util
         }
     }
 
+    public static Assembly Assembly => Assembly.GetExecutingAssembly();
+
+    public static Type[] AssemblyTypes => Assembly.GetTypes();
+
+    public static AssemblyName AssemblyName => Assembly.GetName();
+
     public static bool StartProcess(ProcessStartInfo startInfo)
     {
         try

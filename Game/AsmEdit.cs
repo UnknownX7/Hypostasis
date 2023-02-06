@@ -30,7 +30,7 @@ public class AsmEdit : IDisposable
         asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, NewBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, NewBytes, $"{Util.AssemblyName.Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
@@ -51,7 +51,7 @@ public class AsmEdit : IDisposable
         asmEdits.Add(this);
 
         if (useASMHook)
-            hook = new(addr, NewBytes, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+            hook = new(addr, NewBytes, $"{Util.AssemblyName.Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
@@ -69,7 +69,7 @@ public class AsmEdit : IDisposable
         SafeMemory.ReadBytes(addr, 7, out var oldBytes);
         OldBytes = oldBytes;
         asmEdits.Add(this);
-        hook = new(addr, asm, $"{Assembly.GetExecutingAssembly().GetName().Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
+        hook = new(addr, asm, $"{Util.AssemblyName.Name} AsmEdit#{asmEdits.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();

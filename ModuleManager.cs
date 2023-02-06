@@ -12,7 +12,7 @@ public static class ModuleManager
 
     public static void Initialize()
     {
-        foreach (var t in Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsSubclassOf(typeof(Module)) && !t.IsAbstract))
+        foreach (var t in Util.AssemblyTypes.Where(t => t.IsSubclassOf(typeof(Module)) && !t.IsAbstract))
         {
             var module = (Module)Activator.CreateInstance(t);
             if (module == null) continue;
