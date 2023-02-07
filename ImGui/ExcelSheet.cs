@@ -30,8 +30,29 @@ public static partial class ImGuiEx
         public bool CloseOnSelection { get; init; } = false;
     }
 
-    private static string search = string.Empty;
-    private static HashSet<ExcelRow> filtered;
+    private static string sheetSearchText = string.Empty;
+    private static HashSet<ExcelRow> filteredSearchSheet;
+    private static string prevSearchID = string.Empty;
+
+    private static void ExcelSheetSearchInput<T>(string id, IEnumerable<T> filteredSheet, Func<T, string, bool> searchPredicate) where T : ExcelRow
+    {
+        if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
+        {
+            if (id != prevSearchID)
+            {
+                sheetSearchText = string.Empty;
+                filteredSearchSheet = null;
+                prevSearchID = id;
+            }
+
+            ImGui.SetKeyboardFocusHere(0);
+        }
+
+        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref sheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
+            filteredSearchSheet = null;
+
+        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Select(s => (ExcelRow)s).ToHashSet();
+    }
 
     public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : ExcelRow
     {
@@ -42,26 +63,14 @@ public static partial class ImGuiEx
         var getPreview = options.GetPreview ?? options.FormatRow;
         if (!ImGui.BeginCombo(id, sheet.GetRow(selectedRow) is { } r ? getPreview(r) : selectedRow.ToString(), options.ComboFlags | ImGuiComboFlags.HeightLargest)) return false;
 
-        if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
-        {
-            search = string.Empty;
-            filtered = null;
-            ImGui.SetKeyboardFocusHere(0);
-        }
-
-        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref search, 128))
-            filtered = null;
+        ExcelSheetSearchInput(id, options.FilteredSheet ?? sheet, options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase)));
 
         ImGui.BeginChild("ExcelSheetSearchList", options.Size ?? new Vector2(0, 200 * ImGuiHelpers.GlobalScale), true);
-
-        var filteredSheet = options.FilteredSheet ?? sheet;
-        var searchPredicate = options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase));
-        filtered ??= filteredSheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
         var ret = false;
         var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
-        foreach (var row in filtered.Cast<T>())
+        foreach (var row in filteredSearchSheet.Cast<T>())
         {
             ImGui.PushID(i++);
             if (drawSelectable(row, selectedRow == row.RowId))
@@ -92,26 +101,15 @@ public static partial class ImGuiEx
         ImGui.SetNextWindowSize(options.Size ?? new Vector2(0, 250 * ImGuiHelpers.GlobalScale));
         if (!ImGui.BeginPopup(id, options.WindowFlags)) return false;
 
-        if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
-        {
-            search = string.Empty;
-            filtered = null;
-            ImGui.SetKeyboardFocusHere(0);
-        }
-
-        if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref search, 128))
-            filtered = null;
+        ExcelSheetSearchInput(id, sheet, options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase)));
 
         ImGui.BeginChild("ExcelSheetSearchList", Vector2.Zero, true);
-
-        var searchPredicate = options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase));
-        filtered ??= sheet.Where(s => searchPredicate(s, search)).Select(s => (ExcelRow)s).ToHashSet();
 
         var i = 0;
         var ret = false;
         var selectableFlags = options.CloseOnSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.DontClosePopups;
         var drawSelectable = options.DrawSelectable ?? ((row, _) => ImGui.Selectable(options.FormatRow(row), false, selectableFlags));
-        foreach (var row in filtered.Cast<T>())
+        foreach (var row in filteredSearchSheet.Cast<T>())
         {
             ImGui.PushID(i++);
             if (drawSelectable(row, false))
