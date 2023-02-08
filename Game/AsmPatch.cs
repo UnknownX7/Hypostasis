@@ -76,7 +76,7 @@ public class AsmPatch : IDisposable
 
     public void Enable()
     {
-        if (!IsValid) return;
+        if (IsEnabled || !IsValid) return;
 
         if (hook == null)
             SafeMemory.WriteBytes(Address, NewBytes);
@@ -88,7 +88,7 @@ public class AsmPatch : IDisposable
 
     public void Disable()
     {
-        if (!IsValid) return;
+        if (!IsEnabled || !IsValid) return;
 
         if (hook == null)
             SafeMemory.WriteBytes(Address, OldBytes);
