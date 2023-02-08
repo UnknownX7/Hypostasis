@@ -25,7 +25,7 @@ public class SigScannerWrapper : IDisposable
             Primitive,
             Hook,
             AsmHook,
-            AsmEdit
+            AsmPatch
         }
 
         public Util.AssignableInfo AssignableInfo { get; set; }
@@ -412,10 +412,10 @@ public class SigScannerWrapper : IDisposable
             MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
             SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.Hook, Address = hook.Address });
         }
-        else if (assignableInfo.GetValue() is AsmEdit edit)
+        else if (assignableInfo.GetValue() is AsmPatch patch)
         {
             MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
-            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.AsmEdit, Signature = edit.Signature, Address = edit.Address });
+            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.AsmPatch, Signature = patch.Signature, Address = patch.Address });
         }
     }
 

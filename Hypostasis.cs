@@ -43,6 +43,6 @@ public static class Hypostasis
         ModuleManager.Dispose();
         DalamudApi.Dispose();
         Common.Dispose();
-        AsmEdit.DisposeAll();
+        AsmPatch.DisposeAll();
     }
 }
