@@ -17,17 +17,26 @@ public static class Debug
         GetSigInfosProvider.RegisterFunc(() => DalamudApi.SigScanner.SignatureInfos);
         GetMemberInfosProvider = DalamudApi.PluginInterface.GetIpcProvider<Dictionary<int, (object, MemberInfo)>>($"{pluginName}.Hypostasis.GetMemberInfos");
         GetMemberInfosProvider.RegisterFunc(() => DalamudApi.SigScanner.MemberInfos);
+        DalamudApi.Framework.RunOnTick(EnableDebugging);
+    }
+
+    private static void EnableDebugging()
+    {
         var plugins = DalamudApi.PluginInterface.GetOrCreateData(HypostasisTag, () => new HashSet<string>());
         lock (plugins)
-            plugins.Add(pluginName);
+            plugins.Add(Hypostasis.PluginName);
+    }
+
+    private static void DisableDebugging()
+    {
+        if (!DalamudApi.PluginInterface.TryGetData<HashSet<string>>(HypostasisTag, out var plugins)) return;
+        lock (plugins)
+            plugins.Remove(Hypostasis.PluginName);
     }
 
     public static void Dispose()
     {
-        if (DalamudApi.PluginInterface.TryGetData<HashSet<string>>(HypostasisTag, out var plugins))
-            lock (plugins)
-                plugins.Remove(Hypostasis.PluginName);
-
+        DisableDebugging();
         DalamudApi.PluginInterface.RelinquishData(HypostasisTag);
         GetSigInfosProvider?.UnregisterFunc();
         GetMemberInfosProvider?.UnregisterFunc();
