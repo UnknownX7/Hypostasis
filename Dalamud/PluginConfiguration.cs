@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using Dalamud.Configuration;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;

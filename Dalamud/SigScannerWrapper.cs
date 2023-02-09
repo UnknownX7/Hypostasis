@@ -9,7 +9,38 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Hypostasis.Game;
+namespace Hypostasis.Dalamud;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public class InjectSignaturesAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class SignatureExAttribute : Attribute
+{
+    public bool EnableHook { get; init; } = true;
+    public bool DisposeHook { get; init; } = true;
+}
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class ClientStructsAttribute : Attribute
+{
+    public Type ClientStructsType { get; init; }
+    public string MemberName { get; init; } = "Instance";
+    public ClientStructsAttribute(Type type) => ClientStructsType = type;
+    public ClientStructsAttribute() { }
+}
+
+public class ClientStructsAttribute<T> : ClientStructsAttribute
+{
+    public ClientStructsAttribute() => ClientStructsType = typeof(T);
+}
+
+[AttributeUsage(AttributeTargets.Struct)]
+public class GameStructureAttribute : Attribute
+{
+    public string CtorSignature { get; init; }
+    public GameStructureAttribute(string ctor) => CtorSignature = ctor;
+}
 
 public class SigScannerWrapper : IDisposable
 {
