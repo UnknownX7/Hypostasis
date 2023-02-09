@@ -20,7 +20,7 @@ public static class ModuleManager
             if (module.IsValid)
             {
                 if (module.ShouldEnable)
-                    ToggleOrInvalidateModule(module, false);
+                    ToggleOrInvalidateModule(module, Hypostasis.IsDebug);
             }
             else
             {

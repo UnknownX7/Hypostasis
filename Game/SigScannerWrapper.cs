@@ -1,4 +1,4 @@
-﻿using Dalamud.Game;
+using Dalamud.Game;
 using Dalamud.Hooking;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -214,6 +214,16 @@ public class SigScannerWrapper : IDisposable
         AddSignatureInfo(signature, address, 0, SignatureInfo.SignatureType.Hook);
         AddHook(hook, startEnabled, autoDispose);
         return hook;
+    }
+
+    public void InjectSignatures()
+    {
+        foreach (var t in Util.AssemblyTypes)
+        {
+            var attribute = t.GetCustomAttribute<InjectSignaturesAttribute>();
+            if (attribute == null) continue;
+            Inject(t);
+        }
     }
 
     public void Inject(Type type, object o = null, bool addAllMembers = true)
