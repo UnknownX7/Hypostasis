@@ -41,7 +41,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, $"Failed loading Hypostasis for {printName}");
+            PluginLog.Error(e, $"Failed loading {nameof(Hypostasis)} for {printName}");
             Dispose();
             Hypostasis.State = Hypostasis.PluginState.Failed;
             return;
@@ -60,19 +60,19 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
             var derivedType = typeof(P);
 
-            if (derivedType.GetMethod("Update", bindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(Update), bindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
             {
                 DalamudApi.Framework.Update += Update;
                 addedUpdate = true;
             }
 
-            if (derivedType.GetMethod("Draw", bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(Draw), bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
             {
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
                 addedDraw = true;
             }
 
-            if (derivedType.GetMethod("ToggleConfig", bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(ToggleConfig), bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
             {
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
                 addedConfig = true;
@@ -81,7 +81,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             Hypostasis.State = Hypostasis.PluginState.Loaded;
 
 #if DEBUG
-            ShowNotification($"Hypostasis initialized in {hypostasisMS} ms\nPlugin initialized in {stopwatch.Elapsed.TotalMilliseconds} ms", NotificationType.Info);
+            ShowNotification($"{nameof(Hypostasis)} initialized in {hypostasisMS} ms\nPlugin initialized in {stopwatch.Elapsed.TotalMilliseconds} ms", NotificationType.Info);
 #endif
         }
         catch (Exception e)

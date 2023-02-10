@@ -21,7 +21,7 @@ public static unsafe class Common
         get
         {
             if (ffxivReplay == null)
-                InjectMember("ffxivReplay");
+                InjectMember(nameof(ffxivReplay));
             return ffxivReplay;
         }
     }
@@ -33,7 +33,7 @@ public static unsafe class Common
         get
         {
             if (cameraManager == null)
-                InjectMember("cameraManager");
+                InjectMember(nameof(cameraManager));
             return cameraManager;
         }
     }
@@ -45,7 +45,7 @@ public static unsafe class Common
         get
         {
             if (actionManager == null)
-                InjectMember("actionManager");
+                InjectMember(nameof(actionManager));
             return actionManager;
         }
     }
@@ -57,7 +57,7 @@ public static unsafe class Common
         get
         {
             if (framework == null)
-                InjectMember("framework");
+                InjectMember(nameof(framework));
             return framework;
         }
     }
@@ -69,7 +69,7 @@ public static unsafe class Common
         {
             if (uiModule != null) return uiModule;
             uiModule = Framework->UIModule;
-            AddMember("uiModule");
+            AddMember(nameof(uiModule));
             return uiModule;
         }
     }
@@ -81,7 +81,7 @@ public static unsafe class Common
         {
             if (raptureShellModule != null) return raptureShellModule;
             raptureShellModule = UIModule->GetRaptureShellModule();
-            AddMember("raptureShellModule");
+            AddMember(nameof(raptureShellModule));
             return raptureShellModule;
         }
     }
@@ -93,7 +93,7 @@ public static unsafe class Common
         {
             if (pronounModule != null) return pronounModule;
             pronounModule = UIModule->GetPronounModule();
-            AddMember("pronounModule");
+            AddMember(nameof(pronounModule));
             return pronounModule;
         }
     }
@@ -139,7 +139,7 @@ public static unsafe class Common
     public static GameObject* GetGameObjectFromPronounID(PronounID id)
     {
         if (getGameObjectFromPronounID == null)
-            InjectMember("getGameObjectFromPronounID");
+            InjectMember(nameof(getGameObjectFromPronounID));
         return getGameObjectFromPronounID(PronounModule, id);
     }
 

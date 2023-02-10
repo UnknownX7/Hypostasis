@@ -33,7 +33,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static bool CanUseActionOnGameObject(uint actionID, GameObject* o)
     {
         if (fpCanUseActionOnGameObject == null)
-            throw new InvalidOperationException("InitializeStructure was not called on ActionManager");
+            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
         return fpCanUseActionOnGameObject(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
     }
 
@@ -42,7 +42,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public bool CanActionQueue(uint actionType, uint actionID)
     {
         if (fpCanActionQueue == null)
-            throw new InvalidOperationException("InitializeStructure was not called on ActionManager");
+            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
         fixed (ActionManager* ptr = &this)
         {
             return fpCanActionQueue(ptr, actionType, actionID);

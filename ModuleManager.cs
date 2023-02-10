@@ -24,7 +24,7 @@ public static class ModuleManager
             }
             else
             {
-                PluginLog.Warning($"{t}.Initialize() failed!");
+                PluginLog.Warning($"{t} failed to load!");
             }
 
             t.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)?.SetValue(null, module);
