@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using Dalamud.Configuration;
 using Dalamud.Game;
@@ -24,6 +25,10 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     protected DalamudPlugin(DalamudPluginInterface pluginInterface)
     {
+#if DEBUG
+        var stopwatch = Stopwatch.StartNew();
+#endif
+
         try
         {
             Plugin = this as P;
@@ -41,6 +46,11 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             Hypostasis.State = Hypostasis.PluginState.Failed;
             return;
         }
+
+#if DEBUG
+        var hypostasisMS = stopwatch.Elapsed.TotalMilliseconds;
+        stopwatch.Restart();
+#endif
 
         try
         {
@@ -69,6 +79,10 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             }
 
             Hypostasis.State = Hypostasis.PluginState.Loaded;
+
+#if DEBUG
+            ShowNotification($"Hypostasis initialized in {hypostasisMS} ms\nPlugin initialized in {stopwatch.Elapsed.TotalMilliseconds} ms", NotificationType.Info);
+#endif
         }
         catch (Exception e)
         {
