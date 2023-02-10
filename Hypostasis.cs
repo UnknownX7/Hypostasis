@@ -24,13 +24,13 @@ public static class Hypostasis
         = true;
 #endif
 
-    public static void Initialize(string pluginName, DalamudPluginInterface pluginInterface)
+    public static void Initialize(IDalamudPlugin plugin, DalamudPluginInterface pluginInterface)
     {
-        PluginName = pluginName;
+        PluginName = plugin.Name;
         DalamudApi.Initialize(pluginInterface);
         Common.Initialize();
 #if DEBUG
-        Debug.Initialize(pluginName);
+        Debug.Initialize(plugin);
 #endif
     }
 

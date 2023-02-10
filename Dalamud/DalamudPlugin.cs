@@ -35,7 +35,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             printName = Name;
             printHeader = $"[{printName}] ";
 
-            Hypostasis.Initialize(printName, pluginInterface);
+            Hypostasis.Initialize(Plugin, pluginInterface);
             Config = PluginConfiguration<C>.LoadConfig();
             pluginCommandManager = new(Plugin);
         }
