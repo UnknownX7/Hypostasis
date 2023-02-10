@@ -1,21 +1,25 @@
 ﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Dalamud.Interface;
 
 namespace ImGuiNET;
 
 public static partial class ImGuiEx
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetItemTooltip(string s, ImGuiHoveredFlags flags = ImGuiHoveredFlags.None)
     {
         if (ImGui.IsItemHovered(flags))
             ImGui.SetTooltip(s);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton.Left, ImGuiHoveredFlags flags = ImGuiHoveredFlags.None) =>
         ImGui.IsMouseDoubleClicked(button) && ImGui.IsItemHovered(flags);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsItemReleased(ImGuiMouseButton button = ImGuiMouseButton.Left, ImGuiHoveredFlags flags = ImGuiHoveredFlags.None) =>
         ImGui.IsMouseReleased(button) && ImGui.IsItemHovered(flags);
 
@@ -77,6 +81,7 @@ public static partial class ImGuiEx
         return b;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string GetClipboardTextOrDefault(string def = "")
     {
         try { return ImGui.GetClipboardText(); }
