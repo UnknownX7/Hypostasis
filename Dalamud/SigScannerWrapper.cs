@@ -25,7 +25,7 @@ public class SignatureExAttribute : Attribute
 public class ClientStructsAttribute : Attribute
 {
     public Type ClientStructsType { get; init; }
-    public string MemberName { get; init; } = "Instance";
+    public string MemberName { get; init; } = nameof(FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance);
     public ClientStructsAttribute(Type type) => ClientStructsType = type;
     public ClientStructsAttribute() { }
 }
