@@ -1,3 +1,6 @@
+using System;
+using Dalamud.Logging;
+
 namespace Hypostasis;
 
 public abstract class Module
@@ -7,7 +10,18 @@ public abstract class Module
     private bool? isValid;
     public bool IsValid
     {
-        get => isValid ?? (isValid = Validate()).Value;
+        get
+        {
+            try
+            {
+                return isValid ?? (isValid = Validate()).Value;
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error(e, $"Error validating {this}");
+                return (isValid = false).Value;
+            }
+        }
         set
         {
             if (!value)
