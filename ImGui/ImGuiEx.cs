@@ -126,4 +126,13 @@ public static partial class ImGuiEx
         ImGui.PopFont();
         return ret;
     }
+
+    // No way to block the title bar
+    public static void BlockWindowDrag()
+    {
+        var io = ImGui.GetIO();
+        var prev = io.ConfigWindowsMoveFromTitleBarOnly;
+        io.ConfigWindowsMoveFromTitleBarOnly = true;
+        DalamudApi.Framework.RunOnTick(() => io.ConfigWindowsMoveFromTitleBarOnly = prev);
+    }
 }

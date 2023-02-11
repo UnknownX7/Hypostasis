@@ -11,11 +11,7 @@ public class PluginCommandAttribute : Attribute
     public string[] Commands { get; init; }
     public string HelpMessage { get; init; } = string.Empty;
     public bool ShowInHelp { get; init; } = true;
-
-    public PluginCommandAttribute(params string[] commands)
-    {
-        Commands = commands;
-    }
+    public PluginCommandAttribute(params string[] commands) => Commands = commands;
 }
 
 public class PluginCommandManager : IDisposable
