@@ -132,6 +132,8 @@ public static partial class Util
             _ => false
         };
 
+    public static bool IsValidHookAddress(this nint address) => DalamudApi.SigScanner.IsValidHookAddress(address);
+
     public static object Cast(this Type type, object data)
     {
         var dataParam = Expression.Parameter(typeof(object), "data");

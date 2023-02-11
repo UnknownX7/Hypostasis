@@ -285,7 +285,7 @@ public class SigScannerWrapper : IDisposable
 
         if (ownerType == null)
         {
-            LogSignatureAttributeError(null, name, "ReflectedType was null!", true);
+            LogInjectError(null, name, "ReflectedType was null!", true);
             return;
         }
 
@@ -298,7 +298,7 @@ public class SigScannerWrapper : IDisposable
 
         if (sigAttribute.ScanType == ScanType.Text ? !DalamudSigScanner.TryScanText(signature, out var ptr) : !DalamudSigScanner.TryGetStaticAddressFromSig(signature, out ptr))
         {
-            LogSignatureAttributeError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", infallible);
+            LogInjectError(ownerType, name, $"Failed to find {sigAttribute.Signature} ({sigAttribute.ScanType}) signature", infallible);
             return;
         }
 
@@ -319,7 +319,7 @@ public class SigScannerWrapper : IDisposable
                 sigInfo.SigType = SignatureInfo.SignatureType.Hook;
                 if (!type.IsGenericType || type.GetGenericTypeDefinition() != typeof(Hook<>))
                 {
-                    LogSignatureAttributeError(ownerType, name, $"{type.Name} is not a Hook", infallible);
+                    LogInjectError(ownerType, name, $"{type.Name} is not a Hook", infallible);
                     return;
                 }
                 InjectHook(type, assignableInfo, o, ptr, sigAttribute, exAttribute);
@@ -331,7 +331,7 @@ public class SigScannerWrapper : IDisposable
                 assignableInfo.SetValue(offset);
                 break;
             default:
-                LogSignatureAttributeError(ownerType, name, "Unable to detect SignatureUseFlags", infallible);
+                LogInjectError(ownerType, name, "Unable to detect SignatureUseFlags", infallible);
                 return;
         }
     }
@@ -376,6 +376,13 @@ public class SigScannerWrapper : IDisposable
         var hookDelegateType = type.GenericTypeArguments[0];
         var name = assignableInfo.Name;
         var throwOnFail = sigAttribute.Fallibility == Fallibility.Infallible;
+
+        if (!IsValidHookAddress(ptr))
+        {
+            LogInjectError(ownerType, name, $"Attempted to place hook on invalid location {ptr:X}", throwOnFail);
+            return;
+        }
+
         var detour = GetMethodDelegate(ownerType, hookDelegateType, o, name.Replace("Hook", "Detour"));
 
         if (detour == null)
@@ -386,7 +393,7 @@ public class SigScannerWrapper : IDisposable
                 detour = GetMethodDelegate(ownerType, hookDelegateType, o, detourName);
                 if (detour == null)
                 {
-                    LogSignatureAttributeError(ownerType, name, $"Detour not found or was incompatible with delegate \"{detourName}\" {hookDelegateType.Name}", throwOnFail);
+                    LogInjectError(ownerType, name, $"Detour not found or was incompatible with delegate \"{detourName}\" {hookDelegateType.Name}", throwOnFail);
                     return;
                 }
             }
@@ -395,7 +402,7 @@ public class SigScannerWrapper : IDisposable
                 var matches = GetMethodDelegates(ownerType, hookDelegateType, o);
                 if (matches.Length != 1)
                 {
-                    LogSignatureAttributeError(ownerType, name, $"Found {matches.Length} matching detours: specify a detour name", throwOnFail);
+                    LogInjectError(ownerType, name, $"Found {matches.Length} matching detours: specify a detour name", throwOnFail);
                     return;
                 }
 
@@ -406,7 +413,7 @@ public class SigScannerWrapper : IDisposable
         var ctor = type.GetConstructor(new[] { typeof(nint), hookDelegateType });
         if (ctor == null)
         {
-            LogSignatureAttributeError(ownerType, name, "Could not find Hook constructor", throwOnFail);
+            LogInjectError(ownerType, name, "Could not find Hook constructor", throwOnFail);
             return;
         }
 
@@ -472,15 +479,17 @@ public class SigScannerWrapper : IDisposable
 
     public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, defaultBindingFlags)[0]);
 
-    private static void LogSignatureAttributeError(Type classType, string memberName, string message, bool infallible)
+    private static void LogInjectError(Type classType, string memberName, string message, bool infallible)
     {
-        var errorMsg = $"Signature attribute error in {classType?.FullName}.{memberName}:\n{message}";
+        var errorMsg = $"Error injecting {classType?.FullName}.{memberName}:\n{message}";
 
         if (infallible)
             throw new ApplicationException(errorMsg);
 
         PluginLog.Warning(errorMsg);
     }
+
+    public unsafe bool IsValidHookAddress(nint address) => address == BaseTextAddress || (address > BaseTextAddress && address < BaseRDataAddress && *(byte*)address != 0xCC && *(byte*)(address - 1) == 0xCC);
 
     public void Dispose()
     {
