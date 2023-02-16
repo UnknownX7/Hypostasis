@@ -3,9 +3,9 @@ using Dalamud.Logging;
 
 namespace Hypostasis;
 
-public abstract class Module
+public abstract class PluginModule
 {
-    //public static Module Instance { get; private set; } // Can be implemented to enable access to a module's instance
+    //public static PluginModule Instance { get; private set; } // Can be implemented to enable access to a plugin module's instance
 
     private bool? isValid;
     public bool IsValid

@@ -40,7 +40,7 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
 
     public void Save()
     {
-        ModuleManager.CheckModules();
+        PluginModuleManager.CheckModules();
         DalamudApi.PluginInterface.SavePluginConfig(this as T);
     }
 

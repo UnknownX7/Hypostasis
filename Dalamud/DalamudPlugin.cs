@@ -56,7 +56,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         {
             DalamudApi.SigScanner.InjectSignatures();
             Initialize();
-            ModuleManager.Initialize();
+            PluginModuleManager.Initialize();
 
             var derivedType = typeof(P);
 
