@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Interface;
 using Lumina.Excel;
+using System.Reflection;
 
 namespace ImGuiNET;
 
@@ -123,5 +124,52 @@ public static partial class ImGuiEx
         ImGui.EndChild();
         ImGui.EndPopup();
         return ret;
+    }
+
+    public static void ExcelSheetTable<T>(string id) where T : ExcelRow
+    {
+        var properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
+        var columns = properties.Length;
+        if (columns == 0 || !ImGui.BeginTable(id, columns + 1, ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY)) return;
+
+        ImGui.TableSetupScrollFreeze(1, 1);
+        ImGui.TableSetupColumn("Row");
+        foreach (var propertyInfo in properties)
+            ImGui.TableSetupColumn(propertyInfo.Name);
+        ImGui.TableHeadersRow();
+
+        var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
+        if (sheet != null)
+        {
+            using var clipper = new ListClipper((int)sheet.RowCount);
+            foreach (var i in clipper.Rows)
+            {
+                var row = sheet.GetRow((uint)i);
+                if (row == null) continue;
+
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
+                ImGui.TextUnformatted(row.RowId.ToString());
+                ImGui.TableNextColumn();
+
+                for (int j = 0; j < properties.Length; j++)
+                {
+                    var propertyInfo = properties[j];
+                    var value = propertyInfo.GetValue(row);
+                    var valueStr = value switch
+                    {
+                        ILazyRow lazyRow => lazyRow.Row.ToString(),
+                        _ => value?.ToString() ?? string.Empty
+                    };
+
+                    ImGui.TextUnformatted(valueStr);
+                    if (j != properties.Length - 1)
+                        ImGui.TableNextColumn();
+                }
+            }
+        }
+
+        ImGui.EndTable();
     }
 }
