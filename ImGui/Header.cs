@@ -6,7 +6,7 @@ namespace ImGuiNET;
 
 public static partial class ImGuiEx
 {
-    public class HeaderIconOptions
+    public record HeaderIconOptions
     {
         public int Position { get; init; } = 1;
         public Vector2 Offset { get; init; } = Vector2.Zero;

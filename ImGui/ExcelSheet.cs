@@ -10,7 +10,7 @@ namespace ImGuiNET;
 
 public static partial class ImGuiEx
 {
-    public class ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetOptions<T> where T : ExcelRow
     {
         public Func<T, string> FormatRow { get; init; } = row => row.ToString();
         public Func<T, string, bool> SearchPredicate { get; init; } = null;
@@ -19,20 +19,21 @@ public static partial class ImGuiEx
         public Vector2? Size { get; init; } = null;
     }
 
-    public class ExcelSheetComboOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetComboOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
     {
         public Func<T, string> GetPreview { get; init; } = null;
         public ImGuiComboFlags ComboFlags { get; init; } = ImGuiComboFlags.None;
     }
 
-    public class ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
     {
-        public ImGuiWindowFlags WindowFlags { get; init; } = ImGuiWindowFlags.None;
+        public ImGuiPopupFlags PopupFlags { get; init; } = ImGuiPopupFlags.None;
         public bool CloseOnSelection { get; init; } = false;
+        public Func<T, bool> IsRowSelected { get; init; } = _ => false;
     }
 
     private static string sheetSearchText = string.Empty;
-    private static HashSet<ExcelRow> filteredSearchSheet;
+    private static List<ExcelRow> filteredSearchSheet;
     private static string prevSearchID = string.Empty;
 
     private static void ExcelSheetSearchInput<T>(string id, IEnumerable<T> filteredSheet, Func<T, string, bool> searchPredicate) where T : ExcelRow
@@ -52,7 +53,7 @@ public static partial class ImGuiEx
         if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref sheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
             filteredSearchSheet = null;
 
-        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Select(s => (ExcelRow)s).ToHashSet();
+        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Select(s => (ExcelRow)s).ToList();
     }
 
     public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : ExcelRow
@@ -68,22 +69,25 @@ public static partial class ImGuiEx
 
         ImGui.BeginChild("ExcelSheetSearchList", options.Size ?? new Vector2(0, 200 * ImGuiHelpers.GlobalScale), true);
 
-        var i = 0;
         var ret = false;
         var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
-        foreach (var row in filteredSearchSheet.Cast<T>())
+        using (var clipper = new ListClipper(filteredSearchSheet.Count))
         {
-            ImGui.PushID(i++);
-            if (drawSelectable(row, selectedRow == row.RowId))
+            foreach (var i in clipper.Rows)
             {
-                selectedRow = row.RowId;
-                ret = true;
-                break;
+                var row = (T)filteredSearchSheet[i];
+                ImGui.PushID(i);
+                if (drawSelectable(row, selectedRow == row.RowId))
+                {
+                    selectedRow = row.RowId;
+                    ret = true;
+                }
+                ImGui.PopID();
+                if (ret) break;
             }
-            ImGui.PopID();
         }
 
-        // ImGui issue #273849, children keep combos from closing automatically
+        // ImGui issue #273849, children keep popups from closing automatically
         if (ret)
             ImGui.CloseCurrentPopup();
 
@@ -100,30 +104,48 @@ public static partial class ImGuiEx
         if (sheet == null) return false;
 
         ImGui.SetNextWindowSize(options.Size ?? new Vector2(0, 250 * ImGuiHelpers.GlobalScale));
-        if (!ImGui.BeginPopup(id, options.WindowFlags)) return false;
+        if (!ImGui.BeginPopupContextItem(id, options.PopupFlags)) return false;
 
         ExcelSheetSearchInput(id, sheet, options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase)));
 
         ImGui.BeginChild("ExcelSheetSearchList", Vector2.Zero, true);
 
-        var i = 0;
         var ret = false;
-        var selectableFlags = options.CloseOnSelection ? ImGuiSelectableFlags.None : ImGuiSelectableFlags.DontClosePopups;
-        var drawSelectable = options.DrawSelectable ?? ((row, _) => ImGui.Selectable(options.FormatRow(row), false, selectableFlags));
-        foreach (var row in filteredSearchSheet.Cast<T>())
+        var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
+        using (var clipper = new ListClipper(filteredSearchSheet.Count))
         {
-            ImGui.PushID(i++);
-            if (drawSelectable(row, false))
+            foreach (var i in clipper.Rows)
             {
-                selectedRow = row.RowId;
-                ret = true;
+                var row = (T)filteredSearchSheet[i];
+                ImGui.PushID(i);
+                if (drawSelectable(row, options.IsRowSelected(row)))
+                {
+                    selectedRow = row.RowId;
+                    ret = true;
+                }
+                ImGui.PopID();
             }
-            ImGui.PopID();
         }
+
+        // ImGui issue #273849, children keep popups from closing automatically
+        if (ret && options.CloseOnSelection)
+            ImGui.CloseCurrentPopup();
 
         ImGui.EndChild();
         ImGui.EndPopup();
         return ret;
+    }
+
+    public static bool ExcelSheetMultiselectPopup<T>(string id, ICollection<uint> selectedRows, ExcelSheetPopupOptions<T> options = null) where T : ExcelRow
+    {
+        options ??= new ExcelSheetPopupOptions<T>();
+        options = options with { IsRowSelected = row => selectedRows.Contains(row.RowId) };
+        if (!ExcelSheetPopup(id, out var selectedRow, options)) return false;
+        if (!selectedRows.Contains(selectedRow))
+            selectedRows.Add(selectedRow);
+        else
+            selectedRows.Remove(selectedRow);
+        return true;
     }
 
     public static void ExcelSheetTable<T>(string id) where T : ExcelRow
