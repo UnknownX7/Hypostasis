@@ -32,9 +32,10 @@ public static partial class ImGuiEx
         public Func<T, bool> IsRowSelected { get; init; } = _ => false;
     }
 
-    private static string sheetSearchText = string.Empty;
+    private static string sheetSearchText;
     private static List<ExcelRow> filteredSearchSheet;
-    private static string prevSearchID = string.Empty;
+    private static string prevSearchID;
+    private static Type prevSearchType;
 
     private static void ExcelSheetSearchInput<T>(string id, IEnumerable<T> filteredSheet, Func<T, string, bool> searchPredicate) where T : ExcelRow
     {
@@ -42,7 +43,12 @@ public static partial class ImGuiEx
         {
             if (id != prevSearchID)
             {
-                sheetSearchText = string.Empty;
+                if (typeof(T) != prevSearchType)
+                {
+                    sheetSearchText = string.Empty;
+                    prevSearchType = typeof(T);
+                }
+
                 filteredSearchSheet = null;
                 prevSearchID = id;
             }
