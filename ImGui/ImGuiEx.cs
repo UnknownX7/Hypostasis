@@ -135,4 +135,16 @@ public static partial class ImGuiEx
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         DalamudApi.Framework.RunOnTick(() => io.ConfigWindowsMoveFromTitleBarOnly = prev);
     }
+
+    public static void Prefix(string prefix = "◇")
+    {
+        var dummySize = new Vector2(ImGui.GetFrameHeight());
+        ImGui.Dummy(dummySize);
+        var itemRectMin = ImGui.GetItemRectMin();
+        ImGui.PushClipRect(itemRectMin, ImGui.GetItemRectMax(), true);
+        var textSize = ImGui.CalcTextSize(prefix);
+        ImGui.GetWindowDrawList().AddText(itemRectMin + (dummySize - textSize) / 2, ImGui.GetColorU32(ImGuiCol.Text), prefix);
+        ImGui.PopClipRect();
+        ImGui.SameLine();
+    }
 }
