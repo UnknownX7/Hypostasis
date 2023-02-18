@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace ImGuiNET;
@@ -15,11 +16,11 @@ public static partial class ImGuiEx
         public float BorderRounding { get; init; } = ImGui.GetStyle().FrameRounding;
     }
 
-    private static GroupBoxOptions currentGroupBoxOptions;
+    private static readonly Stack<GroupBoxOptions> groupBoxOptionsStack = new();
     public static bool BeginGroupBox(string id = null, float minimumWindowPercent = 1.0f, GroupBoxOptions options = null)
     {
         options ??= new GroupBoxOptions();
-        currentGroupBoxOptions = options;
+        groupBoxOptionsStack.Push(options);
         ImGui.BeginGroup();
 
         var open = true;
@@ -63,11 +64,12 @@ public static partial class ImGuiEx
 
     public static void EndGroupBox()
     {
-        ImGui.Unindent(Math.Max(currentGroupBoxOptions.BorderPadding.X, 0.01f));
+        var options = groupBoxOptionsStack.Pop();
+        ImGui.Unindent(Math.Max(options.BorderPadding.X, 0.01f));
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - ImGui.GetStyle().ItemSpacing.Y);
-        ImGui.Dummy(currentGroupBoxOptions.BorderPadding with { X = 0 });
+        ImGui.Dummy(options.BorderPadding with { X = 0 });
         ImGui.EndGroup();
-        ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), currentGroupBoxOptions.BorderColor, currentGroupBoxOptions.BorderRounding);
+        ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), options.BorderColor, options.BorderRounding);
         ImGui.EndGroup();
     }
 }

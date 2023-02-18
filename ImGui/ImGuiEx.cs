@@ -147,4 +147,40 @@ public static partial class ImGuiEx
         ImGui.PopClipRect();
         ImGui.SameLine();
     }
+
+    public static bool RadioBox(string label, ref int v, string[] optionsArray, bool vertical)
+    {
+        if (!BeginGroupBox(label, 0)) return false;
+
+        var ret = false;
+        var numOptions = optionsArray.Length;
+
+        ImGui.PushID(label);
+        for (int i = 0; i < numOptions; i++)
+        {
+            var option = optionsArray[i];
+            var selected = v == i;
+            ret |= ImGui.RadioButton(vertical ? option : $"##{i}", ref v, i) && !selected;
+            if (vertical) continue;
+            SetItemTooltip(option);
+            if (i != numOptions - 1)
+                ImGui.SameLine();
+        }
+        ImGui.PopID();
+
+
+        if (!vertical && v >= 0 && v < numOptions)
+        {
+            ImGui.SameLine();
+            ImGui.TextUnformatted(optionsArray[v]);
+        }
+
+        ImGui.SameLine();
+        ImGui.Dummy(Vector2.Zero);
+
+        EndGroupBox();
+        return ret;
+    }
+
+    public static bool RadioBox(string label, ref int v, string options, bool vertical) => RadioBox(label, ref v, options.Split('\0'), vertical);
 }
