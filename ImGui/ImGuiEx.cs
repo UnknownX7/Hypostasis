@@ -136,15 +136,17 @@ public static partial class ImGuiEx
         DalamudApi.Framework.RunOnTick(() => io.ConfigWindowsMoveFromTitleBarOnly = prev);
     }
 
+    private static void AddTextCentered(Vector2 pos, string text, uint color)
+    {
+        var textSize = ImGui.CalcTextSize(text);
+        ImGui.GetWindowDrawList().AddText(pos - textSize / 2, color, text);
+    }
+
     public static void Prefix(string prefix = "◇")
     {
         var dummySize = new Vector2(ImGui.GetFrameHeight());
         ImGui.Dummy(dummySize);
-        var itemRectMin = ImGui.GetItemRectMin();
-        ImGui.PushClipRect(itemRectMin, ImGui.GetItemRectMax(), true);
-        var textSize = ImGui.CalcTextSize(prefix);
-        ImGui.GetWindowDrawList().AddText(itemRectMin + (dummySize - textSize) / 2, ImGui.GetColorU32(ImGuiCol.Text), prefix);
-        ImGui.PopClipRect();
+        AddTextCentered(ImGui.GetItemRectMin() + dummySize / 2, prefix, ImGui.GetColorU32(ImGuiCol.Text));
         ImGui.SameLine();
     }
 
@@ -183,4 +185,42 @@ public static partial class ImGuiEx
     }
 
     public static bool RadioBox(string label, ref int v, string options, bool vertical) => RadioBox(label, ref v, options.Split('\0'), vertical);
+
+    public static bool CheckboxTristate(string label, ref bool? v)
+    {
+        bool ret;
+
+        var unset = !v.HasValue;
+        if (unset)
+        {
+            var _ = false;
+            ret = ImGui.Checkbox(label, ref _);
+            if (ret)
+                v = true;
+
+            var size = ImGui.GetFrameHeight();
+            var padSize = Math.Max(MathF.Floor(size / 4), 1);
+            var padding = new Vector2(padSize);
+            var min = ImGui.GetItemRectMin();
+            var max = min + new Vector2(size);
+            ImGui.GetWindowDrawList().AddRect(min + padding, max - padding, ImGui.GetColorU32(ImGuiCol.CheckMark), ImGui.GetStyle().FrameRounding, ImDrawFlags.None, 3 * ImGuiHelpers.GlobalScale);
+        }
+        else
+        {
+            var value = v.Value;
+            var isFalse = !value;
+
+            if (isFalse)
+                ImGui.PushStyleColor(ImGuiCol.CheckMark, Vector4.Zero);
+
+            ret = ImGui.Checkbox(label, ref value);
+            if (ret)
+                v = value ? null : false;
+
+            if (isFalse)
+                ImGui.PopStyleColor();
+        }
+
+        return ret;
+    }
 }
