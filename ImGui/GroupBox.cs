@@ -14,6 +14,8 @@ public static partial class ImGuiEx
         public uint BorderColor { get; init; } = ImGui.GetColorU32(ImGuiCol.Border);
         public Vector2 BorderPadding { get; init; } = ImGui.GetStyle().WindowPadding;
         public float BorderRounding { get; init; } = ImGui.GetStyle().FrameRounding;
+        public ImDrawFlags DrawFlags { get; init; } = ImDrawFlags.None;
+        public float BorderThickness { get; init; } = 2f;
     }
 
     private static readonly Stack<GroupBoxOptions> groupBoxOptionsStack = new();
@@ -69,7 +71,36 @@ public static partial class ImGuiEx
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - ImGui.GetStyle().ItemSpacing.Y);
         ImGui.Dummy(options.BorderPadding with { X = 0 });
         ImGui.EndGroup();
-        ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), options.BorderColor, options.BorderRounding);
+
+        var min = ImGui.GetItemRectMin();
+        var max = ImGui.GetItemRectMax();
+
+        // Rect with text corner missing
+        /*ImGui.PushClipRect(min with { Y = min.Y + options.BorderRounding }, max, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();
+        ImGui.PushClipRect(min with { X = (min.X + max.X) / 2 }, max with { Y = min.Y + options.BorderRounding }, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();*/
+
+        // [ ] Brackets
+        /*ImGui.PushClipRect(min, max with { X = (min.X * 2 + max.X) / 3 }, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();
+        ImGui.PushClipRect(min with { X = (min.X + max.X * 2) / 3 }, max, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();*/
+
+        // Horizontal brackets
+        /*ImGui.PushClipRect(min, max with { Y = (min.Y * 2 + max.Y) / 3 }, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();
+        ImGui.PushClipRect(min with { Y = (min.Y + max.Y * 2) / 3 }, max, true);
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+        ImGui.PopClipRect();*/
+
+        ImGui.GetWindowDrawList().AddRect(min, max, options.BorderColor, options.BorderRounding, options.DrawFlags, options.BorderThickness);
+
         ImGui.EndGroup();
     }
 }
