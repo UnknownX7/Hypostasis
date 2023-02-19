@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
@@ -98,42 +99,6 @@ public static unsafe class Common
         }
     }
 
-    public enum PronounID : uint
-    {
-        None = 0,
-        // 9 - 34 are marks
-        // 35 - 42 are party related
-        P1 = 43, // Same as Me
-        P2 = 44,
-        P3 = 45,
-        P4 = 46,
-        P5 = 47,
-        P6 = 48,
-        P7 = 49,
-        P8 = 50,
-        // 51 - 58 are PROBABLY alliance 1
-        // 59 - 66 are PROBABLY alliance 2
-        E1 = 83,
-        E2 = 84,
-        E3 = 85,
-        E4 = 86,
-        E5 = 87,
-        Target = 1000,
-        TargetsTarget = 1002,
-        FocusTarget = 1004,
-        LastTarget = 1006,
-        LastAttacker = 1008,
-        MouseOver = 1012,
-        Me = 1014,
-        Companion = 1016, // AKA Chocobo AKA Buddy
-        Pet = 1018,
-        //??? = 1020, // Appears to look up a character based on name?
-        // 1050 - 1076 are marks
-        // 1078 - 1082 are marks
-        LastEnemy = 1084
-        //??? = 1116 // Mapped to 1074 for some reason
-    }
-
     [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
     private static delegate* unmanaged<PronounModule*, PronounID, GameObject*> getGameObjectFromPronounID;
     public static GameObject* GetGameObjectFromPronounID(PronounID id)
@@ -141,6 +106,28 @@ public static unsafe class Common
         if (getGameObjectFromPronounID == null)
             InjectMember(nameof(getGameObjectFromPronounID));
         return getGameObjectFromPronounID(PronounModule, id);
+    }
+
+    public static IEnumerable<nint> GetPartyMembers()
+    {
+        static nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(43 + i));
+        for (uint i = 0; i < 8; i++)
+        {
+            var address = f(i);
+            if (address != nint.Zero)
+                yield return address;
+        }
+    }
+
+    public static IEnumerable<nint> GetEnemies()
+    {
+        static nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(9 + i));
+        for (uint i = 0; i < 26; i++)
+        {
+            var address = f(i);
+            if (address != nint.Zero)
+                yield return address;
+        }
     }
 
     public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
