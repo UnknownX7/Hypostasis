@@ -1,12 +1,14 @@
-﻿using System.Linq.Expressions;
-using System;
-using System.Reflection;
-using System.IO.Compression;
-using System.IO;
-using System.Text;
-using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using Dalamud.Logging;
 
 namespace Hypostasis;
@@ -66,6 +68,13 @@ public static partial class Util
     public static Type[] AssemblyTypes => Assembly.GetTypes();
 
     public static AssemblyName AssemblyName => Assembly.GetName();
+
+    public static IEnumerable<Type> GetTypes<T>(this Assembly assembly) => typeof(T).IsInterface
+        ? assembly.GetTypes().Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(T)))
+        : assembly.GetTypes().Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(T)));
+
+    public static IEnumerable<(Type, T)> GetTypesWithAttribute<T>(this Assembly assembly) where T : Attribute =>
+        from t in assembly.GetTypes() let attribute = t.GetCustomAttribute<T>() where attribute != null select (t, attribute);
 
     public static bool StartProcess(ProcessStartInfo startInfo)
     {

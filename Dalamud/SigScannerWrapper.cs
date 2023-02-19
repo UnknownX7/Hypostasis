@@ -249,12 +249,8 @@ public class SigScannerWrapper : IDisposable
 
     public void InjectSignatures()
     {
-        foreach (var t in Util.AssemblyTypes)
-        {
-            var attribute = t.GetCustomAttribute<InjectSignaturesAttribute>();
-            if (attribute == null) continue;
+        foreach (var (t, _) in Util.Assembly.GetTypesWithAttribute<InjectSignaturesAttribute>())
             Inject(t);
-        }
     }
 
     public void Inject(Type type, object o = null, bool addAllMembers = true)

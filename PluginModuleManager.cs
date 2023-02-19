@@ -12,7 +12,7 @@ public static class PluginModuleManager
 
     public static void Initialize()
     {
-        foreach (var t in Util.AssemblyTypes.Where(t => t.IsSubclassOf(typeof(PluginModule)) && !t.IsAbstract))
+        foreach (var t in Util.Assembly.GetTypes<PluginModule>())
         {
             var pluginModule = (PluginModule)Activator.CreateInstance(t);
             if (pluginModule == null) continue;
