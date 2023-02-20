@@ -142,7 +142,7 @@ public static partial class ImGuiEx
         ImGui.GetWindowDrawList().AddText(pos - textSize / 2, color, text);
     }
 
-    public static void Prefix(string prefix = "◇")
+    public static void Prefix(string prefix = "└") // └◇└
     {
         var dummySize = new Vector2(ImGui.GetFrameHeight());
         ImGui.Dummy(dummySize);

@@ -54,7 +54,7 @@ public static partial class ImGuiEx
         ImGui.Dummy(options.BorderPadding with { X = width });
         ImGui.PopStyleVar();
         ImGui.Indent(Math.Max(options.BorderPadding.X, 0.01f));
-        ImGui.PushItemWidth((width - options.BorderPadding.X) / 2);
+        ImGui.PushItemWidth(MathF.Floor((width - options.BorderPadding.X * 2) * 0.65f));
         if (open) return true;
 
         ImGui.TextDisabled(". . .");
