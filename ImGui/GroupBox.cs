@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 
@@ -49,10 +49,12 @@ public static partial class ImGuiEx
         ImGui.BeginGroup();
         var style = ImGui.GetStyle();
         var spacing = style.ItemSpacing.X * (1 - minimumWindowPercent);
+        var width = Math.Max((ImGui.GetWindowContentRegionMax().X - style.WindowPadding.X) * minimumWindowPercent - spacing, 1);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-        ImGui.Dummy(options.BorderPadding with { X = Math.Max((ImGui.GetWindowContentRegionMax().X - style.WindowPadding.X) * minimumWindowPercent - spacing, 1) });
+        ImGui.Dummy(options.BorderPadding with { X = width });
         ImGui.PopStyleVar();
         ImGui.Indent(Math.Max(options.BorderPadding.X, 0.01f));
+        ImGui.PushItemWidth((width - options.BorderPadding.X) / 2);
         if (open) return true;
 
         ImGui.TextDisabled(". . .");
@@ -67,6 +69,7 @@ public static partial class ImGuiEx
     public static void EndGroupBox()
     {
         var options = groupBoxOptionsStack.Pop();
+        ImGui.PopItemWidth();
         ImGui.Unindent(Math.Max(options.BorderPadding.X, 0.01f));
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - ImGui.GetStyle().ItemSpacing.Y);
         ImGui.Dummy(options.BorderPadding with { X = 0 });

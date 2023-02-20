@@ -29,8 +29,8 @@ public static partial class ImGuiEx
     public static void PushFontScale(float scale)
     {
         fontScaleStack.Push(curScale);
+        ImGui.SetWindowFontScale(scale);
         curScale = scale;
-        ImGui.SetWindowFontScale(curScale);
     }
 
     public static void PopFontScale()

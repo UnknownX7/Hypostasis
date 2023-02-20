@@ -82,14 +82,11 @@ public static partial class ImGuiEx
             foreach (var i in clipper.Rows)
             {
                 var row = (T)filteredSearchSheet[i];
-                ImGui.PushID(i);
-                if (drawSelectable(row, selectedRow == row.RowId))
-                {
-                    selectedRow = row.RowId;
-                    ret = true;
-                }
-                ImGui.PopID();
-                if (ret) break;
+                using var block = new IDBlock(i);
+                if (!drawSelectable(row, selectedRow == row.RowId)) continue;
+                selectedRow = row.RowId;
+                ret = true;
+                break;
             }
         }
 
@@ -123,13 +120,10 @@ public static partial class ImGuiEx
             foreach (var i in clipper.Rows)
             {
                 var row = (T)filteredSearchSheet[i];
-                ImGui.PushID(i);
-                if (drawSelectable(row, options.IsRowSelected(row)))
-                {
-                    selectedRow = row.RowId;
-                    ret = true;
-                }
-                ImGui.PopID();
+                using var block = new IDBlock(i);
+                if (!drawSelectable(row, options.IsRowSelected(row))) continue;
+                selectedRow = row.RowId;
+                ret = true;
             }
         }
 
