@@ -28,8 +28,8 @@ public static partial class ImGuiEx
     private static float curScale = 1;
     public static void PushFontScale(float scale)
     {
-        fontScaleStack.Push(curScale);
         ImGui.SetWindowFontScale(scale);
+        fontScaleStack.Push(curScale);
         curScale = scale;
     }
 
@@ -46,6 +46,15 @@ public static partial class ImGuiEx
     public static float GetFontScale() => curScale;
 
     public static float GetFontSize() => curScale * ImGui.GetFont().FontSize;
+
+    private static readonly Stack<float> indentStack = new();
+    public static void PushIndent(float indent = 0f)
+    {
+        ImGui.Indent(indent);
+        indentStack.Push(indent);
+    }
+
+    public static void PopIndent() => ImGui.Unindent(indentStack.Pop());
 
     public static void ClampWindowPosToViewport()
     {

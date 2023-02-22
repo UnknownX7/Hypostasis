@@ -82,7 +82,7 @@ public static partial class ImGuiEx
             foreach (var i in clipper.Rows)
             {
                 var row = (T)filteredSearchSheet[i];
-                using var block = new IDBlock(i);
+                using var _ = IDBlock.Begin(i);
                 if (!drawSelectable(row, selectedRow == row.RowId)) continue;
                 selectedRow = row.RowId;
                 ret = true;
@@ -120,7 +120,7 @@ public static partial class ImGuiEx
             foreach (var i in clipper.Rows)
             {
                 var row = (T)filteredSearchSheet[i];
-                using var block = new IDBlock(i);
+                using var _ = IDBlock.Begin(i);
                 if (!drawSelectable(row, options.IsRowSelected(row))) continue;
                 selectedRow = row.RowId;
                 ret = true;

@@ -7,99 +7,213 @@ public static partial class ImGuiEx
 {
     public sealed class IDBlock : IDisposable
     {
-        public IDBlock(int id) => ImGui.PushID(id);
-        public IDBlock(nint id) => ImGui.PushID(id);
-        public IDBlock(string id) => ImGui.PushID(id);
+        private static readonly IDBlock instance = new();
+        private IDBlock() { }
+
+        public static IDBlock Begin(int id)
+        {
+            ImGui.PushID(id);
+            return instance;
+        }
+
+        public static IDBlock Begin(nint id)
+        {
+            ImGui.PushID(id);
+            return instance;
+        }
+
+        public static IDBlock Begin(string id)
+        {
+            ImGui.PushID(id);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopID();
     }
 
     public sealed class StyleVarBlock : IDisposable
     {
-        public StyleVarBlock(ImGuiStyleVar idx, float val) => ImGui.PushStyleVar(idx, val);
-        public StyleVarBlock(ImGuiStyleVar idx, Vector2 val) => ImGui.PushStyleVar(idx, val);
+        private static readonly StyleVarBlock instance = new();
+        private StyleVarBlock() { }
+
+        public static StyleVarBlock Begin(ImGuiStyleVar idx, float val)
+        {
+            ImGui.PushStyleVar(idx, val);
+            return instance;
+        }
+
+        public static StyleVarBlock Begin(ImGuiStyleVar idx, Vector2 val)
+        {
+            ImGui.PushStyleVar(idx, val);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopStyleVar();
     }
 
     public sealed class StyleColorBlock : IDisposable
     {
-        public StyleColorBlock(ImGuiCol idx, uint val) => ImGui.PushStyleColor(idx, val);
-        public StyleColorBlock(ImGuiCol idx, Vector4 val) => ImGui.PushStyleColor(idx, val);
+        private static readonly StyleColorBlock instance = new();
+        private StyleColorBlock() { }
+
+        public static StyleColorBlock Begin(ImGuiCol idx, uint val)
+        {
+            ImGui.PushStyleColor(idx, val);
+            return instance;
+        }
+
+        public static StyleColorBlock Begin(ImGuiCol idx, Vector4 val)
+        {
+            ImGui.PushStyleColor(idx, val);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopStyleColor();
     }
 
     public sealed class IndentBlock : IDisposable
     {
-        private readonly float? value;
+        private static readonly IndentBlock instance = new();
+        private IndentBlock() { }
 
-        public IndentBlock() => ImGui.Indent();
-
-        public IndentBlock(float indent)
+        public static IndentBlock Begin(float indent = 0f)
         {
-            value = indent;
-            ImGui.Indent(indent);
+            PushIndent(indent);
+            return instance;
         }
 
-        public void Dispose()
-        {
-            if (value.HasValue)
-                ImGui.Unindent(value.Value);
-            else
-                ImGui.Unindent();
-        }
+        public void Dispose() => PopIndent();
     }
 
     public sealed class FontBlock : IDisposable
     {
-        public FontBlock(ImFontPtr font) => ImGui.PushFont(font);
+        private static readonly FontBlock instance = new();
+        private FontBlock() { }
+
+        public static FontBlock Begin(ImFontPtr font)
+        {
+            ImGui.PushFont(font);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopFont();
     }
 
     public sealed class GroupBlock : IDisposable
     {
-        public GroupBlock() => ImGui.BeginGroup();
+        private static readonly GroupBlock instance = new();
+        private GroupBlock() { }
+
+        public static GroupBlock Begin()
+        {
+            ImGui.BeginGroup();
+            return instance;
+        }
+
         public void Dispose() => ImGui.EndGroup();
     }
 
     public sealed class ClipRectBlock : IDisposable
     {
-        public ClipRectBlock(Vector2 min, Vector2 max, bool overlap = true) => ImGui.PushClipRect(min, max, overlap);
+        private static readonly ClipRectBlock instance = new();
+        private ClipRectBlock() { }
+
+        public static ClipRectBlock Begin(Vector2 min, Vector2 max, bool overlap = true)
+        {
+            ImGui.PushClipRect(min, max, overlap);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopClipRect();
     }
 
     public sealed class TooltipBlock : IDisposable
     {
-        public TooltipBlock() => ImGui.BeginTooltip();
+        private static readonly TooltipBlock instance = new();
+        private TooltipBlock() { }
+
+        public static TooltipBlock Begin()
+        {
+            ImGui.BeginTooltip();
+            return instance;
+        }
+
         public void Dispose() => ImGui.EndTooltip();
     }
 
     public sealed class DisabledBlock : IDisposable
     {
-        public DisabledBlock(bool disable = true) => ImGui.BeginDisabled(disable);
+        private static readonly DisabledBlock instance = new();
+        private DisabledBlock() { }
+
+        public static DisabledBlock Begin(bool disable = true)
+        {
+            ImGui.BeginDisabled(disable);
+            return instance;
+        }
+
         public void Dispose() => ImGui.EndDisabled();
     }
 
     public sealed class AllowKeyboardFocusBlock : IDisposable
     {
-        public AllowKeyboardFocusBlock(bool allow = false) => ImGui.PushAllowKeyboardFocus(allow);
+        private static readonly AllowKeyboardFocusBlock instance = new();
+        private AllowKeyboardFocusBlock() { }
+
+        public static AllowKeyboardFocusBlock Begin(bool allow = false)
+        {
+            ImGui.PushAllowKeyboardFocus(allow);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopAllowKeyboardFocus();
     }
 
     public sealed class ButtonRepeatBlock : IDisposable
     {
-        public ButtonRepeatBlock(bool repeat = true) => ImGui.PushButtonRepeat(repeat);
+        private static readonly ButtonRepeatBlock instance = new();
+        private ButtonRepeatBlock() { }
+
+        public static ButtonRepeatBlock Begin(bool repeat = true)
+        {
+            ImGui.PushButtonRepeat(repeat);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopButtonRepeat();
     }
 
     public sealed class ItemWidthBlock : IDisposable
     {
-        public ItemWidthBlock(float width) => ImGui.PushItemWidth(width);
+        private static readonly ItemWidthBlock instance = new();
+        private ItemWidthBlock() { }
+
+        public static ItemWidthBlock Begin(float width)
+        {
+            ImGui.PushItemWidth(width);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopItemWidth();
     }
 
     public sealed class TextWrapPosBlock : IDisposable
     {
-        public TextWrapPosBlock() => ImGui.PushTextWrapPos();
-        public TextWrapPosBlock(float posX) => ImGui.PushTextWrapPos(posX);
+        private static readonly TextWrapPosBlock instance = new();
+        private TextWrapPosBlock() { }
+
+        public static TextWrapPosBlock Begin()
+        {
+            ImGui.PushTextWrapPos();
+            return instance;
+        }
+
+        public static TextWrapPosBlock Begin(float posX)
+        {
+            ImGui.PushTextWrapPos(posX);
+            return instance;
+        }
+
         public void Dispose() => ImGui.PopTextWrapPos();
     }
 }
