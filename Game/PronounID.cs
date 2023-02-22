@@ -53,6 +53,7 @@ public enum PronounID : uint
     FocusTarget = 1004,
     LastTarget = 1006,
     LastAttacker = 1008,
+    Anchor = 1010, // What is this? I don't know!
     MouseOver = 1012,
     Me = 1014,
     Companion = 1016, // AKA Chocobo AKA Buddy

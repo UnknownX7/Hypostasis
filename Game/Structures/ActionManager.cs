@@ -44,8 +44,6 @@ public unsafe partial struct ActionManager : IHypostasisStructure
         if (fpCanActionQueue == null)
             throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
         fixed (ActionManager* ptr = &this)
-        {
             return fpCanActionQueue(ptr, actionType, actionID);
-        }
     }
 }

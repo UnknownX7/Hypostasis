@@ -100,12 +100,12 @@ public static unsafe class Common
     }
 
     [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
-    private static delegate* unmanaged<PronounModule*, PronounID, GameObject*> getGameObjectFromPronounID;
+    public static delegate* unmanaged<PronounModule*, PronounID, GameObject*> fpGetGameObjectFromPronounID;
     public static GameObject* GetGameObjectFromPronounID(PronounID id)
     {
-        if (getGameObjectFromPronounID == null)
-            InjectMember(nameof(getGameObjectFromPronounID));
-        return getGameObjectFromPronounID(PronounModule, id);
+        if (fpGetGameObjectFromPronounID == null)
+            InjectMember(nameof(fpGetGameObjectFromPronounID));
+        return fpGetGameObjectFromPronounID(PronounModule, id);
     }
 
     public static IEnumerable<nint> GetPartyMembers()
