@@ -28,6 +28,15 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;
     [FieldOffset(0x5F4)] public float gcdRecastTime;
 
+    [Signature("E8 ?? ?? ?? ?? 44 8B 4B 2C", Fallibility = Fallibility.Infallible)]
+    public static delegate* unmanaged<uint, uint, uint> fpGetSpellIDForAction;
+    public static uint GetSpellIDForAction(uint actionType, uint actionID)
+    {
+        if (fpGetSpellIDForAction == null)
+            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
+        return fpGetSpellIDForAction(actionType, actionID);
+    }
+
     [Signature("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3", Fallibility = Fallibility.Infallible)]
     public static delegate* unmanaged<uint, GameObject*, Bool> fpCanUseActionOnGameObject;
     public static bool CanUseActionOnGameObject(uint actionID, GameObject* o)
@@ -38,12 +47,12 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     }
 
     [Signature("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00", Fallibility = Fallibility.Infallible)]
-    public static delegate* unmanaged<ActionManager*, uint, uint, Bool> fpCanActionQueue;
-    public bool CanActionQueue(uint actionType, uint actionID)
+    public static delegate* unmanaged<ActionManager*, uint, uint, Bool> fpCanQueueAction;
+    public bool CanQueueAction(uint actionType, uint actionID)
     {
-        if (fpCanActionQueue == null)
+        if (fpCanQueueAction == null)
             throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
         fixed (ActionManager* ptr = &this)
-            return fpCanActionQueue(ptr, actionType, actionID);
+            return fpCanQueueAction(ptr, actionType, actionID);
     }
 }
