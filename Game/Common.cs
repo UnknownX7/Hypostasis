@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -111,14 +111,9 @@ public static unsafe class Common
         }
     }
 
-    [Signature("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD")]
-    public static delegate* unmanaged<PronounModule*, PronounID, GameObject*> fpGetGameObjectFromPronounID;
-    public static GameObject* GetGameObjectFromPronounID(PronounID id)
-    {
-        if (fpGetGameObjectFromPronounID == null)
-            InjectMember(nameof(fpGetGameObjectFromPronounID));
-        return fpGetGameObjectFromPronounID(PronounModule, id);
-    }
+    public delegate GameObject* GetGameObjectFromPronounIDDelegate(PronounModule* pronounModule, PronounID id);
+    public static readonly GameFunction<GetGameObjectFromPronounIDDelegate> getGameObjectFromPronounID = new ("E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 0F 85 ?? ?? ?? ?? 8D 4F DD");
+    public static GameObject* GetGameObjectFromPronounID(PronounID id) => getGameObjectFromPronounID.Invoke(PronounModule, id);
 
     public static IEnumerable<nint> GetPartyMembers()
     {
@@ -149,35 +144,6 @@ public static unsafe class Common
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
 
     private static void AddMember(string member) => DalamudApi.SigScanner.AddMember(typeof(Common), null, member);
-
-    public static void InitializeStructure<T>(bool infallible = true) where T : IHypostasisStructure
-    {
-        try
-        {
-            DalamudApi.SigScanner.Inject(typeof(T), null, false);
-        }
-        catch (Exception e)
-        {
-            if (infallible)
-                throw;
-            PluginLog.Warning(e, "Failed loading structure");
-        }
-    }
-
-    public static void InitializeStructures(bool infallible, params Type[] types)
-    {
-        try
-        {
-            foreach (var type in types)
-                DalamudApi.SigScanner.Inject(type, null, false);
-        }
-        catch (Exception e)
-        {
-            if (infallible)
-                throw;
-            PluginLog.Warning(e, "Failed loading structure");
-        }
-    }
 
     public static void Initialize()
     {

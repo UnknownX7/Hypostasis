@@ -47,13 +47,13 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
         return del = Marshal.GetDelegateForFunctionPointer<T>(address.Value);
     }
 
-    public void CreateHook(T func, bool enable = true, bool dispose = true)
+    public void CreateHook(T detour, bool enable = true, bool dispose = true)
     {
         if (Address == nint.Zero) return;
 
         if (Hook != null)
             throw new ApplicationException("Attempted to hook function more than once");
-        Hook = Hook<T>.FromAddress(Address, func);
+        Hook = Hook<T>.FromAddress(Address, detour);
         DalamudApi.SigScanner.AddHook(Hook, enable, dispose);
         //DalamudApi.SigScanner.AddMember(GetType(), this, nameof(Hook));
     }

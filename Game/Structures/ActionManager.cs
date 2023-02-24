@@ -1,8 +1,5 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using Dalamud.Utility.Signatures;
+﻿using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
-#pragma warning disable CA2211
 
 namespace Hypostasis.Game.Structures;
 
@@ -28,31 +25,20 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;
     [FieldOffset(0x5F4)] public float gcdRecastTime;
 
-    [Signature("E8 ?? ?? ?? ?? 44 8B 4B 2C", Fallibility = Fallibility.Infallible)]
-    public static delegate* unmanaged<uint, uint, uint> fpGetSpellIDForAction;
-    public static uint GetSpellIDForAction(uint actionType, uint actionID)
-    {
-        if (fpGetSpellIDForAction == null)
-            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
-        return fpGetSpellIDForAction(actionType, actionID);
-    }
+    public delegate uint GetSpellIDForActionDelegate(uint actionType, uint actionID);
+    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 44 8B 4B 2C");
+    public static uint GetSpellIDForAction(uint actionType, uint actionID) => getSpellIDForAction.Invoke(actionType, actionID);
 
-    [Signature("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3", Fallibility = Fallibility.Infallible)]
-    public static delegate* unmanaged<uint, GameObject*, Bool> fpCanUseActionOnGameObject;
-    public static bool CanUseActionOnGameObject(uint actionID, GameObject* o)
-    {
-        if (fpCanUseActionOnGameObject == null)
-            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
-        return fpCanUseActionOnGameObject(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
-    }
+    public delegate Bool CanUseActionOnGameObjectDelegate(uint actionID, GameObject* o);
+    public static readonly GameFunction<CanUseActionOnGameObjectDelegate> canUseActionOnGameObject = new("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3");
+    public static bool CanUseActionOnGameObject(uint actionID, GameObject* o) =>
+        canUseActionOnGameObject.Invoke(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
 
-    [Signature("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00", Fallibility = Fallibility.Infallible)]
-    public static delegate* unmanaged<ActionManager*, uint, uint, Bool> fpCanQueueAction;
+    public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
+    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00");
     public bool CanQueueAction(uint actionType, uint actionID)
     {
-        if (fpCanQueueAction == null)
-            throw new InvalidOperationException($"InitializeStructure was not called on {nameof(ActionManager)}");
         fixed (ActionManager* ptr = &this)
-            return fpCanQueueAction(ptr, actionType, actionID);
+            return canQueueAction.Invoke(ptr, actionType, actionID);
     }
 }
