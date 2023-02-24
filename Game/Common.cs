@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Dalamud.Logging;
 using Dalamud.Utility.Signatures;
@@ -72,6 +72,18 @@ public static unsafe class Common
             uiModule = Framework->UIModule;
             AddMember(nameof(uiModule));
             return uiModule;
+        }
+    }
+
+    private static InputData* inputData;
+    public static InputData* InputData
+    {
+        get
+        {
+            if (inputData != null) return inputData;
+            inputData = (InputData*)UIModule->GetUIInputData();
+            AddMember(nameof(inputData));
+            return inputData;
         }
     }
 

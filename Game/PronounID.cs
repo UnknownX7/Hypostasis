@@ -30,7 +30,7 @@ public enum PronounID : uint
     EnemyX = 32,
     EnemyY = 33,
     EnemyZ = 34,
-    // 35 - 42 are party related
+    // 35 - 42 may be the party's true order, while the next ones are based on the party list order
     P1 = 43, // Same as Me
     P2 = 44,
     P3 = 45,
@@ -47,7 +47,7 @@ public enum PronounID : uint
     E4 = 86,
     E5 = 87,
 
-    // These correspond to keys in the TextCommandParam sheet
+    // These correspond to their row in the TextCommandParam sheet
     Target = 1000, // This is also the soft target if there is no target
     TargetsTarget = 1002,
     FocusTarget = 1004,
@@ -78,4 +78,5 @@ public enum PronounID : uint
     Stop = 1082,
     LastEnemy = 1084,
     Plus = 1116 // Alt name for Cross
+    //E = 1118 // Don't know what this is
 }

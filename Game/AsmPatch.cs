@@ -6,7 +6,7 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
-public class AsmPatch : IDisposable
+public sealed class AsmPatch : IDisposable
 {
     public nint Address { get; } = nint.Zero;
     public string Signature { get; } = string.Empty;
@@ -40,7 +40,7 @@ public class AsmPatch : IDisposable
         var addr = nint.Zero;
         Signature = sig;
         try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch { PluginLog.LogError($"Failed to find signature {sig}"); }
+        catch (Exception e) { PluginLog.Warning(e, $"Failed to find signature {sig}"); }
         if (addr == nint.Zero) return;
 
         Address = addr;
@@ -61,7 +61,7 @@ public class AsmPatch : IDisposable
         var addr = nint.Zero;
         Signature = sig;
         try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch { PluginLog.LogError($"Failed to find signature {sig}"); }
+        catch (Exception e) { PluginLog.Warning(e, $"Failed to find signature {sig}"); }
         if (addr == nint.Zero) return;
 
         Address = addr;
@@ -114,8 +114,6 @@ public class AsmPatch : IDisposable
         if (hook == null) return;
         hook.Dispose();
         SafeMemory.WriteBytes(Address, OldBytes);
-
-        GC.SuppressFinalize(this);
     }
 
     public static void DisposeAll()

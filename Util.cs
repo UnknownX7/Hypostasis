@@ -121,25 +121,25 @@ public static partial class Util
     }
 
     public static unsafe nint ConvertObjectToIntPtr(object o) => o switch
-        {
-            Pointer p => (nint)Pointer.Unbox(p),
-            nint p => p,
-            nuint p => (nint)p,
-            { } when o.IsNumeric() => (nint)Convert.ToInt64(o),
-            _ => nint.Zero
-        };
+    {
+        Pointer p => (nint)Pointer.Unbox(p),
+        nint p => p,
+        nuint p => (nint)p,
+        { } when o.IsNumeric() => (nint)Convert.ToInt64(o),
+        _ => nint.Zero
+    };
 
     public static bool IsNumeric(this object o) => o switch
-        {
-            //Int128 => true, UInt128 => true,
-            //nint => true, nuint => true,
-            long => true, ulong => true,
-            int => true, uint => true,
-            short => true, ushort => true,
-            sbyte => true, byte => true,
-            double => true, float => true, decimal => true,
-            _ => false
-        };
+    {
+        //Int128 => true, UInt128 => true,
+        //nint => true, nuint => true,
+        long => true, ulong => true,
+        int => true, uint => true,
+        short => true, ushort => true,
+        sbyte => true, byte => true,
+        double => true, float => true, decimal => true,
+        _ => false
+    };
 
     public static bool IsValidHookAddress(this nint address) => DalamudApi.SigScanner.IsValidHookAddress(address);
 

@@ -1,3 +1,3 @@
-﻿namespace Hypostasis.Game.Structures;
+﻿namespace Hypostasis.Game;
 
 public interface IHypostasisStructure { }

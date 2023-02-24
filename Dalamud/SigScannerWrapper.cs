@@ -56,7 +56,8 @@ public class SigScannerWrapper : IDisposable
             Primitive,
             Hook,
             AsmHook,
-            AsmPatch
+            AsmPatch,
+            GameFunction
         }
 
         public Util.AssignableInfo AssignableInfo { get; set; }
@@ -267,7 +268,7 @@ public class SigScannerWrapper : IDisposable
             InjectMember(o, memberInfo, csAttribute);
         else if (memberInfo.GetCustomAttribute<SignatureAttribute>() is { } sigAttribute)
             InjectMember(o, memberInfo, sigAttribute);
-        else if (addAllMembers)
+        else if (addAllMembers || new Util.AssignableInfo(o, memberInfo).Type.IsAssignableTo(typeof(IGameFunction))) // TODO
             AddMember(o, memberInfo);
     }
 
@@ -456,10 +457,19 @@ public class SigScannerWrapper : IDisposable
             MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
             SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.Hook, Address = hook.Address });
         }
-        else if (assignableInfo.GetValue() is AsmPatch patch)
+        else
         {
-            MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
-            SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.AsmPatch, Signature = patch.Signature, Address = patch.Address });
+            switch (assignableInfo.GetValue())
+            {
+                case AsmPatch patch:
+                    MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+                    SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.AsmPatch, Signature = patch.Signature, Address = patch.Address });
+                    break;
+                case IGameFunction gameFunction:
+                    MemberInfos.Add(SignatureInfos.Count, (o, memberInfo));
+                    SignatureInfos.Add(new() { SigType = SignatureInfo.SignatureType.GameFunction, Signature = gameFunction.Signature, Address = gameFunction.Address });
+                    break;
+            }
         }
     }
 
