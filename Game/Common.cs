@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Dalamud.Logging;
+﻿using System.Collections.Generic;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;

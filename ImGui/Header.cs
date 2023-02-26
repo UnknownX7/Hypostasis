@@ -62,7 +62,7 @@ public static partial class ImGuiEx
 
     public static void AddDonationHeader(int position, string link = @"https://ko-fi.com/unknownx7")
     {
-        if (AddHeaderIcon("_DONATE", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = $"Right click to go to {link}", ToastTooltipOnClick = true }))
+        if (AddHeaderIcon("_DONATE", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = $"\uE052 Right click to go to {link}", ToastTooltipOnClick = true }))
             Util.StartProcess(link);
     }
 }
