@@ -36,13 +36,15 @@ public unsafe partial struct InputData : IHypostasisStructure
             return isInputIDReleased.Invoke(ptr, id);
     }
 
-    public delegate int GetAnalogInputIDDelegate(InputData* inputData, uint id);
-    public static readonly GameFunction<GetAnalogInputIDDelegate> getAnalogInputID = new("E8 ?? ?? ?? ?? 66 44 0F 6E C3");
-    public float GetAnalogInputID(uint id)
+    public delegate int GetAxisInputDelegate(InputData* inputData, uint id);
+    public static readonly GameFunction<GetAxisInputDelegate> getAxisInput = new("E8 ?? ?? ?? ?? 66 44 0F 6E C3");
+    public int GetAxisInput(uint id)
     {
         fixed (InputData* ptr = &this)
-            return getAnalogInputID.Invoke(ptr, id) / 100f;
+            return getAxisInput.Invoke(ptr, id);
     }
+
+    public float GetAxisInputFloat(uint id) => GetAxisInput(id) / 100f;
 
     public delegate sbyte GetMouseWheelStatusDelegate();
     public static readonly GameFunction<GetMouseWheelStatusDelegate> getMouseWheelStatus = new("E8 ?? ?? ?? ?? F7 D8 48 8B CB");
