@@ -8,7 +8,6 @@ public static partial class ImGuiEx
 {
     public record HeaderIconOptions
     {
-        public int Position { get; init; } = 1;
         public Vector2 Offset { get; init; } = Vector2.Zero;
         public ImGuiMouseButton MouseButton { get; init; } = ImGuiMouseButton.Left;
         public string Tooltip { get; init; } = string.Empty;
@@ -17,16 +16,33 @@ public static partial class ImGuiEx
         public ImGuiMouseButton ToastTooltipOnClickButton { get; init; } = ImGuiMouseButton.Left;
     }
 
+    private static uint headerLastWindowID = 0;
+    private static ulong headerLastFrame = 0;
+    private static uint headerCurrentPos = 0;
+    private static float headerImGuiButtonWidth = 0;
+
     public static bool AddHeaderIcon(string id, FontAwesomeIcon icon, HeaderIconOptions options = null)
     {
         if (ImGui.IsWindowCollapsed()) return false;
 
-        options ??= new();
-
         var scale = ImGuiHelpers.GlobalScale;
+        var currentID = ImGui.GetID(0);
+        if (currentID != headerLastWindowID || headerLastFrame != DalamudApi.PluginInterface.UiBuilder.FrameCount)
+        {
+            headerLastWindowID = currentID;
+            headerLastFrame = DalamudApi.PluginInterface.UiBuilder.FrameCount;
+            headerCurrentPos = 0;
+            headerImGuiButtonWidth = 0f;
+            if (CurrentWindowHasCloseButton())
+                headerImGuiButtonWidth += 17 * scale;
+            if (!GetCurrentWindowFlags().HasFlag(ImGuiWindowFlags.NoCollapse))
+                headerImGuiButtonWidth += 17 * scale;
+        }
+
+        options ??= new();
         var prevCursorPos = ImGui.GetCursorPos();
         var buttonSize = new Vector2(20 * scale);
-        var buttonPos = new Vector2(ImGui.GetWindowWidth() - buttonSize.X - 17 * options.Position * scale - ImGui.GetStyle().FramePadding.X * 2, 0) + options.Offset;
+        var buttonPos = new Vector2(ImGui.GetWindowWidth() - buttonSize.X - headerImGuiButtonWidth - 20 * headerCurrentPos++ * scale - ImGui.GetStyle().FramePadding.X * 2, 0) + options.Offset;
         ImGui.SetCursorPos(buttonPos);
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRectFullScreen();
@@ -60,9 +76,9 @@ public static partial class ImGuiEx
         return pressed;
     }
 
-    public static void AddDonationHeader(int position, string link = @"https://ko-fi.com/unknownx7")
+    public static void AddDonationHeader(string link = @"https://ko-fi.com/unknownx7")
     {
-        if (AddHeaderIcon("_DONATE", FontAwesomeIcon.Heart, new HeaderIconOptions { Position = position, Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = $"\uE052 Right click to go to {link}", ToastTooltipOnClick = true }))
+        if (AddHeaderIcon("_DONATE", FontAwesomeIcon.Heart, new HeaderIconOptions { Color = 0xFF3030D0, MouseButton = ImGuiMouseButton.Right, Tooltip = $"\uE052 Right click to go to {link}", ToastTooltipOnClick = true }))
             Util.StartProcess(link);
     }
 }

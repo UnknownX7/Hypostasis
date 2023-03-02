@@ -16,6 +16,7 @@ public static partial class ImGuiEx
         public float BorderRounding { get; init; } = ImGui.GetStyle().FrameRounding;
         public ImDrawFlags DrawFlags { get; init; } = ImDrawFlags.None;
         public float BorderThickness { get; init; } = 2f;
+        public float MaxX { get; set; }
     }
 
     private static readonly Stack<GroupBoxOptions> groupBoxOptionsStack = new();
@@ -46,13 +47,18 @@ public static partial class ImGuiEx
             ImGui.Unindent();
         }
 
-        ImGui.BeginGroup();
         var style = ImGui.GetStyle();
         var spacing = style.ItemSpacing.X * (1 - minimumWindowPercent);
         var width = Math.Max((ImGui.GetWindowContentRegionMax().X - style.WindowPadding.X) * minimumWindowPercent - spacing, 1);
+
+        ImGui.BeginGroup();
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
         ImGui.Dummy(options.BorderPadding with { X = width });
         ImGui.PopStyleVar();
+
+        var max = ImGui.GetItemRectMax();
+        options.MaxX = max.X;
+        ImGui.PushClipRect(ImGui.GetItemRectMin(), max with { Y = 10000 }, true);
         ImGui.Indent(Math.Max(options.BorderPadding.X, 0.01f));
         ImGui.PushItemWidth(MathF.Floor((width - options.BorderPadding.X * 2) * 0.65f));
         if (open) return true;
@@ -66,17 +72,22 @@ public static partial class ImGuiEx
 
     public static bool BeginGroupBox(uint borderColor, float minimumWindowPercent = 1.0f) => BeginGroupBox(null, minimumWindowPercent, new GroupBoxOptions { BorderColor = borderColor });
 
-    public static void EndGroupBox()
+    public static unsafe void EndGroupBox()
     {
         var options = groupBoxOptionsStack.Pop();
         ImGui.PopItemWidth();
         ImGui.Unindent(Math.Max(options.BorderPadding.X, 0.01f));
+        ImGui.PopClipRect();
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - ImGui.GetStyle().ItemSpacing.Y);
         ImGui.Dummy(options.BorderPadding with { X = 0 });
+
+        var window = GetCurrentWindow();
+        window->CursorMaxPos = window->CursorMaxPos with { X = options.MaxX };
+
         ImGui.EndGroup();
 
         var min = ImGui.GetItemRectMin();
-        var max = ImGui.GetItemRectMax();
+        var max = ImGui.GetItemRectMax() with { X = options.MaxX };
 
         // Rect with text corner missing
         /*ImGui.PushClipRect(min with { Y = min.Y + options.BorderRounding }, max, true);
