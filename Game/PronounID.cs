@@ -3,7 +3,14 @@
 public enum PronounID : uint
 {
     None = 0,
-    // 1 - 8 were the subtarget commands from 1.0
+    ST = 1, // Subtarget commands from 1.0
+    STPC = 2,
+    STNPC = 3,
+    STPT = 4,
+    STAL = 5,
+    STEN = 6,
+    STNM = 7,
+    STAG = 8,
     EnemyA = 9,
     EnemyB = 10,
     EnemyC = 11,
@@ -30,7 +37,14 @@ public enum PronounID : uint
     EnemyX = 32,
     EnemyY = 33,
     EnemyZ = 34,
-    // 35 - 42 may be the party's true order, while the next ones are based on the party list order
+    UnorderedP1 = 35,
+    UnorderedP2 = 36,
+    UnorderedP3 = 37,
+    UnorderedP4 = 38,
+    UnorderedP5 = 39,
+    UnorderedP6 = 40,
+    UnorderedP7 = 41,
+    UnorderedP8 = 42,
     P1 = 43, // Same as Me
     P2 = 44,
     P3 = 45,
@@ -39,8 +53,22 @@ public enum PronounID : uint
     P6 = 48,
     P7 = 49,
     P8 = 50,
-    // 51 - 58 are PROBABLY alliance 1
-    // 59 - 66 are PROBABLY alliance 2
+    A1_1 = 51, // These appear to not work due to a bug?
+    A1_2 = 52,
+    A1_3 = 53,
+    A1_4 = 54,
+    A1_5 = 55,
+    A1_6 = 56,
+    A1_7 = 57,
+    A1_8 = 58,
+    A2_1 = 59,
+    A2_2 = 60,
+    A2_3 = 61,
+    A2_4 = 62,
+    A2_5 = 63,
+    A2_6 = 64,
+    A2_7 = 65,
+    A2_8 = 66,
     E1 = 83,
     E2 = 84,
     E3 = 85,
@@ -53,12 +81,13 @@ public enum PronounID : uint
     FocusTarget = 1004,
     LastTarget = 1006,
     LastAttacker = 1008,
-    Anchor = 1010, // What is this? I don't know!
-    MouseOver = 1012,
+    Anchor = 1010, // Probably returned the lock on target at some point in the past
+    Mouse = 1012,
     Me = 1014,
     Companion = 1016, // AKA Chocobo AKA Buddy
     Pet = 1018,
     Reply = 1020,
+    LastST = 1022, // 1.0
     Attack1 = 1050,
     Attack2 = 1052,
     Attack3 = 1054,
@@ -77,6 +106,6 @@ public enum PronounID : uint
     Bind = 1080,
     Stop = 1082,
     LastEnemy = 1084,
-    Plus = 1116 // Alt name for Cross
-    //E = 1118 // Don't know what this is
+    Plus = 1116, // Alt name for Cross
+    E = 1118 // Don't know what this is
 }
