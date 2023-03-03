@@ -16,6 +16,7 @@ public static partial class ImGuiEx
         public float BorderRounding { get; init; } = ImGui.GetStyle().FrameRounding;
         public ImDrawFlags DrawFlags { get; init; } = ImDrawFlags.None;
         public float BorderThickness { get; init; } = 2f;
+        public float Width { get; set; }
         public float MaxX { get; set; }
     }
 
@@ -23,7 +24,6 @@ public static partial class ImGuiEx
     public static bool BeginGroupBox(string id = null, float minimumWindowPercent = 1.0f, GroupBoxOptions options = null)
     {
         options ??= new GroupBoxOptions();
-        groupBoxOptionsStack.Push(options);
         ImGui.BeginGroup();
 
         var open = true;
@@ -49,7 +49,9 @@ public static partial class ImGuiEx
 
         var style = ImGui.GetStyle();
         var spacing = style.ItemSpacing.X * (1 - minimumWindowPercent);
-        var width = Math.Max((ImGui.GetWindowContentRegionMax().X - style.WindowPadding.X) * minimumWindowPercent - spacing, 1);
+        var contentRegionWidth = groupBoxOptionsStack.TryPeek(out var parent) ? parent.Width - parent.BorderPadding.X * 2 : ImGui.GetWindowContentRegionMax().X - style.WindowPadding.X;
+        var width = Math.Max(contentRegionWidth * minimumWindowPercent - spacing, 1);
+        options.Width = minimumWindowPercent > 0 ? width : 0;
 
         ImGui.BeginGroup();
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
@@ -58,9 +60,14 @@ public static partial class ImGuiEx
 
         var max = ImGui.GetItemRectMax();
         options.MaxX = max.X;
-        ImGui.PushClipRect(ImGui.GetItemRectMin(), max with { Y = 10000 }, true);
+
+        if (options.Width > 0)
+            ImGui.PushClipRect(ImGui.GetItemRectMin(), max with { Y = 10000 }, true);
+
         ImGui.Indent(Math.Max(options.BorderPadding.X, 0.01f));
         ImGui.PushItemWidth(MathF.Floor((width - options.BorderPadding.X * 2) * 0.65f));
+
+        groupBoxOptionsStack.Push(options);
         if (open) return true;
 
         ImGui.TextDisabled(". . .");
@@ -75,19 +82,26 @@ public static partial class ImGuiEx
     public static unsafe void EndGroupBox()
     {
         var options = groupBoxOptionsStack.Pop();
+        var autoAdjust = options.Width <= 0;
         ImGui.PopItemWidth();
         ImGui.Unindent(Math.Max(options.BorderPadding.X, 0.01f));
-        ImGui.PopClipRect();
+
+        if (!autoAdjust)
+            ImGui.PopClipRect();
+
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - ImGui.GetStyle().ItemSpacing.Y);
         ImGui.Dummy(options.BorderPadding with { X = 0 });
 
-        var window = GetCurrentWindow();
-        window->CursorMaxPos = window->CursorMaxPos with { X = options.MaxX };
+        if (!autoAdjust)
+        {
+            var window = GetCurrentWindow();
+            window->CursorMaxPos = window->CursorMaxPos with { X = options.MaxX };
+        }
 
         ImGui.EndGroup();
 
         var min = ImGui.GetItemRectMin();
-        var max = ImGui.GetItemRectMax() with { X = options.MaxX };
+        var max = autoAdjust ? ImGui.GetItemRectMax() : ImGui.GetItemRectMax() with { X = options.MaxX };
 
         // Rect with text corner missing
         /*ImGui.PushClipRect(min with { Y = min.Y + options.BorderRounding }, max, true);
