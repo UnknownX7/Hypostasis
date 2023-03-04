@@ -42,7 +42,7 @@ public static partial class ImGuiEx
         options ??= new();
         var prevCursorPos = ImGui.GetCursorPos();
         var buttonSize = new Vector2(20 * scale);
-        var buttonPos = new Vector2(ImGui.GetWindowWidth() - buttonSize.X - headerImGuiButtonWidth - 20 * headerCurrentPos++ * scale - ImGui.GetStyle().FramePadding.X * 2, 0) + options.Offset;
+        var buttonPos = new Vector2(ImGui.GetWindowWidth() - buttonSize.X - headerImGuiButtonWidth - 20 * headerCurrentPos++ * scale - ImGui.GetStyle().FramePadding.X * 2, ImGui.GetScrollY()) + options.Offset;
         ImGui.SetCursorPos(buttonPos);
         var drawList = ImGui.GetWindowDrawList();
         drawList.PushClipRectFullScreen();
