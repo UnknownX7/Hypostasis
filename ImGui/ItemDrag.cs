@@ -6,13 +6,13 @@ namespace ImGuiNET;
 
 public static partial class ImGuiEx
 {
-    private static uint dragID = 0;
+    private static object dragID = null;
     private static bool isDraggingItem = false;
     private static bool initialPosition = false;
     private static Vector2 lastGridPosition = Vector2.Zero;
     private static Vector2 gridCenter = Vector2.Zero;
 
-    public static bool IsItemDragged(string id, ImGuiMouseButton button, float gridSize, bool drawGrid, out Vector2 pos)
+    public static bool IsItemDragged(object id, ImGuiMouseButton button, float gridSize, bool drawGrid, out Vector2 pos)
     {
         if (!GetDragLock(id, ImGuiMouseButton.Left))
         {
@@ -38,7 +38,7 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    public static bool IsItemDraggedDelta(string id, ImGuiMouseButton button, float gridSize, bool drawGrid, out Vector2 delta)
+    public static bool IsItemDraggedDelta(object id, ImGuiMouseButton button, float gridSize, bool drawGrid, out Vector2 delta)
     {
         if (!GetDragLock(id, ImGuiMouseButton.Left))
         {
@@ -66,13 +66,25 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    private static bool GetDragLock(string id, ImGuiMouseButton button)
+    private static bool GetDragLock(object id, ImGuiMouseButton button)
     {
+        if (isDraggingItem && !ImGui.IsAnyMouseDown())
+        {
+            dragID = null;
+            isDraggingItem = false;
+        }
+
         if (!isDraggingItem && ImGui.IsItemHovered())
             ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeAll);
 
-        var imguiID = ImGui.GetID(id);
-        if ((!isDraggingItem && !ImGui.IsItemClicked(button)) || (dragID != 0 && dragID != imguiID)) return false;
+        var imguiID = id switch
+        {
+            string s => ImGui.GetID(s),
+            _ when id.IsNumeric() => ImGui.GetID(id.ToString()),
+            _ => id
+        };
+
+        if ((!isDraggingItem && !ImGui.IsItemClicked(button)) || (dragID != null && (dragID is uint u1 && imguiID is uint u2 ? u1 != u2 : dragID != imguiID))) return false;
 
         if (!isDraggingItem)
         {
@@ -84,7 +96,7 @@ public static partial class ImGuiEx
         }
 
         if (ImGui.IsMouseDragging(button, 0)) return true;
-        dragID = 0;
+        dragID = null;
         isDraggingItem = false;
         return false;
     }

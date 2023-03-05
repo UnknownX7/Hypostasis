@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -158,4 +159,16 @@ public static partial class Util
     }
 
     public static Vector2 Rotate(this Vector2 v, float aCos, float aSin) => new(v.X * aCos - v.Y * aSin, v.X * aSin + v.Y * aCos);
+
+    public static void Shift(this IList list, int i, int amount)
+    {
+        var count = list.Count;
+        if (i < 0 || i >= count) return;
+
+        var item = list[i];
+        list.RemoveAt(i);
+        list.Insert(Math.Min(Math.Max(i + amount, 0), list.Count), item);
+    }
+
+    public static void Shift(this IList list, int i, float amount) => Shift(list, i, (int)amount);
 }
