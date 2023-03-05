@@ -76,8 +76,15 @@ public static partial class ImGuiEx
         private static readonly IndentBlock instance = new();
         private IndentBlock() { }
 
-        public static IndentBlock Begin(float indent = 0f)
+        public static IndentBlock Begin()
         {
+            PushIndent();
+            return instance;
+        }
+
+        public static IndentBlock Begin(float indent)
+        {
+            if (indent == 0) return null;
             PushIndent(indent);
             return instance;
         }
