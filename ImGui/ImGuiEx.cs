@@ -136,6 +136,19 @@ public static partial class ImGuiEx
         return ret;
     }
 
+    public static bool DeleteConfirmationButton(Vector2 size = default)
+    {
+        using var _ = FontBlock.Begin(UiBuilder.IconFont);
+        ImGui.Button(FontAwesomeIcon.Times.ToIconString(), size);
+        if (IsItemReleased(ImGuiMouseButton.Right)) return true;
+
+        using var __ = StyleVarBlock.Begin(ImGuiStyleVar.PopupBorderSize, 1);
+        if (!ImGui.BeginPopupContextItem(null, ImGuiPopupFlags.MouseButtonLeft)) return false;
+        var ret = ImGui.Selectable(FontAwesomeIcon.TrashAlt.ToIconString());
+        ImGui.EndPopup();
+        return ret;
+    }
+
     // No way to block the title bar
     public static void BlockWindowDrag()
     {
