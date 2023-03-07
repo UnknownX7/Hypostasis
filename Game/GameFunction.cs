@@ -13,6 +13,7 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
     public Hook<T> Hook { get; private set; }
     public T Original => Hook?.Original ?? Invoke;
     public bool IsValid => Invoke != null;
+    public bool IsHooked => Hook != null;
 
     private nint? address;
     private T del;
@@ -51,7 +52,7 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
     {
         if (Address == nint.Zero) return;
 
-        if (Hook != null)
+        if (IsHooked)
             throw new ApplicationException("Attempted to hook function more than once");
         Hook = Hook<T>.FromAddress(Address, detour);
         DalamudApi.SigScanner.AddHook(Hook, enable, dispose);
