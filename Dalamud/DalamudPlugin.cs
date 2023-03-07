@@ -56,7 +56,9 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         {
             DalamudApi.SigScanner.InjectSignatures();
             Initialize();
-            PluginModuleManager.Initialize();
+
+            if (!PluginModuleManager.Initialize())
+                ShowNotification("One or more modules failed to load,\nplease check /xllog for more info", NotificationType.Warning, 10_000);
 
             var derivedType = typeof(P);
 

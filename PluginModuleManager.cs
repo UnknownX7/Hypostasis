@@ -10,8 +10,10 @@ public static class PluginModuleManager
 {
     private static readonly List<PluginModule> pluginModules = new();
 
-    public static void Initialize()
+    public static bool Initialize()
     {
+        var succeeded = true;
+
         foreach (var t in Util.Assembly.GetTypes<PluginModule>())
         {
             var pluginModule = (PluginModule)Activator.CreateInstance(t);
@@ -25,11 +27,14 @@ public static class PluginModuleManager
             else
             {
                 PluginLog.Warning($"{t} failed to load!");
+                succeeded = false;
             }
 
             t.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)?.SetValue(null, pluginModule);
             pluginModules.Add(pluginModule);
         }
+
+        return succeeded;
     }
 
     public static void CheckModules()
