@@ -80,7 +80,7 @@ public static partial class ImGuiEx
         var imguiID = id switch
         {
             string s => ImGui.GetID(s),
-            _ when id.IsNumeric() => ImGui.GetID(id.ToString()),
+            _ when Util.IsNumeric(id) => ImGui.GetID(id.ToString()),
             _ => id
         };
 

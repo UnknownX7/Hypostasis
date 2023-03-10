@@ -126,11 +126,11 @@ public static partial class Util
         Pointer p => (nint)Pointer.Unbox(p),
         nint p => p,
         nuint p => (nint)p,
-        { } when o.IsNumeric() => (nint)Convert.ToInt64(o),
+        { } when IsNumeric(o) => (nint)Convert.ToInt64(o),
         _ => nint.Zero
     };
 
-    public static bool IsNumeric(this object o) => o switch
+    public static bool IsNumeric(object o) => o switch
     {
         //Int128 => true, UInt128 => true,
         //nint => true, nuint => true,
