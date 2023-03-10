@@ -29,17 +29,13 @@ public static class Hypostasis
         PluginName = plugin.Name;
         DalamudApi.Initialize(pluginInterface);
         Common.Initialize();
-#if DEBUG
         Debug.Initialize(plugin);
-#endif
     }
 
     public static void Dispose(bool failed)
     {
-#if DEBUG
         if (!failed)
             Debug.Dispose();
-#endif
         PluginModuleManager.Dispose();
         DalamudApi.Dispose();
         Common.Dispose();

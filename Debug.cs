@@ -1,5 +1,5 @@
-﻿#if DEBUG
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -13,6 +13,7 @@ public static class Debug
     public static ICallGateProvider<List<SigScannerWrapper.SignatureInfo>> GetSigInfosProvider { get; private set; }
     public static ICallGateProvider<Dictionary<int, (object, MemberInfo)>> GetMemberInfosProvider { get; private set; }
 
+    [Conditional("DEBUG")]
     public static void Initialize(IDalamudPlugin plugin)
     {
         var name = plugin.Name;
@@ -39,6 +40,7 @@ public static class Debug
             plugins.Remove(Hypostasis.PluginName);
     }
 
+    [Conditional("DEBUG")]
     public static void Dispose()
     {
         DisableDebugging();
@@ -48,4 +50,3 @@ public static class Debug
         GetMemberInfosProvider?.UnregisterFunc();
     }
 }
-#endif
