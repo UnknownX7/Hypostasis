@@ -23,7 +23,7 @@ public static partial class Util
         private readonly FieldInfo fieldInfo;
         private readonly PropertyInfo propertyInfo;
 
-        public string Name => fieldInfo?.Name ?? propertyInfo?.Name ?? string.Empty;
+        public string Name => MemberInfo.Name;
         public Type Type => fieldInfo?.FieldType ?? propertyInfo?.PropertyType;
 
         public AssignableInfo(object o, MemberInfo info)

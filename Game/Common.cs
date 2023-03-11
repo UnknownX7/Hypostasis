@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -13,7 +12,7 @@ namespace Hypostasis.Game;
 
 public static unsafe class Common
 {
-    [Signature("48 8D 0D ?? ?? ?? ?? 88 44 24 24", ScanType = ScanType.StaticAddress, Fallibility = Fallibility.Infallible)]
+    [HypostasisSignatureInjection("48 8D 0D ?? ?? ?? ?? 88 44 24 24", Static = true, Required = true)]
     private static FFXIVReplay* ffxivReplay;
     public static FFXIVReplay* FFXIVReplay
     {
@@ -25,7 +24,7 @@ public static unsafe class Common
         }
     }
 
-    [ClientStructs<FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager>]
+    [HypostasisClientStructsInjection<FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager>(Required = true)]
     private static CameraManager* cameraManager;
     public static CameraManager* CameraManager
     {
@@ -37,7 +36,7 @@ public static unsafe class Common
         }
     }
 
-    [ClientStructs<FFXIVClientStructs.FFXIV.Client.Game.ActionManager>]
+    [HypostasisClientStructsInjection<FFXIVClientStructs.FFXIV.Client.Game.ActionManager>(Required = true)]
     private static ActionManager* actionManager;
     public static ActionManager* ActionManager
     {
@@ -49,7 +48,7 @@ public static unsafe class Common
         }
     }
 
-    [ClientStructs<Framework>]
+    [HypostasisClientStructsInjection<Framework>(Required = true)]
     private static Framework* framework;
     public static Framework* Framework
     {
@@ -68,7 +67,6 @@ public static unsafe class Common
         {
             if (uiModule != null) return uiModule;
             uiModule = Framework->UIModule;
-            AddMember(nameof(uiModule));
             return uiModule;
         }
     }
@@ -80,7 +78,6 @@ public static unsafe class Common
         {
             if (inputData != null) return inputData;
             inputData = (InputData*)UIModule->GetUIInputData();
-            AddMember(nameof(inputData));
             return inputData;
         }
     }
@@ -92,7 +89,6 @@ public static unsafe class Common
         {
             if (raptureShellModule != null) return raptureShellModule;
             raptureShellModule = UIModule->GetRaptureShellModule();
-            AddMember(nameof(raptureShellModule));
             return raptureShellModule;
         }
     }
@@ -104,7 +100,6 @@ public static unsafe class Common
         {
             if (pronounModule != null) return pronounModule;
             pronounModule = UIModule->GetPronounModule();
-            AddMember(nameof(pronounModule));
             return pronounModule;
         }
     }
@@ -141,15 +136,6 @@ public static unsafe class Common
 
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
 
-    private static void AddMember(string member) => DalamudApi.SigScanner.AddMember(typeof(Common), null, member);
-
-    public static void Initialize()
-    {
-
-    }
-
-    public static void Dispose()
-    {
-
-    }
+    public static void Initialize() { }
+    public static void Dispose() { }
 }

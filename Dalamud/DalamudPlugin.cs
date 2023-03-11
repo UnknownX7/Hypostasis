@@ -7,7 +7,6 @@ using Dalamud.Game.Gui.Toast;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-#pragma warning disable CA1816
 
 namespace Hypostasis.Dalamud;
 

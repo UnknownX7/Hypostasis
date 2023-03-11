@@ -6,8 +6,8 @@ namespace Hypostasis.Game.Structures;
 public unsafe partial struct CameraManager : IHypostasisStructure
 {
     [FieldOffset(0x0)] public FFXIVClientStructs.FFXIV.Client.Game.Control.CameraManager CS;
-    [FieldOffset(0x0)] public GameCamera* WorldCamera;
-    [FieldOffset(0x8)] public GameCamera* IdleCamera;
-    [FieldOffset(0x10)] public GameCamera* MenuCamera;
-    [FieldOffset(0x18)] public GameCamera* SpectatorCamera;
+    [FieldOffset(0x0)] public GameCamera* worldCamera;
+    [FieldOffset(0x8)] public GameCamera* idleCamera;
+    [FieldOffset(0x10)] public GameCamera* menuCamera;
+    [FieldOffset(0x18)] public GameCamera* spectatorCamera;
 }

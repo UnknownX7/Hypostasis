@@ -15,7 +15,7 @@ public abstract class PluginModule
             try
             {
                 if (isValid == null)
-                    DalamudApi.SigScanner.Inject(this, false);
+                    DalamudApi.SigScanner.Inject(this);
                 return isValid ?? (isValid = Validate()).Value;
             }
             catch (Exception e)
