@@ -52,8 +52,6 @@ public class GameStructureAttribute : Attribute
 
 public class SigScannerWrapper : IDisposable
 {
-    private const BindingFlags defaultBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
     private readonly Dictionary<string, nint> sigCache = new();
     private readonly Dictionary<string, nint> staticSigCache = new();
     private readonly List<IDisposable> disposableHooks = new();
@@ -184,7 +182,10 @@ public class SigScannerWrapper : IDisposable
 
     public void Inject(Type type, object o = null)
     {
-        foreach (var memberInfo in type.GetMembers(defaultBindingFlags).Where(memberInfo => memberInfo.MemberType is MemberTypes.Field or MemberTypes.Property))
+        if (o != null)
+            Debug.AddInjectedObject(o);
+
+        foreach (var memberInfo in type.GetAllMembers().Where(memberInfo => memberInfo.MemberType is MemberTypes.Field or MemberTypes.Property))
             InjectMember(o, memberInfo);
     }
 
@@ -302,11 +303,11 @@ public class SigScannerWrapper : IDisposable
 
     private static Delegate GetMethodDelegate(IReflect ownerType, Type delegateType, object o, string methodName)
     {
-        var detourMethod = ownerType.GetMethod(methodName, defaultBindingFlags);
+        var detourMethod = ownerType.GetMethod(methodName, Util.AllMembersBindingFlags);
         return CreateDelegate(delegateType, o, detourMethod);
     }
 
-    private static Delegate[] GetMethodDelegates(IReflect ownerType, Type delegateType, object o) => ownerType.GetMethods(defaultBindingFlags)
+    private static Delegate[] GetMethodDelegates(IReflect ownerType, Type delegateType, object o) => ownerType.GetAllMethods()
         .Select(methodInfo => CreateDelegate(delegateType, o, methodInfo)).Where(del => del != null).ToArray();
 
     private static Delegate CreateDelegate(Type delegateType, object o, MethodInfo delegateMethod)
@@ -325,7 +326,7 @@ public class SigScannerWrapper : IDisposable
             disposableHooks.Add(hook);
     }
 
-    public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, defaultBindingFlags)[0]);
+    public void InjectMember(Type type, object o, string member) => InjectMember(o, type.GetMember(member, Util.AllMembersBindingFlags)[0]);
 
     private static void LogInjectError(MemberInfo memberInfo, string message, bool required)
     {

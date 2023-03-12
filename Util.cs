@@ -24,7 +24,7 @@ public static partial class Util
         private readonly PropertyInfo propertyInfo;
 
         public string Name => MemberInfo.Name;
-        public Type Type => fieldInfo?.FieldType ?? propertyInfo?.PropertyType;
+        public Type Type => MemberInfo.GetObjectType();
 
         public AssignableInfo(object o, MemberInfo info)
         {
@@ -42,6 +42,8 @@ public static partial class Util
             propertyInfo?.SetValue(Object, v);
         }
     }
+
+    public const BindingFlags AllMembersBindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
     [LibraryImport("user32.dll")]
     private static partial nint GetForegroundWindow();
@@ -76,6 +78,24 @@ public static partial class Util
 
     public static IEnumerable<(Type, T)> GetTypesWithAttribute<T>(this Assembly assembly) where T : Attribute =>
         from t in assembly.GetTypes() let attribute = t.GetCustomAttribute<T>() where attribute != null select (t, attribute);
+
+    public static MemberInfo[] GetAllMembers(this IReflect type) => type.GetMembers(AllMembersBindingFlags);
+
+    public static IEnumerable<(MemberInfo, T)> GetAllMembersWithAttribute<T>(this IReflect type) where T : Attribute =>
+        from memberInfo in type.GetAllMembers() let attribute = memberInfo.GetCustomAttribute<T>() where attribute != null select (memberInfo, attribute);
+
+    public static FieldInfo[] GetAllFields(this IReflect type) => type.GetFields(AllMembersBindingFlags);
+
+    public static PropertyInfo[] GetAllProperties(this IReflect type) => type.GetProperties(AllMembersBindingFlags);
+
+    public static MethodInfo[] GetAllMethods(this IReflect type) => type.GetMethods(AllMembersBindingFlags);
+
+    public static Type GetObjectType(this MemberInfo memberInfo) => memberInfo switch
+    {
+        FieldInfo field => field.FieldType,
+        PropertyInfo property => property.PropertyType,
+        _ => null
+    };
 
     public static bool StartProcess(ProcessStartInfo startInfo)
     {

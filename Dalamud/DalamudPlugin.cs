@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using Dalamud.Configuration;
 using Dalamud.Game;
 using Dalamud.Game.Gui.Toast;
@@ -12,8 +11,6 @@ namespace Hypostasis.Dalamud;
 
 public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamudPlugin where C : PluginConfiguration<C>, IPluginConfiguration, new()
 {
-    private const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
     public abstract string Name { get; }
     public static P Plugin { get; private set; }
     public static C Config { get; private set; }
@@ -61,19 +58,19 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
             var derivedType = typeof(P);
 
-            if (derivedType.GetMethod(nameof(Update), bindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(Update), Util.AllMembersBindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
             {
                 DalamudApi.Framework.Update += Update;
                 addedUpdate = true;
             }
 
-            if (derivedType.GetMethod(nameof(Draw), bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(Draw), Util.AllMembersBindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
             {
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
                 addedDraw = true;
             }
 
-            if (derivedType.GetMethod(nameof(ToggleConfig), bindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
+            if (derivedType.GetMethod(nameof(ToggleConfig), Util.AllMembersBindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
             {
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
                 addedConfig = true;
@@ -96,6 +93,8 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             Dispose();
             Hypostasis.State = Hypostasis.PluginState.Failed;
         }
+
+        Debug.SetupDebugMembers();
     }
 
     public static void PrintEcho(string message) => DalamudApi.ChatGui.Print(printHeader + message);

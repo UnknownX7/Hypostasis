@@ -20,7 +20,7 @@ public class PluginCommandManager : IDisposable
 
     public PluginCommandManager(object o)
     {
-        foreach (var method in o.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+        foreach (var method in o.GetType().GetAllMethods())
             AddPluginCommandMethod(o, method);
     }
 

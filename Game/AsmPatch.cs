@@ -6,6 +6,7 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
+[HypostasisDebuggable]
 public sealed class AsmPatch : IDisposable
 {
     public nint Address { get; } = nint.Zero;

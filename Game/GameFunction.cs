@@ -5,6 +5,7 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
+[HypostasisDebuggable]
 public sealed class GameFunction<T> : IGameFunction where T : Delegate
 {
     public string Signature { get; }
@@ -18,14 +19,14 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
     private nint? address;
     private T del;
 
-    public GameFunction(string sig, bool infallible = false)
+    public GameFunction(string sig, bool required = false)
     {
         Signature = sig;
-        if (infallible)
+        if (required)
             SetupAddress(true);
     }
 
-    private nint SetupAddress(bool infallible)
+    private nint SetupAddress(bool required)
     {
         try
         {
@@ -35,7 +36,7 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
         {
             address = nint.Zero;
             PluginLog.Warning(e, $"Failed to find signature {Signature}");
-            if (infallible)
+            if (required)
                 throw;
         }
 

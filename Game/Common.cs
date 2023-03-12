@@ -60,6 +60,7 @@ public static unsafe class Common
         }
     }
 
+    [HypostasisDebuggable]
     private static UIModule* uiModule;
     public static UIModule* UIModule
     {
@@ -71,6 +72,7 @@ public static unsafe class Common
         }
     }
 
+    [HypostasisDebuggable]
     private static InputData* inputData;
     public static InputData* InputData
     {
@@ -82,6 +84,7 @@ public static unsafe class Common
         }
     }
 
+    [HypostasisDebuggable]
     private static RaptureShellModule* raptureShellModule;
     public static RaptureShellModule* RaptureShellModule
     {
@@ -93,6 +96,7 @@ public static unsafe class Common
         }
     }
 
+    [HypostasisDebuggable]
     private static PronounModule* pronounModule;
     public static PronounModule* PronounModule
     {
@@ -132,6 +136,7 @@ public static unsafe class Common
 
     public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
 
+    [HypostasisDebuggable]
     public static GameObject* UITarget => (GameObject*)*(nint*)((nint)PronounModule + 0x290);
 
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
