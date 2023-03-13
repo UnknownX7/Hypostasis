@@ -164,6 +164,10 @@ public static partial class Util
 
     public static bool IsValidHookAddress(this nint address) => DalamudApi.SigScanner.IsValidHookAddress(address);
 
+    public static string ReadCString(this nint address) => Marshal.PtrToStringAnsi(address);
+
+    public static string ReadCString(this nint address, int len) => Marshal.PtrToStringAnsi(address, len);
+
     public static object Cast(this Type type, object data)
     {
         var dataParam = Expression.Parameter(typeof(object), "data");
