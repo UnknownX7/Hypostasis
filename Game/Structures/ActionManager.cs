@@ -16,6 +16,9 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x38)] public long castTargetObjectID;
     [FieldOffset(0x60)] public float remainingComboTime;
     [FieldOffset(0x68)] public bool isQueued;
+    [FieldOffset(0x6C)] public uint queuedActionType;
+    [FieldOffset(0x70)] public uint queuedActionID;
+    [FieldOffset(0x78)] public long queuedTargetObjectID;
     [FieldOffset(0x98)] public long queuedGroundTargetObjectID;
     [FieldOffset(0xB8)] public byte activateGroundTarget;
     [FieldOffset(0x110)] public ushort currentSequence;
