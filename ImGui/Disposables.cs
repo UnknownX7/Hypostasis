@@ -16,15 +16,25 @@ public static partial class ImGuiEx
             return instance;
         }
 
+        public static IDBlock Begin(uint id) => Begin((int)id);
+
         public static IDBlock Begin(nint id)
         {
             ImGui.PushID(id);
             return instance;
         }
 
+        public static IDBlock Begin(nuint id) => Begin((nint)id);
+
         public static IDBlock Begin(string id)
         {
             ImGui.PushID(id);
+            return instance;
+        }
+
+        public static unsafe IDBlock Begin(void* ptr)
+        {
+            ImGuiNative.igPushID_Ptr(ptr);
             return instance;
         }
 
