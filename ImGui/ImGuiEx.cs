@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Dalamud.Interface;
 
@@ -244,5 +245,37 @@ public static partial class ImGuiEx
         }
 
         return ret;
+    }
+
+    public static void FloatingDrawable(Action<ImDrawListPtr, float, Vector2> draw, uint timerMS = 1000)
+    {
+        var viewport = ImGui.GetWindowViewport();
+        var pos = ImGui.GetMousePos();
+        var timer = Stopwatch.StartNew();
+
+        void f()
+        {
+            var percentElapsed = Math.Min(timer.ElapsedMilliseconds / (float)timerMS, 1);
+
+            // Moving a window to the main viewport and then back off while one of these is drawing can sometimes cause a crash if done quickly enough, this flag seems to be set on those viewports though
+            if (percentElapsed < 1 && !viewport.Flags.HasFlag(ImGuiViewportFlags.NoTaskBarIcon))
+                draw(ImGui.GetForegroundDrawList(viewport), percentElapsed, pos);
+            else
+                DalamudApi.PluginInterface.UiBuilder.Draw -= f;
+        }
+
+        DalamudApi.PluginInterface.UiBuilder.Draw += f;
+    }
+
+    public static void FloatingText(string text, uint color = 0xFFFFFFFF)
+    {
+        var textSize = ImGui.CalcTextSize(text);
+        var startingAlpha = color >> 24;
+
+        FloatingDrawable((drawList, percentElapsed, pos) =>
+        {
+            var alphaReduction = percentElapsed > 0.75f ? (uint)(startingAlpha * (percentElapsed - 0.75f) * 4) << 24 : 0;
+            drawList.AddText(new Vector2(pos.X - textSize.X / 2, pos.Y - textSize.Y - 20 * percentElapsed * ImGuiHelpers.GlobalScale), color - alphaReduction, text);
+        });
     }
 }
