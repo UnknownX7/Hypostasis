@@ -33,7 +33,7 @@ public static partial class ImGuiEx
     }
 
     private static string sheetSearchText;
-    private static List<ExcelRow> filteredSearchSheet;
+    private static ExcelRow[] filteredSearchSheet;
     private static string prevSearchID;
     private static Type prevSearchType;
 
@@ -59,7 +59,7 @@ public static partial class ImGuiEx
         if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref sheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
             filteredSearchSheet = null;
 
-        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Select(s => (ExcelRow)s).ToList();
+        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Cast<ExcelRow>().ToArray();
     }
 
     public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : ExcelRow
@@ -77,7 +77,7 @@ public static partial class ImGuiEx
 
         var ret = false;
         var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
-        using (var clipper = new ListClipper(filteredSearchSheet.Count))
+        using (var clipper = new ListClipper(filteredSearchSheet.Length))
         {
             foreach (var i in clipper.Rows)
             {
@@ -115,7 +115,7 @@ public static partial class ImGuiEx
 
         var ret = false;
         var drawSelectable = options.DrawSelectable ?? ((row, selected) => ImGui.Selectable(options.FormatRow(row), selected));
-        using (var clipper = new ListClipper(filteredSearchSheet.Count))
+        using (var clipper = new ListClipper(filteredSearchSheet.Length))
         {
             foreach (var i in clipper.Rows)
             {
@@ -148,11 +148,49 @@ public static partial class ImGuiEx
         return true;
     }
 
+    private static string tableSearchText = string.Empty;
+    private static ExcelRow[] filteredTableSearchSheet;
+    private static string prevTableSearchID;
+    private static Type prevTableSearchType;
+
     public static void ExcelSheetTable<T>(string id) where T : ExcelRow
     {
         var properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
         var columns = properties.Length;
-        if (columns == 0 || !ImGui.BeginTable(id, columns + 1, ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY)) return;
+
+        ImGui.BeginGroup();
+
+        if (prevTableSearchID != id || prevTableSearchType != typeof(T))
+        {
+            tableSearchText = string.Empty;
+            prevTableSearchType = typeof(T);
+            filteredTableSearchSheet = null;
+            prevTableSearchID = id;
+        }
+
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+        if (ImGui.InputTextWithHint("##ExcelTableSearch", "Search", ref tableSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
+            filteredTableSearchSheet = null;
+
+        if (columns == 0 || !ImGui.BeginTable(id, columns + 1, ImGuiTableFlags.Sortable | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY))
+        {
+            ImGui.EndGroup();
+            return;
+        }
+
+        static string GetObjectAsString(object o) => o switch
+        {
+            ILazyRow lazyRow => $"{lazyRow.GetType().GenericTypeArguments[0].Name}#{lazyRow.Row}",
+            _ => o?.ToString() ?? string.Empty
+        };
+
+        static IEnumerable<string> GetPropertiesAsStrings(IEnumerable<PropertyInfo> properties, object o)
+        {
+            foreach (var propertyInfo in properties)
+                yield return GetObjectAsString(propertyInfo.GetValue(o));
+        }
+
+        static IComparable GetComparable(object o) => o is ILazyRow lazyRow ? lazyRow.Row : o as IComparable ?? GetObjectAsString(o);
 
         ImGui.TableSetupScrollFreeze(1, 1);
         ImGui.TableSetupColumn("Row");
@@ -163,10 +201,31 @@ public static partial class ImGuiEx
         var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
         if (sheet != null)
         {
-            using var clipper = new ListClipper((int)sheet.RowCount);
+            var sortSpecs = ImGui.TableGetSortSpecs();
+            if (filteredTableSearchSheet == null || sortSpecs.SpecsDirty)
+            {
+                var rows = sheet.Where(row => GetPropertiesAsStrings(properties, row).Any(valueStr => valueStr.Contains(tableSearchText, StringComparison.CurrentCultureIgnoreCase)));
+
+                if (sortSpecs.Specs.ColumnIndex > 0)
+                {
+                    rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
+                        ? rows.OrderBy(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)))
+                        : rows.OrderByDescending(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)));
+                }
+                else
+                {
+                    rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
+                        ? rows.OrderBy(row => row.RowId)
+                        : rows.OrderByDescending(row => row.RowId);
+                }
+
+                sortSpecs.SpecsDirty = false;
+                filteredTableSearchSheet = rows.Cast<ExcelRow>().ToArray();
+            }
+            using var clipper = new ListClipper(filteredTableSearchSheet.Length);
             foreach (var i in clipper.Rows)
             {
-                var row = sheet.GetRow((uint)i);
+                var row = filteredTableSearchSheet[i];
                 if (row == null) continue;
 
                 ImGui.TableNextRow();
@@ -175,23 +234,17 @@ public static partial class ImGuiEx
                 ImGui.TextUnformatted(row.RowId.ToString());
                 ImGui.TableNextColumn();
 
-                for (int j = 0; j < properties.Length; j++)
+                var j = 0;
+                foreach (var valueStr in GetPropertiesAsStrings(properties, row))
                 {
-                    var propertyInfo = properties[j];
-                    var value = propertyInfo.GetValue(row);
-                    var valueStr = value switch
-                    {
-                        ILazyRow lazyRow => lazyRow.Row.ToString(),
-                        _ => value?.ToString() ?? string.Empty
-                    };
-
                     ImGui.TextUnformatted(valueStr);
-                    if (j != properties.Length - 1)
+                    if (j++ != properties.Length - 1)
                         ImGui.TableNextColumn();
                 }
             }
         }
 
         ImGui.EndTable();
+        ImGui.EndGroup();
     }
 }
