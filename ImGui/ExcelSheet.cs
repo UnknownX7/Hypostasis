@@ -2,9 +2,9 @@
 using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Dalamud.Interface;
 using Lumina.Excel;
-using System.Reflection;
 
 namespace ImGuiNET;
 
@@ -152,6 +152,7 @@ public static partial class ImGuiEx
     private static ExcelRow[] filteredTableSearchSheet;
     private static string prevTableSearchID;
     private static Type prevTableSearchType;
+    private static bool tableCompatMode = false;
 
     public static void ExcelSheetTable<T>(string id) where T : ExcelRow
     {
@@ -169,10 +170,16 @@ public static partial class ImGuiEx
         }
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-        if (ImGui.InputTextWithHint("##ExcelTableSearch", "Search", ref tableSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
+        if (ImGui.InputTextWithHint("##ExcelTableSearch", "Search", ref tableSearchText, 128, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue))
             filteredTableSearchSheet = null;
 
-        if (columns == 0 || !ImGui.BeginTable(id, columns + 1, ImGuiTableFlags.Sortable | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY))
+        if (IsItemReleased(ImGuiMouseButton.Right))
+            tableCompatMode ^= true;
+
+        if (tableCompatMode)
+            ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), ImGui.GetColorU32(ImGuiCol.TabActive), ImGui.GetStyle().FrameRounding);
+
+        if (columns == 0 || !ImGui.BeginTable(id, tableCompatMode && columns >= 64 ? 64 : columns + 1, (columns < 64 || tableCompatMode ? ImGuiTableFlags.Sortable : ImGuiTableFlags.None) | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY))
         {
             ImGui.EndGroup();
             return;
@@ -181,6 +188,7 @@ public static partial class ImGuiEx
         static string GetObjectAsString(object o) => o switch
         {
             ILazyRow lazyRow => $"{lazyRow.GetType().GenericTypeArguments[0].Name}#{lazyRow.Row}",
+            //Lumina.Text.SeString seString => seString.ToDalamudString().ToString(),
             _ => o?.ToString() ?? string.Empty
         };
 
@@ -194,32 +202,50 @@ public static partial class ImGuiEx
 
         ImGui.TableSetupScrollFreeze(1, 1);
         ImGui.TableSetupColumn("Row");
-        foreach (var propertyInfo in properties)
+        for (int col = 0; col < properties.Length; col++)
+        {
+            if (tableCompatMode && col >= 63)
+                break;
+
+            var propertyInfo = properties[col];
             ImGui.TableSetupColumn(propertyInfo.Name);
+        }
+
         ImGui.TableHeadersRow();
 
         var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
         if (sheet != null)
         {
+            // Sorting causes crashes if above the current max column limit of 64, so this is required until Dalamud updates ImGui
             var sortSpecs = ImGui.TableGetSortSpecs();
-            if (filteredTableSearchSheet == null || sortSpecs.SpecsDirty)
+            bool usingSort;
+            unsafe
             {
-                var rows = sheet.Where(row => GetPropertiesAsStrings(properties, row).Any(valueStr => valueStr.Contains(tableSearchText, StringComparison.CurrentCultureIgnoreCase)));
+                usingSort = sortSpecs.NativePtr != null;
+            }
 
-                if (sortSpecs.Specs.ColumnIndex > 0)
+            if (filteredTableSearchSheet == null || (usingSort && sortSpecs.SpecsDirty))
+            {
+                var rows = sheet.Where(row => row.RowId.ToString() == tableSearchText || GetPropertiesAsStrings(properties, row).Any(valueStr => valueStr.Contains(tableSearchText, StringComparison.CurrentCultureIgnoreCase)));
+
+                if (usingSort)
                 {
-                    rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
-                        ? rows.OrderBy(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)))
-                        : rows.OrderByDescending(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)));
-                }
-                else
-                {
-                    rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
-                        ? rows.OrderBy(row => row.RowId)
-                        : rows.OrderByDescending(row => row.RowId);
+                    if (sortSpecs.Specs.ColumnIndex > 0)
+                    {
+                        rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
+                            ? rows.OrderBy(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)))
+                            : rows.OrderByDescending(row => GetComparable(properties[sortSpecs.Specs.ColumnIndex - 1].GetValue(row)));
+                    }
+                    else
+                    {
+                        rows = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Ascending
+                            ? rows.OrderBy(row => row.RowId)
+                            : rows.OrderByDescending(row => row.RowId);
+                    }
+
+                    sortSpecs.SpecsDirty = false;
                 }
 
-                sortSpecs.SpecsDirty = false;
                 filteredTableSearchSheet = rows.Cast<ExcelRow>().ToArray();
             }
             using var clipper = new ListClipper(filteredTableSearchSheet.Length);
@@ -238,6 +264,10 @@ public static partial class ImGuiEx
                 foreach (var valueStr in GetPropertiesAsStrings(properties, row))
                 {
                     ImGui.TextUnformatted(valueStr);
+
+                    if (tableCompatMode && j == 62)
+                        break;
+
                     if (j++ != properties.Length - 1)
                         ImGui.TableNextColumn();
                 }
