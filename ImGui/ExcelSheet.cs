@@ -170,7 +170,7 @@ public static partial class ImGuiEx
         }
 
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-        if (ImGui.InputTextWithHint("##ExcelTableSearch", "Search", ref tableSearchText, 128, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue))
+        if (ImGui.InputTextWithHint("##ExcelTableSearch", !tableCompatMode ? "\uE052 Search" : "\uE052 Large Table Sorting Enabled", ref tableSearchText, 128, ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue))
             filteredTableSearchSheet = null;
 
         if (IsItemReleased(ImGuiMouseButton.Right))
