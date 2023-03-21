@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -247,9 +247,9 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    public static void FloatingDrawable(Action<ImDrawListPtr, float, Vector2> draw, uint timerMS = 1000)
+    public static unsafe void FloatingDrawable(Action<ImDrawListPtr, float, Vector2> draw, uint timerMS = 1000)
     {
-        var viewport = ImGui.GetWindowViewport();
+        var viewport = ImGui.GetWindowViewport() is { NativePtr: not null } v ? v : ImGui.GetMainViewport();
         var pos = ImGui.GetMousePos();
         var timer = Stopwatch.StartNew();
 
@@ -267,7 +267,7 @@ public static partial class ImGuiEx
         DalamudApi.PluginInterface.UiBuilder.Draw += f;
     }
 
-    public static void FloatingText(string text, uint color = 0xFFFFFFFF)
+    public static void FloatingText(string text, uint color = 0xFFFFFFFF, uint timerMS = 1000)
     {
         var textSize = ImGui.CalcTextSize(text);
         var startingAlpha = color >> 24;
@@ -275,7 +275,9 @@ public static partial class ImGuiEx
         FloatingDrawable((drawList, percentElapsed, pos) =>
         {
             var alphaReduction = percentElapsed > 0.75f ? (uint)(startingAlpha * (percentElapsed - 0.75f) * 4) << 24 : 0;
-            drawList.AddText(new Vector2(pos.X - textSize.X / 2, pos.Y - textSize.Y - 20 * percentElapsed * ImGuiHelpers.GlobalScale), color - alphaReduction, text);
-        });
+            pos = new Vector2(pos.X - textSize.X / 2, pos.Y - textSize.Y - 20 * percentElapsed * ImGuiHelpers.GlobalScale);
+            drawList.AddText(pos + Vector2.One * ImGuiHelpers.GlobalScale, (startingAlpha << 24) - alphaReduction, text);
+            drawList.AddText(pos, color - alphaReduction, text);
+        }, timerMS);
     }
 }
