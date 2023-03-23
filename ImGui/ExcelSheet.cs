@@ -159,6 +159,8 @@ public static partial class ImGuiEx
         var properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
         var columns = properties.Length;
 
+        if (columns == 0) return;
+
         ImGui.BeginGroup();
 
         if (prevTableSearchID != id || prevTableSearchType != typeof(T))
@@ -179,7 +181,7 @@ public static partial class ImGuiEx
         if (tableCompatMode)
             ImGui.GetWindowDrawList().AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), ImGui.GetColorU32(ImGuiCol.TabActive), ImGui.GetStyle().FrameRounding);
 
-        if (columns == 0 || !ImGui.BeginTable(id, tableCompatMode && columns >= 64 ? 64 : columns + 1, (columns < 64 || tableCompatMode ? ImGuiTableFlags.Sortable : ImGuiTableFlags.None) | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY))
+        if (!ImGui.BeginTable(id, tableCompatMode && columns >= 64 ? 64 : columns + 1, (columns < 64 || tableCompatMode ? ImGuiTableFlags.Sortable : ImGuiTableFlags.None) | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY))
         {
             ImGui.EndGroup();
             return;
