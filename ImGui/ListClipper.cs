@@ -15,6 +15,8 @@ public static partial class ImGuiEx
         private readonly bool twoDimensional;
         private readonly int itemRemainder;
 
+        public int FirstRow { get; private set; } = -1;
+        public int LastRow => CurrentRow;
         public int CurrentRow { get; private set; }
         public bool IsStepped => CurrentRow == DisplayStart;
         public int DisplayStart => clipper.DisplayStart;
@@ -26,6 +28,8 @@ public static partial class ImGuiEx
             {
                 while (clipper.Step()) // Supposedly this calls End()
                 {
+                    if (clipper.ItemsHeight > 0 && FirstRow < 0)
+                        FirstRow = (int)(ImGui.GetScrollY() / clipper.ItemsHeight);
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                     {
                         CurrentRow = i;
