@@ -9,11 +9,10 @@ using Dalamud.Plugin;
 
 namespace Hypostasis.Dalamud;
 
-public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamudPlugin where C : PluginConfiguration<C>, IPluginConfiguration, new()
+public abstract class DalamudPlugin<P> where P : DalamudPlugin<P>, IDalamudPlugin
 {
     public abstract string Name { get; }
     public static P Plugin { get; private set; }
-    public static C Config { get; private set; }
 
     private static string printName, printHeader;
     private readonly bool addedUpdate, addedDraw, addedConfig;
@@ -32,7 +31,7 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
             printHeader = $"[{printName}] ";
 
             Hypostasis.Initialize(Plugin, pluginInterface);
-            Config = PluginConfiguration<C>.LoadConfig();
+            SetupConfig();
             pluginCommandManager = new(Plugin);
         }
         catch (Exception e)
@@ -117,13 +116,17 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
 
     protected virtual void Draw() { }
 
+    protected virtual void SetupConfig() { }
+
+    protected virtual void DisposeConfig() { }
+
     protected abstract void Dispose(bool disposing);
 
     public void Dispose()
     {
         var failed = Hypostasis.State == Hypostasis.PluginState.Loading;
         Hypostasis.State = Hypostasis.PluginState.Unloading;
-        Config?.Save();
+        DisposeConfig();
 
         if (addedUpdate)
             DalamudApi.Framework.Update -= Update;
@@ -142,4 +145,12 @@ public abstract class DalamudPlugin<P, C> where P : DalamudPlugin<P, C>, IDalamu
         Hypostasis.State = Hypostasis.PluginState.Unloaded;
         GC.SuppressFinalize(this);
     }
+}
+
+public abstract class DalamudPlugin<P, C> : DalamudPlugin<P> where P : DalamudPlugin<P, C>, IDalamudPlugin where C : PluginConfiguration<C>, IPluginConfiguration, new()
+{
+    public static C Config { get; private set; }
+    protected DalamudPlugin(DalamudPluginInterface pluginInterface) : base(pluginInterface) { }
+    protected sealed override void SetupConfig() => Config = PluginConfiguration<C>.LoadConfig();
+    protected sealed override void DisposeConfig() => Config?.Save();
 }
