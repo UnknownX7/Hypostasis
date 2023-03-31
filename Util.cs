@@ -141,6 +141,10 @@ public static partial class Util
         return r.ReadToEnd();
     }
 
+    public static int ToMilliseconds(this float f) => (int)(f * 1000);
+
+    public static int ToMilliseconds(this double d) => (int)(d * 1000);
+
     public static unsafe nint ConvertObjectToIntPtr(object o) => o switch
     {
         Pointer p => (nint)Pointer.Unbox(p),
@@ -195,4 +199,6 @@ public static partial class Util
     }
 
     public static void Shift(this IList list, int i, float amount) => Shift(list, i, (int)amount);
+
+    public static bool IsAprilFools => DateTime.Now is { Month: 4, Day: 1 };
 }

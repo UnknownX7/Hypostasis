@@ -121,6 +121,26 @@ public static partial class ImGuiEx
             ImGui.SetClipboardText(text);
     }
 
+    public static void TextMarquee(string text, float speed = 0.1f)
+    {
+        var textWidth = ImGui.CalcTextSize(text).X;
+        var scrollWidth = ImGui.GetContentRegionMax().X + textWidth;
+        var indent = (float)DalamudApi.PluginInterface.LoadTimeDelta.TotalSeconds * (scrollWidth * speed) % scrollWidth - textWidth;
+        ImGui.Indent(indent);
+        ImGui.TextUnformatted(text);
+        ImGui.Unindent(indent);
+    }
+
+    public static void TextMarquee(Vector4 color, string text, float speed = 0.1f)
+    {
+        var textWidth = ImGui.CalcTextSize(text).X;
+        var scrollWidth = ImGui.GetContentRegionMax().X + textWidth;
+        var indent = (float)DalamudApi.PluginInterface.LoadTimeDelta.TotalSeconds * (scrollWidth * speed) % scrollWidth - textWidth;
+        ImGui.Indent(indent);
+        ImGui.TextColored(color, text);
+        ImGui.Unindent(indent);
+    }
+
     public static bool FontButton(string label, ImFontPtr font)
     {
         ImGui.PushFont(font);
