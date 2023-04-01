@@ -168,6 +168,8 @@ public static partial class Util
 
     public static bool IsValidHookAddress(this nint address) => DalamudApi.SigScanner.IsValidHookAddress(address);
 
+    public static unsafe T Deref<T>(this nint address) where T : unmanaged => *(T*)address;
+
     public static string ReadCString(this nint address) => Marshal.PtrToStringAnsi(address);
 
     public static string ReadCString(this nint address, int len) => Marshal.PtrToStringAnsi(address, len);
