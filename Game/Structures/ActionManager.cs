@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace Hypostasis.Game.Structures;
@@ -28,6 +29,8 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;
     [FieldOffset(0x5F4)] public float gcdRecastTime;
 
+    public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
+
     public delegate uint GetSpellIDForActionDelegate(uint actionType, uint actionID);
     public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 44 8B 4B 2C");
     public static uint GetSpellIDForAction(uint actionType, uint actionID) => getSpellIDForAction.Invoke(actionType, actionID);
@@ -36,6 +39,10 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static readonly GameFunction<CanUseActionOnGameObjectDelegate> canUseActionOnGameObject = new("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3");
     public static bool CanUseActionOnGameObject(uint actionID, GameObject* o) =>
         canUseActionOnGameObject.Invoke(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
+
+    public delegate uint GetAdjustedRecastTimeDelegate(uint actionType, uint actionID, Bool useStats);
+    public static readonly GameFunction<GetAdjustedRecastTimeDelegate> getAdjustedRecastTime = new("E8 ?? ?? ?? ?? 8B D6 41 8B CF");
+    public static uint GetAdjustedRecastTime(uint actionType, uint actionID, bool useStats) => getAdjustedRecastTime.Invoke(actionType, actionID, useStats);
 
     public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
     public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00");
