@@ -8,7 +8,7 @@ public unsafe partial struct InputData : IHypostasisStructure
     //[FieldOffset(0x0)] public void CS;
 
     public delegate Bool InputIDDelegate(InputData* inputData, uint id);
-    public static readonly GameFunction<InputIDDelegate> isInputIDHeld = new("E9 ?? ?? ?? ?? BA 4D 01 00 00");
+    public static readonly GameFunction<InputIDDelegate> isInputIDHeld = new("E9 ?? ?? ?? ?? B9 4F 01 00 00");
     public bool IsInputIDHeld(uint id)
     {
         fixed (InputData* ptr = &this)
