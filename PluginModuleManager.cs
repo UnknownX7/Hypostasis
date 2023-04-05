@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Dalamud.Logging;
 
 namespace Hypostasis;
 
 public static class PluginModuleManager
 {
-    private static readonly List<PluginModule> pluginModules = new();
+    private static readonly Dictionary<Type, PluginModule> pluginModules = new();
 
     public static bool Initialize()
     {
@@ -30,16 +29,17 @@ public static class PluginModuleManager
                 succeeded = false;
             }
 
-            t.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)?.SetValue(null, pluginModule);
-            pluginModules.Add(pluginModule);
+            pluginModules.Add(t, pluginModule);
         }
 
         return succeeded;
     }
 
+    public static T GetModule<T>() where T : PluginModule => (T)pluginModules[typeof(T)];
+
     public static void CheckModules()
     {
-        foreach (var pluginModule in pluginModules.Where(pluginModule => pluginModule.IsValid && pluginModule.ShouldEnable != pluginModule.IsEnabled))
+        foreach (var (_, pluginModule) in pluginModules.Where(kv => kv.Value.IsValid && kv.Value.ShouldEnable != kv.Value.IsEnabled))
             ToggleOrInvalidateModule(pluginModule, true);
     }
 
@@ -60,7 +60,7 @@ public static class PluginModuleManager
 
     public static void Dispose()
     {
-        foreach (var pluginModule in pluginModules.Where(pluginModule => pluginModule.IsValid && pluginModule.IsEnabled))
+        foreach (var (_, pluginModule) in pluginModules.Where(kv => kv.Value.IsValid && kv.Value.IsEnabled))
             pluginModule.Toggle();
     }
 }

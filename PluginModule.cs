@@ -5,8 +5,6 @@ namespace Hypostasis;
 
 public abstract class PluginModule
 {
-    //public static PluginModule Instance { get; private set; } // Can be implemented to enable access to a plugin module's instance
-
     private bool? isValid;
     public bool IsValid
     {
