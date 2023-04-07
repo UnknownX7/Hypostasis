@@ -8,6 +8,7 @@ namespace Hypostasis;
 public static class PluginModuleManager
 {
     private static readonly Dictionary<Type, PluginModule> pluginModules = new();
+    public static IEnumerable<PluginModule> PluginModules => pluginModules.Values;
 
     public static bool Initialize()
     {
@@ -39,7 +40,7 @@ public static class PluginModuleManager
 
     public static void CheckModules()
     {
-        foreach (var (_, pluginModule) in pluginModules.Where(kv => kv.Value.IsValid && kv.Value.ShouldEnable != kv.Value.IsEnabled))
+        foreach (var pluginModule in pluginModules.Values.Where(pluginModule => pluginModule.IsValid && pluginModule.ShouldEnable != pluginModule.IsEnabled))
             ToggleOrInvalidateModule(pluginModule, true);
     }
 
@@ -60,7 +61,7 @@ public static class PluginModuleManager
 
     public static void Dispose()
     {
-        foreach (var (_, pluginModule) in pluginModules.Where(kv => kv.Value.IsValid && kv.Value.IsEnabled))
+        foreach (var pluginModule in pluginModules.Values.Where(pluginModule => pluginModule.IsValid && pluginModule.IsEnabled))
             pluginModule.Toggle();
     }
 }
