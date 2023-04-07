@@ -36,6 +36,7 @@ public abstract class PluginModule
     protected virtual bool Validate() => true;
     protected virtual void Enable() { }
     protected virtual void Disable() { }
+    public virtual void Dispose() { }
 
     public void Toggle()
     {

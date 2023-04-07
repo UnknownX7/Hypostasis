@@ -61,7 +61,11 @@ public static class PluginModuleManager
 
     public static void Dispose()
     {
-        foreach (var pluginModule in pluginModules.Values.Where(pluginModule => pluginModule.IsValid && pluginModule.IsEnabled))
-            pluginModule.Toggle();
+        foreach (var pluginModule in pluginModules.Values.Where(pluginModule => pluginModule.IsValid))
+        {
+            if (pluginModule.IsEnabled)
+                pluginModule.Toggle();
+            pluginModule.Dispose();
+        }
     }
 }
