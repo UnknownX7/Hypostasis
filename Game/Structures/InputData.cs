@@ -2,7 +2,7 @@
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit), GameStructure("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8D 05 ?? ?? ?? ?? 48 63 DA")]
+[StructLayout(LayoutKind.Explicit, Size = 0xA20), GameStructure("48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 48 8D 05 ?? ?? ?? ?? 48 63 DA")]
 public unsafe partial struct InputData : IHypostasisStructure
 {
     //[FieldOffset(0x0)] public void CS;
@@ -49,4 +49,12 @@ public unsafe partial struct InputData : IHypostasisStructure
     public delegate sbyte GetMouseWheelStatusDelegate();
     public static readonly GameFunction<GetMouseWheelStatusDelegate> getMouseWheelStatus = new("E8 ?? ?? ?? ?? F7 D8 48 8B CB");
     public static sbyte GetMouseWheelStatus() => getMouseWheelStatus.Invoke();
+
+    public delegate void* GetInputBindingDelegate(InputData* inputData, uint id);
+    public static readonly GameFunction<GetInputBindingDelegate> getInputBinding = new("48 63 C2 48 6B C0 0B");
+    public void* GetInputBinding(uint id)
+    {
+        fixed (InputData* ptr = &this)
+            return getInputBinding.Invoke(ptr, id);
+    }
 }
