@@ -11,10 +11,10 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
     public static DirectoryInfo ConfigFolder => DalamudApi.PluginInterface.ConfigDirectory;
     public static FileInfo ConfigFile => DalamudApi.PluginInterface.ConfigFile;
 
-    public abstract int Version { get; set; }
+    public virtual int Version { get; set; }
     public Version PluginVersion;
 
-    public abstract void Initialize();
+    public virtual void Initialize() { }
 
     public static T LoadConfig()
     {
