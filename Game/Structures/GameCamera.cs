@@ -39,7 +39,8 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     [FieldOffset(0x224)] public float lookAtHeightOffset; // No idea what to call this (0x230 is the interpolated value)
     [FieldOffset(0x228)] public byte resetLookatHeightOffset; // No idea what to call this
     [FieldOffset(0x230)] public float interpolatedLookAtHeightOffset;
-    [FieldOffset(0x2B4)] public float lookAtY2;
+    [FieldOffset(0x2B0)] public byte lockPosition;
+    [FieldOffset(0x2C4)] public float lookAtY2;
 
     public bool IsHRotationOffset => mode == isFlipped;
     public float GameObjectHRotation => !IsHRotationOffset ? (currentHRotation > 0 ? currentHRotation - MathF.PI : currentHRotation + MathF.PI) : currentHRotation;
