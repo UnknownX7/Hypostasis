@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using Dalamud.Configuration;
 using Dalamud.Game;
@@ -56,13 +56,13 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
 
             var derivedType = typeof(P);
 
-            if (derivedType.DeclaresMethod(nameof(Update), new[] { typeof(Framework) }))
+            if (derivedType.DeclaresMethod(nameof(Update)))
                 DalamudApi.Framework.Update += Update;
 
-            if (derivedType.DeclaresMethod(nameof(Draw), Type.EmptyTypes))
+            if (derivedType.DeclaresMethod(nameof(Draw)))
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
 
-            if (derivedType.DeclaresMethod(nameof(ToggleConfig), Type.EmptyTypes))
+            if (derivedType.DeclaresMethod(nameof(ToggleConfig)))
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
 
             Hypostasis.State = Hypostasis.PluginState.Loaded;
@@ -102,7 +102,9 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
 
     protected virtual void ToggleConfig() { }
 
-    protected virtual void Update(Framework framework) { }
+    protected virtual void Update() { }
+
+    private void Update(Framework framework) => Update();
 
     protected virtual void Draw() { }
 

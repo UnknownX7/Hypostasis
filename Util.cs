@@ -92,9 +92,9 @@ public static partial class Util
 
     public static MethodInfo[] GetAllMethods(this IReflect type) => type.GetMethods(AllMembersBindingFlags);
 
-    public static bool DeclaresMethod(this Type type, string method) => type.GetMethod(method, AllMembersBindingFlags)?.DeclaringType == type;
-
     public static bool DeclaresMethod(this Type type, string method, Type[] types) => type.GetMethod(method, AllMembersBindingFlags, types)?.DeclaringType == type;
+
+    public static bool DeclaresMethod(this Type type, string method) => DeclaresMethod(type, method, Type.EmptyTypes);
 
     public static Type GetObjectType(this MemberInfo memberInfo) => memberInfo switch
     {
