@@ -66,6 +66,8 @@ public static partial class Util
         }
     }
 
+    public static bool IsAprilFools => DateTime.Now is { Month: 4, Day: 1 };
+
     public static Assembly Assembly => Assembly.GetExecutingAssembly();
 
     public static Type[] AssemblyTypes => Assembly.GetTypes();
@@ -89,6 +91,10 @@ public static partial class Util
     public static PropertyInfo[] GetAllProperties(this IReflect type) => type.GetProperties(AllMembersBindingFlags);
 
     public static MethodInfo[] GetAllMethods(this IReflect type) => type.GetMethods(AllMembersBindingFlags);
+
+    public static bool DeclaresMethod(this Type type, string method) => type.GetMethod(method, AllMembersBindingFlags)?.DeclaringType == type;
+
+    public static bool DeclaresMethod(this Type type, string method, Type[] types) => type.GetMethod(method, AllMembersBindingFlags, types)?.DeclaringType == type;
 
     public static Type GetObjectType(this MemberInfo memberInfo) => memberInfo switch
     {
@@ -202,5 +208,7 @@ public static partial class Util
 
     public static void Shift(this IList list, int i, float amount) => Shift(list, i, (int)amount);
 
-    public static bool IsAprilFools => DateTime.Now is { Month: 4, Day: 1 };
+    public static IEnumerable<K> SelectKeys<K, V>(this Dictionary<K, V> dict) => dict.Select(kv => kv.Key);
+
+    public static IEnumerable<V> SelectValues<K, V>(this Dictionary<K, V> dict) => dict.Select(kv => kv.Value);
 }
