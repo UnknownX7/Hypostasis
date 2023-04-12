@@ -65,9 +65,30 @@ public class SigScannerWrapper : IDisposable
 
     public SigScannerWrapper(SigScanner s) => DalamudSigScanner = s;
 
-    public nint Scan(nint address, int size, string signature) => SigScanner.Scan(address, size, signature);
+    public nint Scan(nint address, int size, string signature)
+    {
+        var scanCopy = address >= BaseAddress && address < BaseRDataAddress;
+        if (scanCopy)
+            address = DalamudSigScanner.SearchBase + (address - BaseAddress);
+        var ret = SigScanner.Scan(address, size, signature);
+        if (scanCopy && ret >= DalamudSigScanner.SearchBase)
+            ret = BaseAddress + (ret - DalamudSigScanner.SearchBase);
+        return ret;
+    }
+
     public nint Scan(nint address, nint endAddress, string signature) => Scan(address, (int)(endAddress - address), signature);
-    public bool TryScan(nint address, int size, string signature, out nint result) => SigScanner.TryScan(address, size, signature, out result);
+
+    public bool TryScan(nint address, int size, string signature, out nint result)
+    {
+        var scanCopy = address >= BaseAddress && address < BaseRDataAddress;
+        if (scanCopy)
+            address = DalamudSigScanner.SearchBase + (address - BaseAddress);
+        var ret = SigScanner.TryScan(address, size, signature, out result);
+        if (scanCopy && result >= DalamudSigScanner.SearchBase)
+            result = BaseAddress + (result - DalamudSigScanner.SearchBase);
+        return ret;
+    }
+
     public bool TryScan(nint address, nint endAddress, string signature, out nint result) => TryScan(address, (int)(endAddress - address), signature, out result);
 
     public nint ScanText(string signature)
@@ -239,6 +260,8 @@ public class SigScannerWrapper : IDisposable
 
     private void InjectAddress(Util.AssignableInfo assignableInfo, nint address, HypostasisMemberInjectionAttribute attribute)
     {
+        address += attribute.Offset;
+
         var type = assignableInfo.Type;
         if (type == typeof(nint) || type.IsPointer)
             assignableInfo.SetValue(address);
@@ -247,7 +270,7 @@ public class SigScannerWrapper : IDisposable
         else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Hook<>))
             InjectHook(assignableInfo, address, attribute);
         else if (type.IsPrimitive)
-            assignableInfo.SetValue(Marshal.PtrToStructure(address + attribute.Offset, type));
+            assignableInfo.SetValue(Marshal.PtrToStructure(address, type));
         else
             LogInjectError(assignableInfo.MemberInfo, "Failed to determine how to inject member", attribute.Required);
     }
