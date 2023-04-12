@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using Dalamud.Configuration;
 using Dalamud.Game;
@@ -122,13 +122,18 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
         DalamudApi.PluginInterface.UiBuilder.Draw -= Draw;
         DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfig;
 
-        Dispose(true);
+        try
+        {
+            Dispose(true);
+        }
+        finally
+        {
+            pluginCommandManager?.Dispose();
+            Hypostasis.Dispose(failed);
 
-        pluginCommandManager?.Dispose();
-        Hypostasis.Dispose(failed);
-
-        Hypostasis.State = Hypostasis.PluginState.Unloaded;
-        GC.SuppressFinalize(this);
+            Hypostasis.State = Hypostasis.PluginState.Unloaded;
+            GC.SuppressFinalize(this);
+        }
     }
 }
 
