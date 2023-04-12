@@ -9,13 +9,12 @@ using Dalamud.Plugin;
 
 namespace Hypostasis.Dalamud;
 
-public abstract class DalamudPlugin<P> where P : DalamudPlugin<P>, IDalamudPlugin
+public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>, IDalamudPlugin
 {
     public abstract string Name { get; }
     public static P Plugin { get; private set; }
 
     private static string printName, printHeader;
-    private readonly bool addedUpdate, addedDraw, addedConfig;
     private readonly PluginCommandManager pluginCommandManager;
 
     protected DalamudPlugin(DalamudPluginInterface pluginInterface)
@@ -57,23 +56,14 @@ public abstract class DalamudPlugin<P> where P : DalamudPlugin<P>, IDalamudPlugi
 
             var derivedType = typeof(P);
 
-            if (derivedType.GetMethod(nameof(Update), Util.AllMembersBindingFlags, new[] { typeof(Framework) })?.DeclaringType == derivedType)
-            {
+            if (derivedType.DeclaresMethod(nameof(Update), new[] { typeof(Framework) }))
                 DalamudApi.Framework.Update += Update;
-                addedUpdate = true;
-            }
 
-            if (derivedType.GetMethod(nameof(Draw), Util.AllMembersBindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
-            {
+            if (derivedType.DeclaresMethod(nameof(Draw), Type.EmptyTypes))
                 DalamudApi.PluginInterface.UiBuilder.Draw += Draw;
-                addedDraw = true;
-            }
 
-            if (derivedType.GetMethod(nameof(ToggleConfig), Util.AllMembersBindingFlags, Type.EmptyTypes)?.DeclaringType == derivedType)
-            {
+            if (derivedType.DeclaresMethod(nameof(ToggleConfig), Type.EmptyTypes))
                 DalamudApi.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfig;
-                addedConfig = true;
-            }
 
             Hypostasis.State = Hypostasis.PluginState.Loaded;
 
@@ -128,14 +118,9 @@ public abstract class DalamudPlugin<P> where P : DalamudPlugin<P>, IDalamudPlugi
         Hypostasis.State = Hypostasis.PluginState.Unloading;
         DisposeConfig();
 
-        if (addedUpdate)
-            DalamudApi.Framework.Update -= Update;
-
-        if (addedDraw)
-            DalamudApi.PluginInterface.UiBuilder.Draw -= Draw;
-
-        if (addedConfig)
-            DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfig;
+        DalamudApi.Framework.Update -= Update;
+        DalamudApi.PluginInterface.UiBuilder.Draw -= Draw;
+        DalamudApi.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfig;
 
         Dispose(true);
 
