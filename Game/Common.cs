@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
@@ -140,6 +142,32 @@ public static unsafe class Common
     public static GameObject* UITarget => (GameObject*)*(nint*)((nint)PronounModule + 0x290);
 
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
+
+    public static bool IsValid<T>(T* o) where T : unmanaged, IHypostasisStructure
+    {
+        if (o == null) return false;
+
+        static bool CheckGameFunctions(object o, BindingFlags bindingFlags) => o.GetType().GetFields(bindingFlags)
+            .Select(fieldInfo => fieldInfo.GetValue(o) as IGameFunction)
+            .All(f => f is not { IsValid: false });
+
+        try
+        {
+            var deref = *o;
+            if (!CheckGameFunctions(deref, BindingFlags.Static | BindingFlags.Public))
+                return false;
+
+            var vtbl = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(propertyInfo => propertyInfo.GetValue(deref) as VirtualTable).FirstOrDefault(p => p != null);
+            if (vtbl != null && !CheckGameFunctions(vtbl, BindingFlags.Instance | BindingFlags.Public))
+                return false;
+        }
+        catch
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     public static void Initialize() { }
     public static void Dispose() { }
