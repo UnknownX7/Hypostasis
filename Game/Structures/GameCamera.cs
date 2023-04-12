@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 
 namespace Hypostasis.Game.Structures;
 
@@ -40,6 +43,74 @@ public unsafe partial struct GameCamera : IHypostasisStructure
 
     public bool IsHRotationOffset => mode == isFlipped;
     public float GameObjectHRotation => !IsHRotationOffset ? (currentHRotation > 0 ? currentHRotation - MathF.PI : currentHRotation + MathF.PI) : currentHRotation;
+
+    public class GameCameraVTable : VirtualTable
+    {
+        public GameCameraVTable(nint* v) : base(v)
+        {
+            setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 8B 81 ?? ?? 00 00 48 8B DA FF C8 83 F8 01 77 1D");
+            getCameraPosition = new(v, 15);
+            getCameraTarget = new(v, 17);
+            canChangePerspective = new(v, 22);
+            getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3");
+        }
+
+        public delegate void SetCameraLookAtDelegate(GameCamera* camera, Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4);
+        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt;
+
+        public delegate void GetCameraPositionDelegate(GameCamera* camera, GameObject* target, Vector3* position, Bool swapPerson);
+        public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition;
+
+        public delegate GameObject* GetCameraTargetDelegate(GameCamera* camera);
+        public readonly VirtualFunction<GetCameraTargetDelegate> getCameraTarget;
+
+        public delegate Bool CanChangePerspectiveDelegate();
+        public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective;
+
+        public delegate float GetZoomDeltaDelegate();
+        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta;
+    }
+
+    private static GameCameraVTable vtable;
+    public GameCameraVTable VTable => vtable ??= new(vtbl);
+
+    public void SetCameraLookAt(Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4)
+    {
+        fixed (GameCamera* ptr = &this)
+            VTable.setCameraLookAt.Invoke(ptr, lookAtPosition, cameraPosition, a4);
+    }
+
+    public void GetCameraPosition(GameObject* target, Vector3* position, bool swapPerson)
+    {
+        fixed (GameCamera* ptr = &this)
+            VTable.getCameraPosition.Invoke(ptr, target, position, swapPerson);
+    }
+
+    public GameObject* GetCameraTarget()
+    {
+        fixed (GameCamera* ptr = &this)
+            return VTable.getCameraTarget.Invoke(ptr);
+    }
+
+    public Bool CanChangePerspective() => VTable.canChangePerspective.Invoke();
+
+    public float GetZoomDelta() => VTable.getZoomDelta.Invoke();
+
+    public delegate byte GetCameraAutoRotateModeDelegate(GameCamera* camera, Framework* framework);
+    public static readonly GameFunction<GetCameraAutoRotateModeDelegate> getCameraAutoRotateMode = new("E8 ?? ?? ?? ?? 48 8B CB 85 C0 0F 84 ?? ?? ?? ?? 83 E8 01");
+    public byte GetCameraAutoRotateMode()
+    {
+        fixed (GameCamera* ptr = &this)
+            return getCameraAutoRotateMode.Invoke(ptr, Framework.Instance());
+    }
+
+    public delegate float GetCameraMaxMaintainDistanceDelegate(GameCamera* camera);
+    public static readonly GameFunction<GetCameraMaxMaintainDistanceDelegate> getCameraMaxMaintainDistance = new("E8 ?? ?? ?? ?? F3 0F 5D 44 24 58");
+    public float GetCameraMaxMaintainDistance()
+    {
+        fixed (GameCamera* ptr = &this)
+            return getCameraMaxMaintainDistance.Invoke(ptr);
+    }
 }
 
 /*
