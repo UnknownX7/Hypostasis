@@ -6,9 +6,9 @@ using Dalamud.Logging;
 namespace Hypostasis.Game;
 
 [HypostasisDebuggable]
-public sealed class GameFunction<T> : IGameFunction where T : Delegate
+public class GameFunction<T> : IGameFunction where T : Delegate
 {
-    public string Signature { get; }
+    public string Signature { get; protected set; }
     public nint Address => address ?? SetupAddress(false);
     public T Invoke => Address != nint.Zero ? del ?? SetupDelegate() : null;
     public Hook<T> Hook { get; private set; }
@@ -19,6 +19,8 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
     private nint? address;
     private T del;
 
+    public GameFunction() { }
+
     public GameFunction(string sig, bool required = false)
     {
         Signature = sig;
@@ -26,11 +28,11 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
             SetupAddress(true);
     }
 
-    private nint SetupAddress(bool required)
+    protected nint SetupAddress(bool required)
     {
         try
         {
-            address = DalamudApi.SigScanner.DalamudSigScanner.ScanText(Signature);
+            address = ScanAddress();
         }
         catch (Exception e)
         {
@@ -42,6 +44,8 @@ public sealed class GameFunction<T> : IGameFunction where T : Delegate
 
         return address.Value;
     }
+
+    protected virtual nint ScanAddress() => DalamudApi.SigScanner.DalamudSigScanner.ScanText(Signature);
 
     private T SetupDelegate()
     {
