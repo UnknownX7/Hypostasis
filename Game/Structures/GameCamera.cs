@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
@@ -112,6 +112,15 @@ public unsafe partial struct GameCamera : IHypostasisStructure
         fixed (GameCamera* ptr = &this)
             return getCameraMaxMaintainDistance.Invoke(ptr);
     }
+
+    public delegate Bool UpdateLookAtHeightOffsetDelegate(GameCamera* camera, GameObject* o, Bool zero);
+    public static readonly GameFunction<UpdateLookAtHeightOffsetDelegate> updateLookAtHeightOffset = new("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 83 28 02 00 00 ");
+    public Bool UpdateLookAtHeightOffset(GameObject* o, bool zero)
+    {
+        fixed (GameCamera* ptr = &this)
+            return updateLookAtHeightOffset.Invoke(ptr, o, zero);
+    }
+
 }
 
 /*

@@ -191,10 +191,19 @@ public static partial class Util
     {
         var aCos = (float)Math.Cos(a);
         var aSin = (float)Math.Sin(a);
-        return v.Rotate(aCos, aSin);
+        return Rotate(v, aCos, aSin);
     }
 
     public static Vector2 Rotate(this Vector2 v, float aCos, float aSin) => new(v.X * aCos - v.Y * aSin, v.X * aSin + v.Y * aCos);
+
+    public static Vector3 RotateAroundY(this Vector3 v, float a)
+    {
+        var aCos = (float)Math.Cos(a);
+        var aSin = (float)Math.Sin(a);
+        return RotateAroundY(v, aCos, aSin);
+    }
+
+    public static Vector3 RotateAroundY(this Vector3 v, float aCos, float aSin) => new(v.X * aCos + v.Z * aSin, v.Y, v.Z * aCos - v.X * aSin);
 
     public static void Shift(this IList list, int i, int amount)
     {
