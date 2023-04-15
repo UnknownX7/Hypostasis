@@ -10,4 +10,6 @@ public unsafe partial struct CameraManager : IHypostasisStructure
     [FieldOffset(0x8)] public GameCamera* idleCamera;
     [FieldOffset(0x10)] public GameCamera* menuCamera;
     [FieldOffset(0x18)] public GameCamera* spectatorCamera;
+
+    public bool Validate() => true;
 }

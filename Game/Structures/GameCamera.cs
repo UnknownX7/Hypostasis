@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
@@ -121,6 +121,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
             return updateLookAtHeightOffset.Invoke(ptr, o, zero);
     }
 
+    public bool Validate() => true;
 }
 
 /*

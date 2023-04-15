@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -176,6 +176,9 @@ public static unsafe class Common
 
             var vtbl = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public).Select(propertyInfo => propertyInfo.GetValue(deref) as VirtualTable).FirstOrDefault(p => p != null);
             if (vtbl != null && !CheckGameFunctions(vtbl, BindingFlags.Instance | BindingFlags.Public))
+                return false;
+
+            if (!deref.Validate())
                 return false;
         }
         catch

@@ -181,4 +181,6 @@ public unsafe partial struct FFXIVReplay : IHypostasisStructure
     [FieldOffset(0x71B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback?, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
     [FieldOffset(0x71C)] public byte u0x71C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
     // 0x71D-0x720 is padding
+
+    public bool Validate() => true;
 }

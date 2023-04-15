@@ -57,4 +57,6 @@ public unsafe partial struct InputData : IHypostasisStructure
         fixed (InputData* ptr = &this)
             return getInputBinding.Invoke(ptr, id);
     }
+
+    public bool Validate() => true;
 }

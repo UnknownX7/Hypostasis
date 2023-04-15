@@ -51,4 +51,6 @@ public unsafe partial struct ActionManager : IHypostasisStructure
         fixed (ActionManager* ptr = &this)
             return canQueueAction.Invoke(ptr, actionType, actionID);
     }
+
+    public bool Validate() => true;
 }
