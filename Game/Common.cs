@@ -139,14 +139,14 @@ public static unsafe class Common
 
     public delegate Bool GetWorldBonePositionDelegate(GameObject* o, uint bone, Vector3* outPosition);
     public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? EB 28 48 8B CF");
-    public static Vector3 GetWorldBonePosition(GameObject* o, uint bone)
+    public static Vector3 GetBoneWorldPosition(GameObject* o, uint bone)
     {
         var ret = Vector3.Zero;
         getWorldBonePosition.Invoke(o, bone, &ret);
         return ret;
     }
 
-    public static Vector3 GetLocalBonePosition(GameObject* o, uint bone) => GetWorldBonePosition(o, bone) - (Vector3)(o->DrawObject != null ? o->DrawObject->Object.Position : o->Position);
+    public static Vector3 GetBoneLocalPosition(GameObject* o, uint bone) => GetBoneWorldPosition(o, bone) - (Vector3)(o->DrawObject != null ? o->DrawObject->Object.Position : o->Position);
 
     public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
 
