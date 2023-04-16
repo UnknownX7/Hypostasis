@@ -115,7 +115,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     }
 
     public delegate Bool UpdateLookAtHeightOffsetDelegate(GameCamera* camera, GameObject* o, Bool zero);
-    public static readonly GameFunction<UpdateLookAtHeightOffsetDelegate> updateLookAtHeightOffset = new("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 83 28 02 00 00 ");
+    public static readonly GameFunction<UpdateLookAtHeightOffsetDelegate> updateLookAtHeightOffset = new("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 83 28 02 00 00");
     public Bool UpdateLookAtHeightOffset(GameObject* o, bool zero)
     {
         fixed (GameCamera* ptr = &this)
