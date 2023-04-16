@@ -32,6 +32,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     [FieldOffset(0x170)] public int mode; // Camera mode? (0 = 1st person, 1 = 3rd person, 2+ = weird controller mode? cant look up/down)
     [FieldOffset(0x174)] public int controlType; // 0 first person, 1 legacy, 2 standard, 3/5/6 ???, 4 ???
     [FieldOffset(0x17C)] public float interpolatedZoom;
+    [FieldOffset(0x190)] public float transition; // Seems to be related to the 1st <-> 3rd camera transition
     [FieldOffset(0x1B0)] public float viewX;
     [FieldOffset(0x1B4)] public float viewY;
     [FieldOffset(0x1B8)] public float viewZ;

@@ -1,7 +1,10 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Dalamud.Interface;
 
@@ -185,7 +188,7 @@ public static partial class ImGuiEx
         ImGui.GetWindowDrawList().AddText(pos - textSize / 2, color, text);
     }
 
-    public static void Prefix(string prefix = "└") // └◇└
+    public static void Prefix(string prefix = "◇")
     {
         var dummySize = new Vector2(ImGui.GetFrameHeight());
         ImGui.Dummy(dummySize);
@@ -193,12 +196,15 @@ public static partial class ImGuiEx
         ImGui.SameLine();
     }
 
+    public static void Prefix(bool isLast) => Prefix(isLast ? "└" : "├");
+
     public static bool RadioBox(string label, ref int v, string[] optionsArray, bool vertical)
     {
         if (!BeginGroupBox(label, 0)) return false;
 
         var ret = false;
         var numOptions = optionsArray.Length;
+        var maxWidth = 0f;
 
         ImGui.PushID(label);
         for (int i = 0; i < numOptions; i++)
@@ -206,28 +212,76 @@ public static partial class ImGuiEx
             var option = optionsArray[i];
             var selected = v == i;
             ret |= ImGui.RadioButton(vertical ? option : $"##{i}", ref v, i) && !selected;
+
+            var width = ImGui.GetItemRectSize().X;
+            maxWidth = Math.Max(width, maxWidth);
+            if (i == numOptions - 1)
+                maxWidth -= width;
+
             if (vertical) continue;
+
             SetItemTooltip(option);
             if (i != numOptions - 1)
                 ImGui.SameLine();
         }
         ImGui.PopID();
 
-
-        if (!vertical && v >= 0 && v < numOptions)
+        if (vertical)
         {
             ImGui.SameLine();
-            ImGui.TextUnformatted(optionsArray[v]);
+            ImGui.Dummy(new Vector2(maxWidth, 0));
         }
-
-        ImGui.SameLine();
-        ImGui.Dummy(Vector2.Zero);
+        else if (v >= 0 && v < numOptions)
+        {
+            ImGui.SameLine();
+            var text = optionsArray[v];
+            ImGui.TextUnformatted(text);
+            ImGui.SameLine();
+            ImGui.Dummy(new Vector2(optionsArray.Select(s => ImGui.CalcTextSize(s).X).Max() - ImGui.CalcTextSize(text).X, 0));
+        }
 
         EndGroupBox();
         return ret;
     }
 
     public static bool RadioBox(string label, ref int v, string options, bool vertical) => RadioBox(label, ref v, options.Split('\0'), vertical);
+
+    public static bool RadioBox<T>(string label, ref T e, bool vertical) where T : struct, Enum
+    {
+        var names = Enum.GetNames<T>();
+        var i = Array.IndexOf(names, Enum.GetName(e));
+        var ret = RadioBox(label, ref i, names.Select(name => typeof(T).GetField(name)?.GetCustomAttribute<DisplayAttribute>()?.Name ?? name).ToArray(), vertical);
+        if (ret)
+            e = Enum.Parse<T>(names[i]);
+        return ret;
+    }
+
+    public static bool RadioBox<T>(string label, ref T e, T[] optionsArray, bool vertical) where T : struct, Enum
+    {
+        var i = Array.IndexOf(optionsArray, e);
+        var ret = RadioBox(label, ref i, optionsArray.Select(Util.GetDisplayName).ToArray(), vertical);
+        if (ret)
+            e = optionsArray[i];
+        return ret;
+    }
+
+    public static bool EnumCombo<T>(string label, ref T e, ImGuiComboFlags flags = ImGuiComboFlags.None) where T : struct, Enum
+    {
+        if (!ImGui.BeginCombo(label, e.GetDisplayName(), flags)) return false;
+
+        var names = Enum.GetNames<T>();
+        var selected = Enum.GetName(e);
+        foreach (var name in names)
+        {
+            if (!ImGui.Selectable($"{typeof(T).GetField(name)?.GetCustomAttribute<DisplayAttribute>()?.Name ?? name}##{name}", name == selected)) continue;
+            e = Enum.Parse<T>(name);
+            ImGui.EndCombo();
+            return true;
+        }
+        ImGui.EndCombo();
+
+        return false;
+    }
 
     public static bool CheckboxTristate(string label, ref bool? v)
     {

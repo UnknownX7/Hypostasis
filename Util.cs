@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -220,4 +221,10 @@ public static partial class Util
     public static IEnumerable<K> SelectKeys<K, V>(this Dictionary<K, V> dict) => dict.Select(kv => kv.Key);
 
     public static IEnumerable<V> SelectValues<K, V>(this Dictionary<K, V> dict) => dict.Select(kv => kv.Value);
+
+    public static string GetDisplayName<T>(this T e) where T : struct, Enum
+    {
+        var name = Enum.GetName(e)!;
+        return typeof(T).GetField(name)!.GetCustomAttribute<DisplayAttribute>()?.Name ?? name;
+    }
 }
