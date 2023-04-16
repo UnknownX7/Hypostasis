@@ -137,21 +137,16 @@ public static unsafe class Common
         }
     }
 
-    // Not 100% accurate but good enough
-    public delegate void GetLocalBonePositionDelegate(GameObject* o, Vector3* outPosition, uint bone);
-    public static readonly GameFunction<GetLocalBonePositionDelegate> getLocalBonePosition = new("E8 ?? ?? ?? ?? 0F B7 4D 18");
-    public static Vector3 GetLocalBonePosition(GameObject* o, uint bone)
+    public delegate Bool GetWorldBonePositionDelegate(GameObject* o, uint bone, Vector3* outPosition);
+    public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? EB 28 48 8B CF");
+    public static Vector3 GetWorldBonePosition(GameObject* o, uint bone)
     {
         var ret = Vector3.Zero;
-        getLocalBonePosition.Invoke(o, &ret, bone);
-        return ret.RotateAroundY(o->Rotation);
+        getWorldBonePosition.Invoke(o, bone, &ret);
+        return ret;
     }
 
-    public static Vector3 GetBonePosition(GameObject* o, uint bone) => GetLocalBonePosition(o, bone) + (Vector3)(o->DrawObject != null ? o->DrawObject->Object.Position : o->Position);
-
-    public static Vector3 GetLocalPlayerBonePosition(uint bone) => getLocalBonePosition.IsValid && DalamudApi.ClientState.LocalPlayer is { } p
-        ? GetBonePosition((GameObject*)p.Address, bone)
-        : Vector3.Zero;
+    public static Vector3 GetLocalBonePosition(GameObject* o, uint bone) => GetWorldBonePosition(o, bone) - (Vector3)(o->DrawObject != null ? o->DrawObject->Object.Position : o->Position);
 
     public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
 
