@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using Dalamud.Configuration;
 using Dalamud.Game;
 using Dalamud.Game.Gui.Toast;
 using Dalamud.Interface.Internal.Notifications;
@@ -9,11 +8,8 @@ using Dalamud.Plugin;
 
 namespace Hypostasis.Dalamud;
 
-public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>, IDalamudPlugin
+public abstract class DalamudPlugin : IDisposable
 {
-    public abstract string Name { get; }
-    public static P Plugin { get; private set; }
-
     private static string printName, printHeader;
     private readonly PluginCommandManager pluginCommandManager;
 
@@ -25,13 +21,15 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
 
         try
         {
-            Plugin = this as P;
-            printName = Name;
+            if (this is not IDalamudPlugin plugin)
+                throw new ApplicationException("A DalamudPlugin MUST implement IDalamudPlugin!");
+
+            printName = plugin.Name;
             printHeader = $"[{printName}] ";
 
-            Hypostasis.Initialize(Plugin, pluginInterface);
+            Hypostasis.Initialize(plugin, pluginInterface);
             SetupConfig();
-            pluginCommandManager = new(Plugin);
+            pluginCommandManager = new(this);
         }
         catch (Exception e)
         {
@@ -54,7 +52,7 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
             if (!PluginModuleManager.Initialize())
                 ShowNotification("One or more modules failed to load,\nplease check /xllog for more info", NotificationType.Warning, 10_000);
 
-            var derivedType = typeof(P);
+            var derivedType = GetType();
 
             if (derivedType.DeclaresMethod(nameof(Update)))
                 DalamudApi.Framework.Update += Update;
@@ -139,10 +137,16 @@ public abstract class DalamudPlugin<P> : IDisposable where P : DalamudPlugin<P>,
     }
 }
 
-public abstract class DalamudPlugin<P, C> : DalamudPlugin<P> where P : DalamudPlugin<P, C>, IDalamudPlugin where C : PluginConfiguration<C>, IPluginConfiguration, new()
+public abstract class DalamudPlugin<C> : DalamudPlugin where C : PluginConfiguration, new()
 {
     public static C Config { get; private set; }
     protected DalamudPlugin(DalamudPluginInterface pluginInterface) : base(pluginInterface) { }
-    protected sealed override void SetupConfig() => Config = PluginConfiguration<C>.LoadConfig();
+    protected sealed override void SetupConfig() => Config = PluginConfiguration.LoadConfig<C>();
     protected sealed override void DisposeConfig() => Config?.Save();
+}
+
+public abstract class DalamudPlugin<P, C> : DalamudPlugin<C> where P : DalamudPlugin where C : PluginConfiguration, new()
+{
+    public static P Plugin { get; private set; }
+    protected DalamudPlugin(DalamudPluginInterface pluginInterface) : base(pluginInterface) => Plugin = this as P;
 }

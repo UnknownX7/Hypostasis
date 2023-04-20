@@ -14,7 +14,7 @@ public class PluginCommandAttribute : Attribute
     public PluginCommandAttribute(params string[] commands) => Commands = commands;
 }
 
-public class PluginCommandManager : IDisposable
+public sealed class PluginCommandManager : IDisposable
 {
     private readonly HashSet<string> pluginCommands = new();
 
@@ -47,6 +47,5 @@ public class PluginCommandManager : IDisposable
     {
         foreach (var command in pluginCommands)
             DalamudApi.CommandManager.RemoveHandler(command);
-        GC.SuppressFinalize(this);
     }
 }

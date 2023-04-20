@@ -6,7 +6,7 @@ using Dalamud.Logging;
 
 namespace Hypostasis.Dalamud;
 
-public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, IPluginConfiguration, new()
+public abstract class PluginConfiguration
 {
     public static DirectoryInfo ConfigFolder => DalamudApi.PluginInterface.ConfigDirectory;
     public static FileInfo ConfigFile => DalamudApi.PluginInterface.ConfigFile;
@@ -14,9 +14,15 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
     public virtual int Version { get; set; }
     public Version PluginVersion;
 
+    protected PluginConfiguration()
+    {
+        if (this is not IPluginConfiguration)
+            throw new ApplicationException("A PluginConfiguration MUST implement IPluginConfiguration!");
+    }
+
     public virtual void Initialize() { }
 
-    public static T LoadConfig()
+    public static T LoadConfig<T>() where T : PluginConfiguration, new()
     {
         T config;
 
@@ -29,7 +35,7 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
             const string message = "Error loading config! Renaming old file and resetting...";
             DalamudApi.PluginInterface.UiBuilder.AddNotification(message, Hypostasis.PluginName, NotificationType.Error, 10_000);
             PluginLog.Error(e, message);
-            config = ResetConfig();
+            config = ResetConfig<T>();
         }
 
         config.Initialize();
@@ -41,10 +47,10 @@ public abstract class PluginConfiguration<T> where T : PluginConfiguration<T>, I
     public void Save()
     {
         PluginModuleManager.CheckModules();
-        DalamudApi.PluginInterface.SavePluginConfig(this as T);
+        DalamudApi.PluginInterface.SavePluginConfig((IPluginConfiguration)this);
     }
 
-    private static T ResetConfig()
+    private static T ResetConfig<T>() where T : new()
     {
         ConfigFile.MoveTo(ConfigFile.FullName + ".CORRUPT", true);
         return new T();
