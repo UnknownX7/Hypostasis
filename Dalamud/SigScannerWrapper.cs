@@ -6,8 +6,12 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Game;
 using Dalamud.Hooking;
+using Hypostasis.Debug;
 
 namespace Hypostasis.Dalamud;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field), Conditional("DEBUG")]
+public class HypostasisDebuggableAttribute : Attribute { }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class HypostasisInjectionAttribute : Attribute { }
@@ -203,7 +207,7 @@ public class SigScannerWrapper : IDisposable
     public void Inject(Type type, object o = null)
     {
         if (o != null)
-            Debug.AddInjectedObject(o);
+            DebugIPC.AddInjectedObject(o);
 
         foreach (var memberInfo in type.GetAllMembers().Where(memberInfo => memberInfo.MemberType is MemberTypes.Field or MemberTypes.Property))
             InjectMember(o, memberInfo);

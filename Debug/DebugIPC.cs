@@ -8,10 +8,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Newtonsoft.Json;
 
-namespace Hypostasis;
-
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field), Conditional("DEBUG")]
-public class HypostasisDebuggableAttribute : Attribute { }
+namespace Hypostasis.Debug;
 
 public sealed class HypostasisMemberDebugInfo
 {
@@ -125,7 +122,7 @@ public sealed class HypostasisMemberDebugInfo
     }
 }
 
-public static class Debug
+public static class DebugIPC
 {
     public const string HypostasisTag = "_HYPOSTASISPLUGINS";
 

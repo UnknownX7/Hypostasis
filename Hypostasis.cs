@@ -3,6 +3,7 @@ global using Hypostasis;
 global using Hypostasis.Dalamud;
 global using Hypostasis.Game;
 using Dalamud.Plugin;
+using Hypostasis.Debug;
 
 namespace Hypostasis;
 
@@ -29,13 +30,13 @@ public static class Hypostasis
         PluginName = plugin.Name;
         DalamudApi.Initialize(pluginInterface);
         Common.Initialize();
-        Debug.Initialize(plugin);
+        DebugIPC.Initialize(plugin);
     }
 
     public static void Dispose(bool failed)
     {
         if (!failed)
-            Debug.Dispose();
+            DebugIPC.Dispose();
         PluginModuleManager.Dispose();
         DalamudApi.Dispose();
         Common.Dispose();

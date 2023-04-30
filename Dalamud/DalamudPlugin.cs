@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Dalamud.Game;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Plugin;
+using Hypostasis.Debug;
 
 namespace Hypostasis.Dalamud;
 
@@ -75,7 +76,7 @@ public abstract class DalamudPlugin : IDisposable
             Hypostasis.State = Hypostasis.PluginState.Failed;
         }
 
-        Debug.SetupDebugMembers();
+        DebugIPC.SetupDebugMembers();
     }
 
     protected virtual void Initialize() { }
