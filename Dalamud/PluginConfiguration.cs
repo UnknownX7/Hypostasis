@@ -2,7 +2,6 @@
 using System.IO;
 using Dalamud.Configuration;
 using Dalamud.Interface.Internal.Notifications;
-using Dalamud.Logging;
 
 namespace Hypostasis.Dalamud;
 
@@ -33,8 +32,8 @@ public abstract class PluginConfiguration
         catch (Exception e)
         {
             const string message = "Error loading config! Renaming old file and resetting...";
-            DalamudApi.PluginInterface.UiBuilder.AddNotification(message, Hypostasis.PluginName, NotificationType.Error, 10_000);
-            PluginLog.Error(e, message);
+            DalamudApi.ShowNotification(message, NotificationType.Error, 10_000);
+            DalamudApi.LogError(message, e);
             config = ResetConfig<T>();
         }
 

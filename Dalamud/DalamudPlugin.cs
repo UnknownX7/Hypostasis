@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using Dalamud.Game;
-using Dalamud.Game.Gui.Toast;
 using Dalamud.Interface.Internal.Notifications;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 
 namespace Hypostasis.Dalamud;
 
 public abstract class DalamudPlugin : IDisposable
 {
-    private static string printName, printHeader;
     private readonly PluginCommandManager pluginCommandManager;
 
     protected DalamudPlugin(DalamudPluginInterface pluginInterface)
@@ -24,16 +21,13 @@ public abstract class DalamudPlugin : IDisposable
             if (this is not IDalamudPlugin plugin)
                 throw new ApplicationException("A DalamudPlugin MUST implement IDalamudPlugin!");
 
-            printName = plugin.Name;
-            printHeader = $"[{printName}] ";
-
             Hypostasis.Initialize(plugin, pluginInterface);
             SetupConfig();
             pluginCommandManager = new(this);
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, $"Failed loading {nameof(Hypostasis)} for {printName}");
+            DalamudApi.LogError($"Failed loading {nameof(Hypostasis)} for {Hypostasis.PluginName}", e);
             Dispose();
             Hypostasis.State = Hypostasis.PluginState.Failed;
             return;
@@ -50,7 +44,7 @@ public abstract class DalamudPlugin : IDisposable
             Initialize();
 
             if (!PluginModuleManager.Initialize())
-                ShowNotification("One or more modules failed to load,\nplease check /xllog for more info", NotificationType.Warning, 10_000);
+                DalamudApi.ShowNotification("One or more modules failed to load,\nplease check /xllog for more info", NotificationType.Warning, 10_000);
 
             var derivedType = GetType();
 
@@ -66,35 +60,23 @@ public abstract class DalamudPlugin : IDisposable
             Hypostasis.State = Hypostasis.PluginState.Loaded;
 
 #if DEBUG
-            ShowNotification($"{nameof(Hypostasis)} initialized in {hypostasisMS} ms\nPlugin initialized in {stopwatch.Elapsed.TotalMilliseconds} ms", NotificationType.Info);
+            DalamudApi.ShowNotification($"{nameof(Hypostasis)} initialized in {hypostasisMS} ms\nPlugin initialized in {stopwatch.Elapsed.TotalMilliseconds} ms", NotificationType.Info);
 #endif
         }
         catch (Exception e)
         {
             // Excessive? Yes.
-            var msg = $"Failed loading {printName}";
-            PluginLog.Error(e, msg);
-            ShowNotification($"\t\t\t{msg}\t\t\t\n\n", NotificationType.Error, 10_000);
-            ShowErrorToast(msg);
-            PrintError(msg);
+            var msg = $"Failed loading {Hypostasis.PluginName}";
+            DalamudApi.LogError(msg, e);
+            DalamudApi.ShowNotification($"\t\t\t{msg}\t\t\t\n\n", NotificationType.Error, 10_000);
+            DalamudApi.ShowErrorToast(msg);
+            DalamudApi.PrintError(msg);
             Dispose();
             Hypostasis.State = Hypostasis.PluginState.Failed;
         }
 
         Debug.SetupDebugMembers();
     }
-
-    public static void PrintEcho(string message) => DalamudApi.ChatGui.Print(printHeader + message);
-
-    public static void PrintError(string message) => DalamudApi.ChatGui.PrintError(printHeader + message);
-
-    public static void ShowNotification(string message, NotificationType type = NotificationType.None, uint msDelay = 3_000u) => DalamudApi.PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
-
-    public static void ShowToast(string message, ToastOptions options = null) => DalamudApi.ToastGui.ShowNormal(printHeader + message, options);
-
-    public static void ShowQuestToast(string message, QuestToastOptions options = null) => DalamudApi.ToastGui.ShowQuest(printHeader + message, options);
-
-    public static void ShowErrorToast(string message) => DalamudApi.ToastGui.ShowError(printHeader + message);
 
     protected virtual void Initialize() { }
 
@@ -110,7 +92,7 @@ public abstract class DalamudPlugin : IDisposable
 
     protected virtual void DisposeConfig() { }
 
-    protected abstract void Dispose(bool disposing);
+    protected virtual void Dispose(bool disposing) { }
 
     public void Dispose()
     {

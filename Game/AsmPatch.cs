@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Hooking;
-using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
@@ -41,7 +40,7 @@ public sealed class AsmPatch : IDisposable
         var addr = nint.Zero;
         Signature = sig;
         try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch (Exception e) { PluginLog.Warning(e, $"Failed to find signature {sig}"); }
+        catch (Exception e) { DalamudApi.LogWarning($"Failed to find signature {sig}", e); }
         if (addr == nint.Zero) return;
 
         Address = addr;
@@ -62,7 +61,7 @@ public sealed class AsmPatch : IDisposable
         var addr = nint.Zero;
         Signature = sig;
         try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch (Exception e) { PluginLog.Warning(e, $"Failed to find signature {sig}"); }
+        catch (Exception e) { DalamudApi.LogWarning($"Failed to find signature {sig}", e); }
         if (addr == nint.Zero) return;
 
         Address = addr;

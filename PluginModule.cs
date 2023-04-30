@@ -1,5 +1,4 @@
 using System;
-using Dalamud.Logging;
 
 namespace Hypostasis;
 
@@ -18,7 +17,7 @@ public abstract class PluginModule
             }
             catch (Exception e)
             {
-                PluginLog.Error(e, $"Error validating {this}");
+                DalamudApi.LogError($"Error validating {this}", e);
                 return (isValid = false).Value;
             }
         }

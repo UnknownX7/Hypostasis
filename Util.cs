@@ -11,7 +11,6 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using Dalamud.Logging;
 
 namespace Hypostasis;
 
@@ -113,7 +112,7 @@ public static partial class Util
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, "Failed to start process!");
+            DalamudApi.LogError("Failed to start process!", e);
             return false;
         }
     }

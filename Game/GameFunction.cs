@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Dalamud.Hooking;
-using Dalamud.Logging;
 
 namespace Hypostasis.Game;
 
@@ -37,7 +36,7 @@ public class GameFunction<T> : IGameFunction where T : Delegate
         catch (Exception e)
         {
             address = nint.Zero;
-            PluginLog.Warning(e, $"Failed to find signature {Signature}");
+            DalamudApi.LogWarning($"Failed to find signature {Signature}", e);
             if (required)
                 throw;
         }

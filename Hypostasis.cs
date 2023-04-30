@@ -17,7 +17,7 @@ public static class Hypostasis
         Failed
     }
 
-    public static string PluginName { get; private set; }
+    public static string PluginName { get; private set; } = string.Empty;
     public static PluginState State { get; set; }
     public static bool IsDebug { get; }
 #if DEBUG

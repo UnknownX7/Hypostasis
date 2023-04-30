@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dalamud.Logging;
 
 namespace Hypostasis;
 
@@ -26,7 +25,7 @@ public static class PluginModuleManager
             }
             else
             {
-                PluginLog.Warning($"{t} failed to load!");
+                DalamudApi.LogWarning($"{t} failed to load!");
                 succeeded = false;
             }
 
@@ -50,11 +49,11 @@ public static class PluginModuleManager
         {
             pluginModule.Toggle();
             if (logInfo)
-                PluginLog.Information(pluginModule.IsEnabled ? $"Enabled plugin module: {pluginModule}" : $"Disabled plugin module: {pluginModule}");
+                DalamudApi.LogInfo(pluginModule.IsEnabled ? $"Enabled plugin module: {pluginModule}" : $"Disabled plugin module: {pluginModule}");
         }
         catch (Exception e)
         {
-            PluginLog.Error(e, $"Error in plugin module: {pluginModule}");
+            DalamudApi.LogError($"Error in plugin module: {pluginModule}", e);
             pluginModule.IsValid = false;
         }
     }

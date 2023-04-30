@@ -1,12 +1,11 @@
-using Dalamud.Game;
-using Dalamud.Hooking;
-using Dalamud.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Dalamud.Game;
+using Dalamud.Hooking;
 
 namespace Hypostasis.Dalamud;
 
@@ -358,7 +357,7 @@ public class SigScannerWrapper : IDisposable
         if (required)
             throw new ApplicationException(errorMsg);
 
-        PluginLog.Warning(errorMsg);
+        DalamudApi.LogWarning(errorMsg);
     }
 
     public unsafe bool IsValidHookAddress(nint address) => address == BaseTextAddress || (address > BaseTextAddress && address < BaseRDataAddress && *(byte*)address != 0xCC && *(byte*)(address - 1) == 0xCC);

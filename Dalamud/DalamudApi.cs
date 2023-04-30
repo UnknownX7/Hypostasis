@@ -22,7 +22,9 @@ using Dalamud.Game.Gui.Toast;
 using Dalamud.Game.Libc;
 using Dalamud.Game.Network;
 using Dalamud.Interface;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Local
@@ -123,7 +125,8 @@ public class DalamudApi
     [PluginService]
     public static ToastGui ToastGui { get; private set; }
 
-    public DalamudApi() { }
+    private static readonly string printName = Hypostasis.PluginName;
+    private static readonly string printHeader = $"[{printName}] ";
 
     public DalamudApi(DalamudPluginInterface pluginInterface)
     {
@@ -132,17 +135,29 @@ public class DalamudApi
             throw new ApplicationException("Failed loading DalamudApi!");
     }
 
-    public static DalamudApi operator +(DalamudApi container, object o)
-    {
-        foreach (var f in typeof(DalamudApi).GetProperties())
-        {
-            if (f.PropertyType != o.GetType()) continue;
-            if (f.GetValue(container) != null) break;
-            f.SetValue(container, o);
-            return container;
-        }
-        throw new InvalidOperationException();
-    }
+    public static void PrintEcho(string message) => ChatGui.Print($"{printHeader}{message}");
+
+    public static void PrintError(string message) => ChatGui.PrintError($"{printHeader}{message}");
+
+    public static void ShowNotification(string message, NotificationType type = NotificationType.None, uint msDelay = 3_000u) => PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
+
+    public static void ShowToast(string message, ToastOptions options = null) => ToastGui.ShowNormal($"{printHeader}{message}", options);
+
+    public static void ShowQuestToast(string message, QuestToastOptions options = null) => ToastGui.ShowQuest($"{printHeader}{message}", options);
+
+    public static void ShowErrorToast(string message) => ToastGui.ShowError($"{printHeader}{message}");
+
+    public static void LogVerbose(string message, Exception exception = null) => PluginLog.Verbose(exception, message);
+
+    public static void LogDebug(string message, Exception exception = null) => PluginLog.Debug(exception, message);
+
+    public static void LogInfo(string message, Exception exception = null) => PluginLog.Information(exception, message);
+
+    public static void LogWarning(string message, Exception exception = null) => PluginLog.Warning(exception, message);
+
+    public static void LogError(string message, Exception exception = null) => PluginLog.Error(exception, message);
+
+    public static void LogFatal(string message, Exception exception = null) => PluginLog.Fatal(exception, message);
 
     public static void Initialize(DalamudPluginInterface pluginInterface) => _ = new DalamudApi(pluginInterface);
 
