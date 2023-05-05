@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Hypostasis.Game.Structures;
@@ -33,7 +35,8 @@ public unsafe partial struct FFXIVReplay : IHypostasisStructure
 
         public bool IsValid
         {
-            get {
+            get
+            {
                 for (int i = 0; i < validBytes.Length; i++)
                 {
                     if (validBytes[i] != FFXIVREPLAY[i])
@@ -46,6 +49,19 @@ public unsafe partial struct FFXIVReplay : IHypostasisStructure
         public bool IsPlayable => replayVersion == Common.FFXIVReplay->replayVersion && u0xC == 4;
 
         public bool IsLocked => IsValid && IsPlayable && (info & 2) != 0;
+
+        public Lumina.Excel.GeneratedSheets.ContentFinderCondition ContentFinderCondition => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>()!.GetRow(contentID);
+
+        public Lumina.Excel.GeneratedSheets.ClassJob LocalPlayerClassJob =>
+            DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(jobs[playerIndex])
+            ?? DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(0);
+
+        private byte GetJobSafe(int i) => jobs[i];
+
+        public IEnumerable<Lumina.Excel.GeneratedSheets.ClassJob> ClassJobs => Enumerable.Range(0, 8)
+            .Select(GetJobSafe).TakeWhile(id => id != 0)
+            .Select(id => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(id)
+                ?? DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(0));
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x4 + 0xC * 64)]
@@ -69,9 +85,7 @@ public unsafe partial struct FFXIVReplay : IHypostasisStructure
                     return null;
 
                 fixed (void* ptr = &this)
-                {
                     return (Chapter*)((nint)ptr + 4) + i;
-                }
             }
         }
     }
@@ -174,13 +188,111 @@ public unsafe partial struct FFXIVReplay : IHypostasisStructure
     [FieldOffset(0x704)] public float speed;
     [FieldOffset(0x708)] public float u0x708; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
     [FieldOffset(0x70C)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
-    [FieldOffset(0x710)] public uint startingMS; // The ms considered 00:00:00
+    [FieldOffset(0x710)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
     [FieldOffset(0x714)] public int u0x714;
     [FieldOffset(0x718)] public short u0x718;
     [FieldOffset(0x71A)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
     [FieldOffset(0x71B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback?, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
     [FieldOffset(0x71C)] public byte u0x71C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
     // 0x71D-0x720 is padding
+
+    public bool InPlayback => (playbackControls & 4) != 0;
+    public bool IsPaused => (playbackControls & 8) != 0;
+    public bool IsSavingPackets => (status & 4) != 0;
+    public bool IsRecording => (status & 0x74) == 0x74;
+    public bool IsLoadingChapter => selectedChapter < 0x40;
+
+    // E8 ?? ?? ?? ?? 48 8D 8B 48 0B 00 00 E8 ?? ?? ?? ?? 48 8D 8B 38 0B 00 00 dtor
+    // 40 53 48 83 EC 20 80 A1 ?? ?? ?? ?? F3 Initialize
+    // 40 53 48 83 EC 20 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 04 75 09 Update
+    // 48 83 EC 38 0F B6 91 ?? ?? ?? ?? 0F B6 C2 RequestEndPlayback
+    // E8 ?? ?? ?? ?? EB 10 41 83 78 04 00 EndPlayback
+    // 48 89 5C 24 10 55 48 8B EC 48 81 EC 80 00 00 00 48 8B 05 Something to do with loading
+    // E8 ?? ?? ?? ?? 3C 40 73 4A GetCurrentChapter
+    // F6 81 ?? ?? ?? ?? 04 74 11 SetTimescale (No longer used by anything)
+    // 40 53 48 83 EC 20 F3 0F 10 81 ?? ?? ?? ?? 48 8B D9 F3 0F 10 0D SetSoundTimescale1? Doesn't seem to work (Last function)
+    // E8 ?? ?? ?? ?? 44 0F B6 D8 C7 03 02 00 00 00 Function handling the UI buttons
+    // E9 ?? ?? ?? ?? 48 83 4B 70 04 <FFXIVReplay*, byte, byte> addRecordingChapter
+    // 40 53 48 83 EC 20 0F B6 81 ?? ?? ?? ?? 48 8B D9 24 06 3C 04 75 5D 83 B9 <FFXIVReplay*, void> resetPlayback
+
+    public delegate void BeginRecordingDelegate(FFXIVReplay* ffxivReplay, byte a2);
+    public static readonly GameFunction<BeginRecordingDelegate> beginRecording = new("40 53 48 83 EC 20 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 04 74 5D");
+    public void BeginRecording()
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            beginRecording.Invoke(ptr, 1);
+    }
+
+    public delegate Bool SetChapterDelegate(FFXIVReplay* ffxivReplay, byte chapter);
+    public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 74 8D 48 8B CE");
+    public bool SetChapter(byte chapter)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            return setChapter.Invoke(ptr, chapter);
+    }
+
+    public delegate void InitializeRecordingDelegate(FFXIVReplay* ffxivReplay);
+    public static readonly GameFunction<InitializeRecordingDelegate> initializeRecording = new("40 55 57 48 8D 6C 24 B1 48 81 EC 98 00 00 00");
+    public void InitializeRecording()
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            initializeRecording.Invoke(ptr);
+    }
+
+    public delegate Bool RequestPlaybackDelegate(FFXIVReplay* ffxivReplay, byte slot);
+    public static readonly GameFunction<RequestPlaybackDelegate> requestPlayback = new("48 89 5C 24 08 57 48 83 EC 30 F6 81 ?? ?? ?? ?? 04"); // E8 ?? ?? ?? ?? EB 2B 48 8B CB 89 53 2C (+0x14)
+    public bool RequestPlayback(byte slot)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            return requestPlayback.Invoke(ptr, slot);
+    }
+
+    public delegate void BeginPlaybackDelegate(FFXIVReplay* ffxivReplay, Bool allowed);
+    public static readonly GameFunction<BeginPlaybackDelegate> beginPlayback = new("E8 ?? ?? ?? ?? 0F B7 17 48 8B CB");
+    public void BeginPlayback(Bool allowed)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            beginPlayback.Invoke(ptr, allowed);
+    }
+
+    public static readonly GameFunction<InitializeRecordingDelegate> playbackUpdate = new("E8 ?? ?? ?? ?? F6 83 ?? ?? ?? ?? 04 74 38 F6 83 ?? ?? ?? ?? 01");
+    public void PlaybackUpdate()
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            playbackUpdate.Invoke(ptr);
+    }
+
+    public delegate ReplayDataSegment* GetReplayDataSegmentDelegate(FFXIVReplay* ffxivReplay);
+    public static readonly GameFunction<GetReplayDataSegmentDelegate> getReplayDataSegment = new("40 53 48 83 EC 20 8B 81 90 00 00 00");
+    public ReplayDataSegment* GetReplayDataSegment()
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            return getReplayDataSegment.Invoke(ptr);
+    }
+
+    public delegate void OnSetChapterDelegate(FFXIVReplay* ffxivReplay, byte chapter);
+    public static readonly GameFunction<OnSetChapterDelegate> onSetChapter = new("48 89 5C 24 08 57 48 83 EC 30 48 8B D9 0F B6 FA 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0 74 24");
+    public void OnSetChapter(byte chapter)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            onSetChapter.Invoke(ptr, chapter);
+    }
+
+    public delegate Bool WritePacketDelegate(FFXIVReplay* ffxivReplay, uint objectID, ushort opcode, byte* data, ushort length);
+    public static readonly GameFunction<WritePacketDelegate> writePacket = new ("E8 ?? ?? ?? ?? 84 C0 74 60 33 C0");
+    public bool WritePacket(uint objectID, ushort opcode, byte* data, ushort length)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            return writePacket.Invoke(ptr, objectID, opcode, data, length);
+    }
+
+    public delegate Bool ReplayPacketDelegate(FFXIVReplay* ffxivReplay, ReplayDataSegment* segment, byte* data);
+    public static readonly GameFunction<ReplayPacketDelegate> replayPacket = new ("E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 77 93");
+    public bool ReplayPacket(ReplayDataSegment* segment)
+    {
+        fixed (FFXIVReplay* ptr = &this)
+            return replayPacket.Invoke(ptr, segment, segment->Data);
+    }
 
     public bool Validate() => true;
 }
