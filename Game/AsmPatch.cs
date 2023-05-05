@@ -1,100 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using Dalamud.Hooking;
 
 namespace Hypostasis.Game;
 
 [HypostasisDebuggable]
 public sealed class AsmPatch : IDisposable
 {
-    public nint Address { get; } = nint.Zero;
+    public nint Address { get; }
     public string Signature { get; } = string.Empty;
     public byte[] NewBytes { get; }
     public byte[] OldBytes { get; }
-    public bool IsEnabled { get; private set; } = false;
+    public bool IsEnabled { get; private set; }
     public bool IsValid => Address != nint.Zero;
     public string ReadBytes => !IsValid ? string.Empty : OldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
-    private readonly AsmHook hook = null;
     private static readonly List<AsmPatch> asmPatches = new();
 
-    public AsmPatch(nint addr, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmPatch(nint address, IReadOnlyCollection<byte?> bytes, bool startEnabled = false)
     {
-        if (addr == nint.Zero) return;
+        if (address == nint.Zero) return;
 
-        Address = addr;
-        NewBytes = bytes;
-        SafeMemory.ReadBytes(addr, bytes.Length, out var oldBytes);
+        var trimmedBytes = bytes.SkipWhile(b => !b.HasValue).ToArray();
+        var skip = bytes.Count - trimmedBytes.Length;
+        address += skip;
+        Address = address;
+        SafeMemory.ReadBytes(address, trimmedBytes.Length, out var oldBytes);
         OldBytes = oldBytes;
+        NewBytes = Enumerable.Range(0, trimmedBytes.Length).Select(i => trimmedBytes[i] ?? oldBytes[i]).ToArray();
         asmPatches.Add(this);
-
-        if (useASMHook)
-            hook = new(addr, NewBytes, $"{Util.AssemblyName.Name} AsmPatch#{asmPatches.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
 
         if (startEnabled)
             Enable();
     }
 
-    public AsmPatch(string sig, byte[] bytes, bool startEnabled = false, bool useASMHook = false)
+    public AsmPatch(nint address, string bytesString, bool startEnabled = false) : this(address, ParseByteString(bytesString), startEnabled) { }
+
+    public AsmPatch(string sig, IReadOnlyCollection<byte?> bytes, bool startEnabled = false) : this(Scan(sig), bytes, startEnabled) => Signature = sig;
+
+    public AsmPatch(string sig, string bytesString, bool startEnabled = false) : this(sig, ParseByteString(bytesString), startEnabled) { }
+
+    private static nint Scan(string sig)
     {
-        var addr = nint.Zero;
-        Signature = sig;
-        try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch (Exception e) { DalamudApi.LogWarning($"Failed to find signature {sig}", e); }
-        if (addr == nint.Zero) return;
-
-        Address = addr;
-        NewBytes = bytes;
-        SafeMemory.ReadBytes(addr, bytes.Length, out var oldBytes);
-        OldBytes = oldBytes;
-        asmPatches.Add(this);
-
-        if (useASMHook)
-            hook = new(addr, NewBytes, $"{Util.AssemblyName.Name} AsmPatch#{asmPatches.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
-
-        if (startEnabled)
-            Enable();
+        try
+        {
+            return DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig);
+        }
+        catch (Exception e)
+        {
+            DalamudApi.LogWarning($"Failed to find signature {sig}", e);
+            return nint.Zero;
+        }
     }
 
-    public AsmPatch(string sig, string[] asm, bool startEnabled = false)
+    private static byte?[] ParseByteString(string bytesString)
     {
-        var addr = nint.Zero;
-        Signature = sig;
-        try { addr = DalamudApi.SigScanner.DalamudSigScanner.ScanModule(sig); }
-        catch (Exception e) { DalamudApi.LogWarning($"Failed to find signature {sig}", e); }
-        if (addr == nint.Zero) return;
+        bytesString = bytesString.Replace(" ", string.Empty);
 
-        Address = addr;
-        SafeMemory.ReadBytes(addr, 7, out var oldBytes);
-        OldBytes = oldBytes;
-        asmPatches.Add(this);
-        hook = new(addr, asm, $"{Util.AssemblyName.Name} AsmPatch#{asmPatches.Count}", AsmHookBehaviour.DoNotExecuteOriginal);
-
-        if (startEnabled)
-            Enable();
+        var bytes = new byte?[bytesString.Length / 2];
+        for (int i = 0; i < bytesString.Length; i += 2)
+        {
+            var s = bytesString.Substring(i, 2);
+            bytes[i / 2] = s is not ("??" or "**") ? byte.Parse(s, NumberStyles.AllowHexSpecifier) : null;
+        }
+        return bytes;
     }
 
     public void Enable()
     {
         if (IsEnabled || !IsValid) return;
-
-        if (hook == null)
-            SafeMemory.WriteBytes(Address, NewBytes);
-        else
-            hook.Enable();
-
+        SafeMemory.WriteBytes(Address, NewBytes);
         IsEnabled = true;
     }
 
     public void Disable()
     {
         if (!IsEnabled || !IsValid) return;
-
-        if (hook == null)
-            SafeMemory.WriteBytes(Address, OldBytes);
-        else
-            hook.Disable();
-
+        SafeMemory.WriteBytes(Address, OldBytes);
         IsEnabled = false;
     }
 
@@ -106,14 +88,18 @@ public sealed class AsmPatch : IDisposable
             Disable();
     }
 
+    public void Toggle(bool enable)
+    {
+        if (enable)
+            Enable();
+        else
+            Disable();
+    }
+
     public void Dispose()
     {
         if (IsEnabled)
             Disable();
-
-        if (hook == null) return;
-        hook.Dispose();
-        SafeMemory.WriteBytes(Address, OldBytes);
     }
 
     public static void DisposeAll()
