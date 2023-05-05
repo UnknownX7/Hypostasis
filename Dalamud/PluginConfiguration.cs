@@ -10,7 +10,6 @@ public abstract class PluginConfiguration
     public static DirectoryInfo ConfigFolder => DalamudApi.PluginInterface.ConfigDirectory;
     public static FileInfo ConfigFile => DalamudApi.PluginInterface.ConfigFile;
 
-    public virtual int Version { get; set; }
     public Version PluginVersion;
 
     protected PluginConfiguration()
