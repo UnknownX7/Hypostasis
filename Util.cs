@@ -180,6 +180,21 @@ public static partial class Util
 
     public static string ReadCString(this nint address, int len) => Marshal.PtrToStringAnsi(address, len);
 
+    public static void WriteCString(this nint address, string str)
+    {
+        try
+        {
+            for (int i = 0; i < str.Length; i++)
+            {
+                var c = str[i];
+                Marshal.WriteByte(address + i, Convert.ToByte(c));
+            }
+        }
+        catch { }
+
+        Marshal.WriteByte(address + str.Length, 0);
+    }
+
     public static object Cast(this Type type, object data)
     {
         var dataParam = Expression.Parameter(typeof(object), "data");
