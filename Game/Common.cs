@@ -16,14 +16,14 @@ namespace Hypostasis.Game;
 public static unsafe class Common
 {
     [HypostasisSignatureInjection("48 8D 0D ?? ?? ?? ?? 88 44 24 24", Static = true, Required = true)]
-    private static FFXIVReplay* ffxivReplay;
-    public static FFXIVReplay* FFXIVReplay
+    private static ContentsReplayModule* contentsReplayModule;
+    public static ContentsReplayModule* ContentsReplayModule
     {
         get
         {
-            if (ffxivReplay == null)
-                InjectMember(nameof(ffxivReplay));
-            return ffxivReplay;
+            if (contentsReplayModule == null)
+                InjectMember(nameof(contentsReplayModule));
+            return contentsReplayModule;
         }
     }
 
