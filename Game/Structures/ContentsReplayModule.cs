@@ -154,16 +154,23 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             onSetChapter.Invoke(ptr, chapter);
     }
 
-    public delegate Bool WritePacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, ushort opcode, byte* data, ushort length);
-    public static readonly GameFunction<WritePacketDelegate> writePacket = new ("E8 ?? ?? ?? ?? 84 C0 74 60 33 C0");
-    public bool WritePacket(uint objectID, ushort opcode, byte* data, ushort length)
+    public delegate Bool WritePacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, ushort opcode, byte* data, ulong length);
+    public static readonly GameFunction<WritePacketDelegate> writePacket = new("E8 ?? ?? ?? ?? 84 C0 74 60 33 C0");
+    public bool WritePacket(uint objectID, ushort opcode, byte* data, ulong length)
     {
         fixed (ContentsReplayModule* ptr = &this)
             return writePacket.Invoke(ptr, objectID, opcode, data, length);
     }
 
+    public bool WritePacket(uint objectID, ushort opcode, byte[] data)
+    {
+        fixed (ContentsReplayModule* ptr = &this)
+        fixed (byte* dataPtr = data)
+            return writePacket.Invoke(ptr, objectID, opcode, dataPtr, (ulong)data.Length);
+    }
+
     public delegate Bool ReplayPacketDelegate(ContentsReplayModule* contentsReplayModule, FFXIVReplay.DataSegment* segment, byte* data);
-    public static readonly GameFunction<ReplayPacketDelegate> replayPacket = new ("E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 77 93");
+    public static readonly GameFunction<ReplayPacketDelegate> replayPacket = new("E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 77 93");
     public bool ReplayPacket(FFXIVReplay.DataSegment* segment)
     {
         fixed (ContentsReplayModule* ptr = &this)
