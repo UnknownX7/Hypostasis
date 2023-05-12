@@ -19,8 +19,8 @@ public unsafe partial struct FFXIVReplay
         [FieldOffset(0xE)] public short u0xE; // Always 3? Seems to be unused
         [FieldOffset(0x10)] public int gameBuildNumber; // Has to match
         [FieldOffset(0x14)] public uint timestamp; // Unix timestamp
-        [FieldOffset(0x18)] public uint u0x18; // # Bytes? Seems to be unused
-        [FieldOffset(0x1C)] public uint ms;
+        [FieldOffset(0x18)] public uint totalMS; // MS including time before the first chapter
+        [FieldOffset(0x1C)] public uint displayedMS; // MS excluding time before the first chapter
         [FieldOffset(0x20)] public ushort contentID;
         // 0x22-0x28 Padding? Does not appear to be used
         [FieldOffset(0x28)] public byte info; // Bitfield, 1 = Up to date, 2 = Locked, 4 = Duty completed

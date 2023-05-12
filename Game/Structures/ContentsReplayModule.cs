@@ -35,7 +35,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     [FieldOffset(0x418)] public long nextDataSection; // 0x100000 if the lower half of the save/read area is next to be loaded into, 0x80000 if the upper half is
     [FieldOffset(0x420)] public long numberBytesRead; // How many bytes have been read from the file
     [FieldOffset(0x428)] public int currentFileSection; // Currently playing section starting at 1 (each section is 512 kb)
-    [FieldOffset(0x42C)] public int dataLoadType; // 7 = Load header + chapters, 8 = Load section, 10 = Load header (3-6 and 11 are used for saving?)
+    [FieldOffset(0x42C)] public int dataLoadType; // 5 = save replay?, 6 = save replay header + chapters?, 7 = Load header + chapters, 8 = Load section, 10 = Load header (3-6 and 11 are used for saving?)
     [FieldOffset(0x430)] public long dataLoadOffset; // Starting offset to load the next section into
     [FieldOffset(0x438)] public long dataLoadLength; // 0x100000 or replayLength if initially loading, 0x80000 afterwards
     [FieldOffset(0x440)] public long dataLoadFileOffset; // Offset to begin loading data from
@@ -68,7 +68,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     [FieldOffset(0x714)] public int u0x714;
     [FieldOffset(0x718)] public short u0x718;
     [FieldOffset(0x71A)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
-    [FieldOffset(0x71B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback?, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
+    [FieldOffset(0x71B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
     [FieldOffset(0x71C)] public byte u0x71C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
     // 0x71D-0x720 is padding
 
@@ -99,12 +99,20 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             beginRecording.Invoke(ptr, saveRecording);
     }
 
-    public delegate Bool SetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
-    public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 74 8D 48 8B CE");
-    public bool SetChapter(byte chapter)
+    public delegate void EndRecordingDelegate(ContentsReplayModule* contentsReplayModule);
+    public static readonly GameFunction<EndRecordingDelegate> endRecording = new("E8 ?? ?? ?? ?? 32 C0 EB A3");
+    public void EndRecording()
     {
         fixed (ContentsReplayModule* ptr = &this)
-            return setChapter.Invoke(ptr, chapter);
+            endRecording.Invoke(ptr);
+    }
+
+    public delegate Bool OnLoginDelegate(ContentsReplayModule* contentsReplayModule);
+    public static readonly GameFunction<OnLoginDelegate> onLogin = new("E9 ?? ?? ?? ?? A8 04 75 27");
+    public bool OnLogin()
+    {
+        fixed (ContentsReplayModule* ptr = &this)
+            return onLogin.Invoke(ptr);
     }
 
     public delegate void InitializeRecordingDelegate(ContentsReplayModule* contentsReplayModule);
@@ -144,6 +152,14 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     {
         fixed (ContentsReplayModule* ptr = &this)
             return getReplayDataSegment.Invoke(ptr);
+    }
+
+    public delegate Bool SetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
+    public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 74 8D 48 8B CE");
+    public bool SetChapter(byte chapter)
+    {
+        fixed (ContentsReplayModule* ptr = &this)
+            return setChapter.Invoke(ptr, chapter);
     }
 
     public delegate void OnSetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
