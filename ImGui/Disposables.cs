@@ -46,14 +46,16 @@ public static partial class ImGuiEx
         private static readonly StyleVarBlock instance = new();
         private StyleVarBlock() { }
 
-        public static StyleVarBlock Begin(ImGuiStyleVar idx, float val)
+        public static StyleVarBlock Begin(ImGuiStyleVar idx, float val, bool conditional = true)
         {
+            if (!conditional) return null;
             ImGui.PushStyleVar(idx, val);
             return instance;
         }
 
-        public static StyleVarBlock Begin(ImGuiStyleVar idx, Vector2 val)
+        public static StyleVarBlock Begin(ImGuiStyleVar idx, Vector2 val, bool conditional = true)
         {
+            if (!conditional) return null;
             ImGui.PushStyleVar(idx, val);
             return instance;
         }
@@ -66,14 +68,16 @@ public static partial class ImGuiEx
         private static readonly StyleColorBlock instance = new();
         private StyleColorBlock() { }
 
-        public static StyleColorBlock Begin(ImGuiCol idx, uint val)
+        public static StyleColorBlock Begin(ImGuiCol idx, uint val, bool conditional = true)
         {
+            if (!conditional) return null;
             ImGui.PushStyleColor(idx, val);
             return instance;
         }
 
-        public static StyleColorBlock Begin(ImGuiCol idx, Vector4 val)
+        public static StyleColorBlock Begin(ImGuiCol idx, Vector4 val, bool conditional = true)
         {
+            if (!conditional) return null;
             ImGui.PushStyleColor(idx, val);
             return instance;
         }
@@ -163,9 +167,9 @@ public static partial class ImGuiEx
         private static readonly DisabledBlock instance = new();
         private DisabledBlock() { }
 
-        public static DisabledBlock Begin(bool disable = true)
+        public static DisabledBlock Begin(bool conditional = true)
         {
-            ImGui.BeginDisabled(disable);
+            ImGui.BeginDisabled(conditional);
             return instance;
         }
 
