@@ -125,7 +125,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
 
     public delegate Bool RequestPlaybackDelegate(ContentsReplayModule* contentsReplayModule, byte slot);
     public static readonly GameFunction<RequestPlaybackDelegate> requestPlayback = new("48 89 5C 24 08 57 48 83 EC 30 F6 81 ?? ?? ?? ?? 04"); // E8 ?? ?? ?? ?? EB 2B 48 8B CB 89 53 2C (+0x14)
-    public bool RequestPlayback(byte slot)
+    public bool RequestPlayback(byte slot = 0)
     {
         fixed (ContentsReplayModule* ptr = &this)
             return requestPlayback.Invoke(ptr, slot);
@@ -133,7 +133,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
 
     public delegate void BeginPlaybackDelegate(ContentsReplayModule* contentsReplayModule, Bool allowed);
     public static readonly GameFunction<BeginPlaybackDelegate> beginPlayback = new("E8 ?? ?? ?? ?? 0F B7 17 48 8B CB");
-    public void BeginPlayback(bool allowed)
+    public void BeginPlayback(bool allowed = true)
     {
         fixed (ContentsReplayModule* ptr = &this)
             beginPlayback.Invoke(ptr, allowed);
@@ -191,6 +191,13 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     {
         fixed (ContentsReplayModule* ptr = &this)
             return replayPacket.Invoke(ptr, segment, segment->Data);
+    }
+
+    public bool ReplayPacket(FFXIVReplay.DataSegment segment, byte[] data)
+    {
+        fixed (ContentsReplayModule* ptr = &this)
+        fixed (byte* dataPtr = data)
+            return replayPacket.Invoke(ptr, &segment, dataPtr);
     }
 
     public bool Validate() => true;
