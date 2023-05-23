@@ -163,7 +163,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate void OnSetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
-    public static readonly GameFunction<OnSetChapterDelegate> onSetChapter = new("48 89 5C 24 08 57 48 83 EC 30 48 8B D9 0F B6 FA 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 85 C0 74 24");
+    public static readonly GameFunction<OnSetChapterDelegate> onSetChapter = new("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC 30 48 8B F1 0F B6 EA");
     public void OnSetChapter(byte chapter)
     {
         fixed (ContentsReplayModule* ptr = &this)
