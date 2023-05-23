@@ -1,4 +1,8 @@
-﻿namespace Hypostasis.Debug;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+namespace Hypostasis.Debug;
 
 public static unsafe class DebugUtil
 {
@@ -41,4 +45,72 @@ public static unsafe class DebugUtil
     private static string GetString(object o, string format) => string.IsNullOrEmpty(format)
         ? o.ToString()
         : (string)(o.GetType().GetMethod(nameof(ToString), new[] { typeof(string) })?.Invoke(o, new object[] { format }) ?? o.ToString());
+
+    public sealed class Profiler : IDisposable
+    {
+        private static readonly Dictionary<string, Profiler> profilers = new();
+
+        private readonly string id;
+        private readonly Stopwatch stopwatch = new();
+        private readonly Stopwatch durationStopwatch = new();
+        private long duration;
+        private long count;
+        private long totalTicks;
+        private long highestTicks;
+        private long lowestTicks;
+
+        private Profiler(string i) => id = i;
+
+        public static Profiler Begin(string id = "", float duration = 0)
+        {
+            if (!profilers.TryGetValue(id, out var profiler))
+                profilers[id] = profiler = new(id);
+
+            var newDuration = (long)(duration * Stopwatch.Frequency);
+            if (newDuration != profiler.duration)
+            {
+                profiler.duration = newDuration;
+                profiler.durationStopwatch.Restart();
+            }
+
+            profiler.stopwatch.Restart();
+            return profiler;
+        }
+
+        public void Dispose()
+        {
+            stopwatch.Stop();
+            var ticks = stopwatch.ElapsedTicks;
+            count++;
+            totalTicks += ticks;
+
+            if (duration > 0)
+            {
+                if (highestTicks < ticks)
+                    highestTicks = ticks;
+                if (count == 1 || lowestTicks > ticks)
+                    lowestTicks = ticks;
+            }
+
+            if (durationStopwatch.ElapsedTicks < duration) return;
+
+            var ticksPerMS = Stopwatch.Frequency / 1000f;
+            var name = !string.IsNullOrEmpty(id) ? $"{id}, " : string.Empty;
+
+            if (duration > 0)
+            {
+                DalamudApi.LogWarning($"{name}A: {totalTicks / ticksPerMS / count:F4} / S: {lowestTicks / ticksPerMS:F4} / L: {highestTicks / ticksPerMS:F4} ({count} calls)");
+                highestTicks = 0;
+                lowestTicks = 0;
+            }
+            else
+            {
+                DalamudApi.LogWarning($"{name}{totalTicks / ticksPerMS:F4} ms ({totalTicks})");
+            }
+
+            count = 0;
+            totalTicks = 0;
+            durationStopwatch.Restart();
+        }
+    }
 }
