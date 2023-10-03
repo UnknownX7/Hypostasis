@@ -14,13 +14,13 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x2C)] public uint castActionID;
     [FieldOffset(0x30)] public float elapsedCastTime;
     [FieldOffset(0x34)] public float castTime;
-    [FieldOffset(0x38)] public long castTargetObjectID;
+    [FieldOffset(0x38)] public ulong castTargetObjectID;
     [FieldOffset(0x60)] public float remainingComboTime;
     [FieldOffset(0x68)] public bool isQueued;
     [FieldOffset(0x6C)] public uint queuedActionType;
     [FieldOffset(0x70)] public uint queuedActionID;
-    [FieldOffset(0x78)] public long queuedTargetObjectID;
-    [FieldOffset(0x98)] public long queuedGroundTargetObjectID;
+    [FieldOffset(0x78)] public ulong queuedTargetObjectID;
+    [FieldOffset(0x98)] public ulong queuedGroundTargetObjectID;
     [FieldOffset(0xB8)] public byte activateGroundTarget;
     [FieldOffset(0x110)] public ushort currentSequence;
     //[FieldOffset(0x112)] public ushort unknownSequence; // ???

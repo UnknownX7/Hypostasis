@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Game;
 using Dalamud.Hooking;
+using Dalamud.Plugin.Services;
 using Hypostasis.Debug;
 
 namespace Hypostasis.Dalamud;
@@ -59,14 +60,14 @@ public class SigScannerWrapper : IDisposable
     private readonly Dictionary<string, nint> staticSigCache = new();
     private readonly List<IDisposable> disposableHooks = new();
 
-    public SigScanner DalamudSigScanner { get; init; }
+    public ISigScanner DalamudSigScanner { get; init; }
     public ProcessModule Module => DalamudSigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
     public nint BaseTextAddress => (nint)(BaseAddress + DalamudSigScanner.TextSectionOffset);
     public nint BaseDataAddress => (nint)(BaseAddress + DalamudSigScanner.DataSectionOffset);
     public nint BaseRDataAddress => (nint)(BaseAddress + DalamudSigScanner.RDataSectionOffset);
 
-    public SigScannerWrapper(SigScanner s) => DalamudSigScanner = s;
+    public SigScannerWrapper(ISigScanner s) => DalamudSigScanner = s;
 
     public nint Scan(nint address, int size, string signature)
     {
@@ -174,17 +175,17 @@ public class SigScannerWrapper : IDisposable
         return b;
     }
 
-    private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
+    private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, IGameInteropProvider.HookBackend backend = IGameInteropProvider.HookBackend.Automatic) where T : Delegate
     {
-        var hook = Hook<T>.FromAddress(address, detour, useMinHook);
+        var hook = DalamudApi.GameInteropProvider.HookFromAddress(address, detour, backend);
         AddHook(hook, startEnabled, autoDispose);
         return hook;
     }
 
-    private Hook<T> HookSignature<T>(string signature, T detour, bool scanModule = false, bool startEnabled = true, bool autoDispose = true, bool useMinHook = false) where T : Delegate
+    private Hook<T> HookSignature<T>(string signature, T detour, bool scanModule = false, bool startEnabled = true, bool autoDispose = true, IGameInteropProvider.HookBackend backend = IGameInteropProvider.HookBackend.Automatic) where T : Delegate
     {
         var address = !scanModule ? DalamudSigScanner.ScanText(signature) : DalamudSigScanner.ScanModule(signature);
-        var hook = Hook<T>.FromAddress(address, detour, useMinHook);
+        var hook = DalamudApi.GameInteropProvider.HookFromAddress(address, detour, backend);
         AddSignatureInfo(signature, address, 0, false);
         AddHook(hook, startEnabled, autoDispose);
         return hook;

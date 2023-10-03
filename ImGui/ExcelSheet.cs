@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Dalamud.Interface;
+using Dalamud.Interface.Utility;
 using Lumina.Excel;
 
 namespace ImGuiNET;

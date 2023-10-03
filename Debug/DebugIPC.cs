@@ -139,7 +139,7 @@ public static class DebugIPC
     [Conditional("DEBUG")]
     public static void Initialize(IDalamudPlugin plugin)
     {
-        var name = plugin.Name;
+        var name = Hypostasis.PluginName;
         GetPluginProvider = DalamudApi.PluginInterface.GetIpcProvider<IDalamudPlugin>($"{name}.{nameof(Hypostasis)}.GetPlugin");
         GetPluginProvider.RegisterFunc(() => plugin);
         GetPluginStateProvider = DalamudApi.PluginInterface.GetIpcProvider<Hypostasis.PluginState>($"{name}.{nameof(Hypostasis)}.GetPluginState");

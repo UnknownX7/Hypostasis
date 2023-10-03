@@ -58,7 +58,7 @@ public class GameFunction<T> : IGameFunction where T : Delegate
 
         if (IsHooked)
             throw new ApplicationException("Attempted to hook function more than once");
-        Hook = Hook<T>.FromAddress(Address, detour);
+        Hook = DalamudApi.GameInteropProvider.HookFromAddress(Address, detour);
         DalamudApi.SigScanner.AddHook(Hook, enable, dispose);
         //DalamudApi.SigScanner.AddMember(GetType(), this, nameof(Hook));
     }

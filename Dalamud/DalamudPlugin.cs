@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using Dalamud.Game;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Hypostasis.Debug;
 
 namespace Hypostasis.Dalamud;
@@ -85,7 +85,7 @@ public abstract class DalamudPlugin : IDisposable
 
     protected virtual void Update() { }
 
-    private void Update(Framework framework) => Update();
+    private void Update(IFramework framework) => Update();
 
     protected virtual void Draw() { }
 
