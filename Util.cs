@@ -16,23 +16,15 @@ namespace Hypostasis;
 
 public static partial class Util
 {
-    public class AssignableInfo
+    public class AssignableInfo(object o, MemberInfo info)
     {
-        public object Object { get; init; }
-        public MemberInfo MemberInfo { get; init; }
-        private readonly FieldInfo fieldInfo;
-        private readonly PropertyInfo propertyInfo;
+        public object Object { get; init; } = o;
+        public MemberInfo MemberInfo { get; init; } = info;
+        private readonly FieldInfo fieldInfo = info as FieldInfo;
+        private readonly PropertyInfo propertyInfo = info as PropertyInfo;
 
         public string Name => MemberInfo.Name;
         public Type Type => MemberInfo.GetObjectType();
-
-        public AssignableInfo(object o, MemberInfo info)
-        {
-            Object = o;
-            MemberInfo = info;
-            fieldInfo = info as FieldInfo;
-            propertyInfo = info as PropertyInfo;
-        }
 
         public object GetValue() => fieldInfo?.GetValue(Object) ?? propertyInfo?.GetValue(Object);
 

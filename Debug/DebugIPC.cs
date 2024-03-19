@@ -132,9 +132,9 @@ public static class DebugIPC
     public static ICallGateProvider<List<HypostasisMemberDebugInfo>> GetDebugInfosProvider { get; private set; }
     public static ICallGateProvider<Dictionary<int, (object, MemberInfo)>> GetMemberInfosProvider { get; private set; }
 
-    private static readonly List<HypostasisMemberDebugInfo> debugInfos = new();
-    private static readonly Dictionary<int, (object, MemberInfo)> memberInfos = new();
-    private static readonly Dictionary<Type, object> injectedObjects = new();
+    private static readonly List<HypostasisMemberDebugInfo> debugInfos = [];
+    private static readonly Dictionary<int, (object, MemberInfo)> memberInfos = [];
+    private static readonly Dictionary<Type, object> injectedObjects = [];
 
     [Conditional("DEBUG")]
     public static void Initialize(IDalamudPlugin plugin)

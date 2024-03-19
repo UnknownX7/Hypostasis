@@ -47,31 +47,22 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     public bool IsHRotationOffset => mode == isFlipped;
     public float GameObjectHRotation => !IsHRotationOffset ? (currentHRotation > 0 ? currentHRotation - MathF.PI : currentHRotation + MathF.PI) : currentHRotation;
 
-    public class GameCameraVTable : VirtualTable
+    public class GameCameraVTable(nint* v) : VirtualTable(v)
     {
-        public GameCameraVTable(nint* v) : base(v)
-        {
-            setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 8B 81 ?? ?? 00 00 48 8B DA FF C8 83 F8 01 77 1D");
-            getCameraPosition = new(v, 15);
-            getCameraTarget = new(v, 17);
-            canChangePerspective = new(v, 22);
-            getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3");
-        }
-
         public delegate void SetCameraLookAtDelegate(GameCamera* camera, Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4);
-        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt;
+        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 8B 81 ?? ?? 00 00 48 8B DA FF C8 83 F8 01 77 1D");
 
         public delegate void GetCameraPositionDelegate(GameCamera* camera, GameObject* target, Vector3* position, Bool swapPerson);
-        public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition;
+        public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition = new(v, 15);
 
         public delegate GameObject* GetCameraTargetDelegate(GameCamera* camera);
-        public readonly VirtualFunction<GetCameraTargetDelegate> getCameraTarget;
+        public readonly VirtualFunction<GetCameraTargetDelegate> getCameraTarget = new(v, 17);
 
         public delegate Bool CanChangePerspectiveDelegate();
-        public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective;
+        public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective = new(v, 22);
 
         public delegate float GetZoomDeltaDelegate();
-        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta;
+        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3");
     }
 
     private static GameCameraVTable vtable;

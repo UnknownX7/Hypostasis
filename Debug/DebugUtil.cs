@@ -44,11 +44,11 @@ public static unsafe class DebugUtil
 
     private static string GetString(object o, string format) => string.IsNullOrEmpty(format)
         ? o.ToString()
-        : (string)(o.GetType().GetMethod(nameof(ToString), new[] { typeof(string) })?.Invoke(o, new object[] { format }) ?? o.ToString());
+        : (string)(o.GetType().GetMethod(nameof(ToString), [ typeof(string) ])?.Invoke(o, [ format ]) ?? o.ToString());
 
     public sealed class Profiler : IDisposable
     {
-        private static readonly Dictionary<string, Profiler> profilers = new();
+        private static readonly Dictionary<string, Profiler> profilers = [];
 
         private readonly string id;
         private readonly Stopwatch stopwatch = new();

@@ -16,9 +16,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0xC0)]
-    public struct UnknownPacket
-    {
-    }
+    public struct UnknownPacket;
 
     [FieldOffset(0x0)] public int gameBuildNumber;
     [FieldOffset(0x8)] public nint fileStream; // Start of save/read area

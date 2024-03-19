@@ -120,10 +120,9 @@ public abstract class DalamudPlugin : IDisposable
     }
 }
 
-public abstract class DalamudPlugin<C> : DalamudPlugin where C : PluginConfiguration, new()
+public abstract class DalamudPlugin<C>(DalamudPluginInterface pluginInterface) : DalamudPlugin(pluginInterface) where C : PluginConfiguration, new()
 {
     public static C Config { get; private set; }
-    protected DalamudPlugin(DalamudPluginInterface pluginInterface) : base(pluginInterface) { }
     protected sealed override void SetupConfig() => Config = PluginConfiguration.LoadConfig<C>();
     protected sealed override void DisposeConfig() => Config?.Save();
 }

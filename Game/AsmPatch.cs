@@ -15,7 +15,7 @@ public sealed class AsmPatch : IDisposable
     public bool IsEnabled { get; private set; }
     public bool IsValid => Address != nint.Zero;
     public string ReadBytes => !IsValid ? string.Empty : OldBytes.Aggregate(string.Empty, (current, b) => current + b.ToString("X2") + " ");
-    private static readonly List<AsmPatch> asmPatches = new();
+    private static readonly List<AsmPatch> asmPatches = [];
 
     public AsmPatch(nint address, IReadOnlyCollection<byte?> bytes, bool startEnabled = false)
     {

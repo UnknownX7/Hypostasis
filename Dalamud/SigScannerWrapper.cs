@@ -12,10 +12,10 @@ using Hypostasis.Debug;
 namespace Hypostasis.Dalamud;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field), Conditional("DEBUG")]
-public class HypostasisDebuggableAttribute : Attribute { }
+public class HypostasisDebuggableAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class HypostasisInjectionAttribute : Attribute { }
+public class HypostasisInjectionAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public abstract class HypostasisMemberInjectionAttribute : HypostasisInjectionAttribute
@@ -27,11 +27,10 @@ public abstract class HypostasisMemberInjectionAttribute : HypostasisInjectionAt
     public bool DisposeHook { get; init; } = true;
 }
 
-public sealed class HypostasisSignatureInjectionAttribute : HypostasisMemberInjectionAttribute
+public sealed class HypostasisSignatureInjectionAttribute(string signature) : HypostasisMemberInjectionAttribute
 {
-    public string Signature { get; init; }
+    public string Signature { get; init; } = signature;
     public bool Static { get; init; } = false;
-    public HypostasisSignatureInjectionAttribute(string signature) => Signature = signature;
 }
 
 public class HypostasisClientStructsInjectionAttribute : HypostasisMemberInjectionAttribute
@@ -48,26 +47,23 @@ public sealed class HypostasisClientStructsInjectionAttribute<T> : HypostasisCli
 }
 
 [AttributeUsage(AttributeTargets.Struct)]
-public class GameStructureAttribute : Attribute
+public class GameStructureAttribute(string ctor) : Attribute
 {
-    public string CtorSignature { get; init; }
-    public GameStructureAttribute(string ctor) => CtorSignature = ctor;
+    public string CtorSignature { get; init; } = ctor;
 }
 
-public class SigScannerWrapper : IDisposable
+public class SigScannerWrapper(ISigScanner s) : IDisposable
 {
     private readonly Dictionary<string, nint> sigCache = new();
     private readonly Dictionary<string, nint> staticSigCache = new();
-    private readonly List<IDisposable> disposableHooks = new();
+    private readonly List<IDisposable> disposableHooks = [];
 
-    public ISigScanner DalamudSigScanner { get; init; }
+    public ISigScanner DalamudSigScanner { get; init; } = s;
     public ProcessModule Module => DalamudSigScanner.Module;
     public nint BaseAddress => Module.BaseAddress;
     public nint BaseTextAddress => (nint)(BaseAddress + DalamudSigScanner.TextSectionOffset);
     public nint BaseDataAddress => (nint)(BaseAddress + DalamudSigScanner.DataSectionOffset);
     public nint BaseRDataAddress => (nint)(BaseAddress + DalamudSigScanner.RDataSectionOffset);
-
-    public SigScannerWrapper(ISigScanner s) => DalamudSigScanner = s;
 
     public nint Scan(nint address, int size, string signature)
     {
@@ -267,7 +263,7 @@ public class SigScannerWrapper : IDisposable
         address += attribute.Offset;
 
         var type = assignableInfo.Type;
-        if (type == typeof(nint) || type.IsPointer)
+        if (type == typeof(nint) || type.IsPointer || type.IsFunctionPointer)
             assignableInfo.SetValue(address);
         else if (type.IsAssignableTo(typeof(Delegate)))
             assignableInfo.SetValue(Marshal.GetDelegateForFunctionPointer(address, type));
@@ -319,7 +315,7 @@ public class SigScannerWrapper : IDisposable
             }
         }
 
-        var hook = type.GetMethod("FromAddress", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, new object[] { address, detour, false });
+        var hook = type.GetMethod("FromAddress", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, [ address, detour, false ]);
         assignableInfo.SetValue(hook);
 
         if (attribute.EnableHook)
