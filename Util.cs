@@ -168,9 +168,9 @@ public static partial class Util
 
     public static unsafe T Deref<T>(this nint address, long offset = 0) where T : unmanaged => *(T*)(address + offset);
 
-    public static string ReadCString(this nint address) => Marshal.PtrToStringAnsi(address);
+    public static string ReadCString(this nint address) => Marshal.PtrToStringUTF8(address);
 
-    public static string ReadCString(this nint address, int len) => Marshal.PtrToStringAnsi(address, len);
+    public static string ReadCString(this nint address, int len) => Marshal.PtrToStringUTF8(address, len);
 
     public static void WriteCString(this nint address, string str)
     {
