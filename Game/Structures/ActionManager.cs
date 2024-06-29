@@ -32,7 +32,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
 
     public delegate uint GetSpellIDForActionDelegate(uint actionType, uint actionID);
-    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 83 FD 02 75 2D ");
+    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 83 FD 02 75 2D");
     public static uint GetSpellIDForAction(uint actionType, uint actionID) => getSpellIDForAction.Invoke(actionType, actionID);
 
     public delegate Bool CanUseActionOnGameObjectDelegate(uint actionID, GameObject* o);
