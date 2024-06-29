@@ -6,6 +6,7 @@ namespace Hypostasis.Game.Structures;
 public unsafe partial struct InputData : IHypostasisStructure
 {
     //[FieldOffset(0x0)] public void CS;
+    [FieldOffset(0x9B4)] public int inputIDCount;
 
     public delegate Bool InputIDDelegate(InputData* inputData, uint id);
     public static readonly GameFunction<InputIDDelegate> isInputIDHeld = new("E9 ?? ?? ?? ?? B9 4F 01 00 00");

@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Interface.Utility;
 
 namespace ImGuiNET;
@@ -62,7 +62,7 @@ public static partial class ImGuiEx
             if (ImGui.IsMouseReleased(options.MouseButton))
                 pressed = true;
             if (options.ToastTooltipOnClick && ImGui.IsMouseReleased(options.ToastTooltipOnClickButton))
-                DalamudApi.PluginInterface.UiBuilder.AddNotification(options.Tooltip!, null, NotificationType.Info);
+                DalamudApi.NotificationManager.AddNotification(new Notification { Type = NotificationType.Info, Content = options.Tooltip! });
         }
 
         ImGui.SetCursorPos(buttonPos);

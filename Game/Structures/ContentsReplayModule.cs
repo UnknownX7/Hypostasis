@@ -3,7 +3,7 @@ using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit, Size = 0x720), GameStructure("48 89 5C 24 08 57 48 83 EC 20 33 FF 48 8B D9 89 39 48 89 79 08")]
+[StructLayout(LayoutKind.Explicit, Size = 0x728), GameStructure("48 89 5C 24 ?? 57 48 83 EC 20 33 FF 48 8B D9 89 39 48 89 79 08")]
 public unsafe partial struct ContentsReplayModule : IHypostasisStructure
 {
     [StructLayout(LayoutKind.Explicit, Size = 0x68)]

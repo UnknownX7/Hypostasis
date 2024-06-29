@@ -2,7 +2,7 @@ using System;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Gui.Toast;
-using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
@@ -83,7 +83,7 @@ public class DalamudApi
     public static IKeyState KeyState { get; private set; }
 
     [PluginService]
-    public static ILibcFunction LibcFunction { get; private set; }
+    public static INotificationManager NotificationManager { get; private set; }
 
     [PluginService]
     public static IObjectTable ObjectTable { get; private set; }
@@ -131,7 +131,7 @@ public class DalamudApi
 
     public static void PrintError(string message) => ChatGui.PrintError($"{printHeader}{message}");
 
-    public static void ShowNotification(string message, NotificationType type = NotificationType.None, uint msDelay = 3_000u) => PluginInterface.UiBuilder.AddNotification(message, printName, type, msDelay);
+    public static void ShowNotification(string message, NotificationType type = NotificationType.None, uint msDelay = 3_000u) => NotificationManager.AddNotification(new Notification { Type = type, Title = printName, Content = message, InitialDuration = TimeSpan.FromMilliseconds(msDelay) });
 
     public static void ShowToast(string message, ToastOptions options = null) => ToastGui.ShowNormal($"{printHeader}{message}", options);
 

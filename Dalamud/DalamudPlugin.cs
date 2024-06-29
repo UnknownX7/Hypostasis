@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Hypostasis.Debug;

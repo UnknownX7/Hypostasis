@@ -28,7 +28,7 @@ public sealed class PluginCommandManager : IDisposable
         var attribute = method.GetCustomAttribute<PluginCommandAttribute>();
         if (attribute == null) return;
 
-        var handlerDelegate = (CommandInfo.HandlerDelegate)Delegate.CreateDelegate(typeof(CommandInfo.HandlerDelegate), o, method);
+        var handlerDelegate = (IReadOnlyCommandInfo.HandlerDelegate)Delegate.CreateDelegate(typeof(IReadOnlyCommandInfo.HandlerDelegate), o, method);
         var commandInfo = new CommandInfo(handlerDelegate)
         {
             HelpMessage = attribute.HelpMessage,

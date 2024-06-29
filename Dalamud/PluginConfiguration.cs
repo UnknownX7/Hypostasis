@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Dalamud.Configuration;
-using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.ImGuiNotification;
 
 namespace Hypostasis.Dalamud;
 
