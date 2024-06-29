@@ -15,7 +15,7 @@ namespace Hypostasis.Game;
 
 public static unsafe class Common
 {
-    [HypostasisSignatureInjection("48 8D 0D ?? ?? ?? ?? 88 44 24 24", Static = true, Required = true)]
+    [HypostasisSignatureInjection("48 8D 0D ?? ?? ?? ?? 0F B6 D8 E8 ?? ?? ?? ?? 44 0F B6 C0", Static = true, Required = true)]
     private static ContentsReplayModule* contentsReplayModule;
     public static ContentsReplayModule* ContentsReplayModule
     {
@@ -138,7 +138,7 @@ public static unsafe class Common
     }
 
     public delegate Bool GetWorldBonePositionDelegate(GameObject* o, uint bone, Vector3* outPosition);
-    public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? EB 29 48 8B 4E 08");
+    public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? 48 8B C3 48 83 C4 20 5B C3 CC 0F 57 C0 C3");
     public static Vector3 GetBoneWorldPosition(GameObject* o, uint bone)
     {
         var ret = Vector3.Zero;

@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Hypostasis.Game.Structures;
@@ -153,7 +153,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate Bool SetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
-    public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 74 8D 48 8B CE");
+    public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 E9 ?? ?? ?? ?? 48 8D 4F 10");
     public bool SetChapter(byte chapter)
     {
         fixed (ContentsReplayModule* ptr = &this)
@@ -184,7 +184,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate Bool ReplayPacketDelegate(ContentsReplayModule* contentsReplayModule, FFXIVReplay.DataSegment* segment, byte* data);
-    public static readonly GameFunction<ReplayPacketDelegate> replayPacket = new("E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 77 93");
+    public static readonly GameFunction<ReplayPacketDelegate> replayPacket = new("E8 ?? ?? ?? ?? 80 BB ?? ?? ?? ?? ?? 77 94");
     public bool ReplayPacket(FFXIVReplay.DataSegment* segment)
     {
         fixed (ContentsReplayModule* ptr = &this)

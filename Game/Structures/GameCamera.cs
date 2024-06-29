@@ -50,7 +50,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     public class GameCameraVTable(nint* v) : VirtualTable(v)
     {
         public delegate void SetCameraLookAtDelegate(GameCamera* camera, Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4);
-        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 8B 81 ?? ?? 00 00 48 8B DA FF C8 83 F8 01 77 1D");
+        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 44 8B 89 ?? ?? ?? ?? 48 8B DA");
 
         public delegate void GetCameraPositionDelegate(GameCamera* camera, GameObject* target, Vector3* position, Bool swapPerson);
         public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition = new(v, 15);
@@ -62,7 +62,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
         public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective = new(v, 22);
 
         public delegate float GetZoomDeltaDelegate();
-        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3");
+        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3"); // This sig is meant to match multiple things
     }
 
     private static GameCameraVTable vtable;
@@ -107,7 +107,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     }
 
     public delegate Bool UpdateLookAtHeightOffsetDelegate(GameCamera* camera, GameObject* o, Bool zero);
-    public static readonly GameFunction<UpdateLookAtHeightOffsetDelegate> updateLookAtHeightOffset = new("E8 ?? ?? ?? ?? 84 C0 0F 94 C0 88 83 28 02 00 00");
+    public static readonly GameFunction<UpdateLookAtHeightOffsetDelegate> updateLookAtHeightOffset = new("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 40 48 8B 02 48 8B F1 48 8B CA"); // INLINED... unable to hook
     public bool UpdateLookAtHeightOffset(GameObject* o, bool zero)
     {
         fixed (GameCamera* ptr = &this)
@@ -115,7 +115,7 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     }
 
     public delegate Bool ShouldDisplayObjectDelegate(GameCamera* camera, GameObject* o, Vector3* cameraPosition, Vector3* cameraLookAt);
-    public static readonly GameFunction<ShouldDisplayObjectDelegate> shouldDisplayObject = new("E8 ?? ?? ?? ?? 84 C0 75 07 B3 01");
+    public static readonly GameFunction<ShouldDisplayObjectDelegate> shouldDisplayObject = new("E8 ?? ?? ?? ?? 84 C0 75 18 48 8D 0D ?? ?? ?? ?? B3 01");
     public bool ShouldDisplayObject(GameObject* o)
     {
         fixed (GameCamera* ptr = &this)

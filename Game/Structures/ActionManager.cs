@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit), GameStructure("48 89 7C 24 08 45 33 C0 B8 00 00 00 E0")]
+[StructLayout(LayoutKind.Explicit), GameStructure("45 33 C0 B8 ?? ?? ?? ?? 48 89 41 38")]
 public unsafe partial struct ActionManager : IHypostasisStructure
 {
     [FieldOffset(0x0)] public FFXIVClientStructs.FFXIV.Client.Game.ActionManager CS;
@@ -32,7 +32,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
 
     public delegate uint GetSpellIDForActionDelegate(uint actionType, uint actionID);
-    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 44 8B 4B 2C");
+    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 83 FD 02 75 2D ");
     public static uint GetSpellIDForAction(uint actionType, uint actionID) => getSpellIDForAction.Invoke(actionType, actionID);
 
     public delegate Bool CanUseActionOnGameObjectDelegate(uint actionID, GameObject* o);
@@ -41,7 +41,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
         canUseActionOnGameObject.Invoke(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
 
     public delegate uint GetAdjustedRecastTimeDelegate(uint actionType, uint actionID, Bool useStats);
-    public static readonly GameFunction<GetAdjustedRecastTimeDelegate> getAdjustedRecastTime = new("E8 ?? ?? ?? ?? 8B D6 41 8B CF");
+    public static readonly GameFunction<GetAdjustedRecastTimeDelegate> getAdjustedRecastTime = new("E8 ?? ?? ?? ?? 8B D6 8B CD");
     public static uint GetAdjustedRecastTime(uint actionType, uint actionID, bool useStats) => getAdjustedRecastTime.Invoke(actionType, actionID, useStats);
 
     public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
