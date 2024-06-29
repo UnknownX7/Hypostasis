@@ -141,10 +141,8 @@ public static partial class ImGuiEx
         options ??= new ExcelSheetPopupOptions<T>();
         options = options with { IsRowSelected = row => selectedRows.Contains(row.RowId) };
         if (!ExcelSheetPopup(id, out var selectedRow, options)) return false;
-        if (!selectedRows.Contains(selectedRow))
+        if (!selectedRows.Remove(selectedRow))
             selectedRows.Add(selectedRow);
-        else
-            selectedRows.Remove(selectedRow);
         return true;
     }
 

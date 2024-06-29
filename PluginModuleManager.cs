@@ -6,7 +6,7 @@ namespace Hypostasis;
 
 public static class PluginModuleManager
 {
-    private static readonly Dictionary<Type, PluginModule> pluginModules = new();
+    private static readonly Dictionary<Type, PluginModule> pluginModules = [];
     public static IEnumerable<PluginModule> PluginModules => pluginModules.Values;
 
     public static bool Initialize()

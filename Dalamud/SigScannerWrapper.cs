@@ -54,8 +54,8 @@ public class GameStructureAttribute(string ctor) : Attribute
 
 public class SigScannerWrapper(ISigScanner s) : IDisposable
 {
-    private readonly Dictionary<string, nint> sigCache = new();
-    private readonly Dictionary<string, nint> staticSigCache = new();
+    private readonly Dictionary<string, nint> sigCache = [];
+    private readonly Dictionary<string, nint> staticSigCache = [];
     private readonly List<IDisposable> disposableHooks = [];
 
     public ISigScanner DalamudSigScanner { get; init; } = s;
@@ -251,7 +251,7 @@ public class SigScannerWrapper(ISigScanner s) : IDisposable
         {
             FieldInfo f => f.GetValue(null),
             PropertyInfo p => p.GetValue(null),
-            MethodInfo m => m.Invoke(null, Array.Empty<object>()),
+            MethodInfo m => m.Invoke(null, []),
             _ => throw new ApplicationException("Member type is unsupported")
         };
 
@@ -324,7 +324,7 @@ public class SigScannerWrapper(ISigScanner s) : IDisposable
             disposableHooks.Add(hook as IDisposable);
     }
 
-    private static Delegate GetMethodDelegate(IReflect ownerType, Type delegateType, object o, string methodName)
+    private static Delegate GetMethodDelegate(Type ownerType, Type delegateType, object o, string methodName)
     {
         var detourMethod = ownerType.GetMethod(methodName, Util.AllMembersBindingFlags);
         return CreateDelegate(delegateType, o, detourMethod);
