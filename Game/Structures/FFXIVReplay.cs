@@ -5,26 +5,25 @@ using System.Runtime.InteropServices;
 namespace Hypostasis.Game.Structures;
 
 // .dat Info
-// 0x364 is the start of the replay data, everything before this is the Header + ChapterArray
+// 0x36C is the start of the replay data, everything before this is the Header + ChapterArray
 [StructLayout(LayoutKind.Sequential)]
 public unsafe partial struct FFXIVReplay
 {
-    [StructLayout(LayoutKind.Explicit, Size = 0x60)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
     public struct Header
     {
+        private const short currentReplayVersion = 5;
         private static readonly byte[] validBytes = "FFXIVREPLAY"u8.ToArray();
 
         [FieldOffset(0x0)] public fixed byte FFXIVREPLAY[12]; // FFXIVREPLAY
-        [FieldOffset(0xC)] public short u0xC; // Always 4? Possibly replay system version, wont play if not 4
-        [FieldOffset(0xE)] public short u0xE; // Always 3? Seems to be unused
+        [FieldOffset(0xC)] public short replayVersion;
+        [FieldOffset(0xE)] public short operatingSystemType; // 3 = Windows, 5 = Mac
         [FieldOffset(0x10)] public int gameBuildNumber; // Has to match
         [FieldOffset(0x14)] public uint timestamp; // Unix timestamp
         [FieldOffset(0x18)] public uint totalMS; // MS including time before the first chapter
         [FieldOffset(0x1C)] public uint displayedMS; // MS excluding time before the first chapter
         [FieldOffset(0x20)] public ushort contentID;
-        // 0x22-0x28 Padding? Does not appear to be used
         [FieldOffset(0x28)] public byte info; // Bitfield, 1 = Up to date, 2 = Locked, 4 = Duty completed
-        // 0x29-0x30 Padding? Does not appear to be used
         [FieldOffset(0x30)] public ulong localCID; // ID of the recorder (Has to match the logged in character)
         [FieldOffset(0x38)] public fixed byte jobs[8]; // Job ID of each player
         [FieldOffset(0x40)] public byte playerIndex; // The index of the recorder in the jobs array
@@ -32,7 +31,8 @@ public unsafe partial struct FFXIVReplay
         [FieldOffset(0x48)] public int replayLength; // Number of bytes in the replay
         [FieldOffset(0x4C)] public short u0x4C; // Padding? Seems to be unused
         [FieldOffset(0x4E)] public fixed ushort npcNames[7]; // Determines displayed names using the BNpcName sheet
-        [FieldOffset(0x5C)] public int u0x5C; // Probably just padding
+        [FieldOffset(0x5C)] public int u0x5C; // Padding? Seems to be unused
+        [FieldOffset(0x60)] public long u0x60; // New in DT
 
         public bool IsValid
         {
@@ -47,7 +47,7 @@ public unsafe partial struct FFXIVReplay
             }
         }
 
-        public bool IsPlayable => gameBuildNumber == Common.ContentsReplayModule->gameBuildNumber && u0xC == 4;
+        public bool IsPlayable => gameBuildNumber == Common.ContentsReplayModule->gameBuildNumber && replayVersion == currentReplayVersion;
 
         public bool IsLocked => IsValid && IsPlayable && (info & 2) != 0;
 

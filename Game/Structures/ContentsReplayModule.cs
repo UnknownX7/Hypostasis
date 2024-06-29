@@ -28,46 +28,46 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     [FieldOffset(0x38)] public long overallDataOffset; // Overall (next?) offset of bytes to read
     [FieldOffset(0x40)] public long lastDataOffset; // Last? offset read
     [FieldOffset(0x48)] public FFXIVReplay.Header replayHeader;
-    [FieldOffset(0xA8)] public FFXIVReplay.ChapterArray chapters; // ms of the first chapter determines the displayed time, but doesn't affect chapter times
-    [FieldOffset(0x3B0)] public Utf8String contentTitle; // Current content name
-    [FieldOffset(0x418)] public long nextDataSection; // 0x100000 if the lower half of the save/read area is next to be loaded into, 0x80000 if the upper half is
-    [FieldOffset(0x420)] public long numberBytesRead; // How many bytes have been read from the file
-    [FieldOffset(0x428)] public int currentFileSection; // Currently playing section starting at 1 (each section is 512 kb)
-    [FieldOffset(0x42C)] public int dataLoadType; // 5 = save replay?, 6 = save replay header + chapters?, 7 = Load header + chapters, 8 = Load section, 10 = Load header (3-6 and 11 are used for saving?)
-    [FieldOffset(0x430)] public long dataLoadOffset; // Starting offset to load the next section into
-    [FieldOffset(0x438)] public long dataLoadLength; // 0x100000 or replayLength if initially loading, 0x80000 afterwards
-    [FieldOffset(0x440)] public long dataLoadFileOffset; // Offset to begin loading data from
-    [FieldOffset(0x448)] public long localCID;
-    [FieldOffset(0x450)] public byte currentReplaySlot; // 0-2 depending on which replay it is, 255 otherwise
-    // 0x451-0x458 Padding?
-    [FieldOffset(0x458)] public Utf8String characterRecordingName; // "<Character name> Duty Record #<Slot>" but only when recording, not when replaying
-    [FieldOffset(0x4C0)] public Utf8String replayTitle; // contentTitle + the date and time, but only when recording, not when replaying
-    [FieldOffset(0x528)] public Utf8String u0x528;
-    [FieldOffset(0x590)] public float recordingTime; // Only used when recording
-    [FieldOffset(0x598)] public long recordingLength; // Only used when recording
-    [FieldOffset(0x5A0)] public int u0x5A0;
-    [FieldOffset(0x5A4)] public byte u0x5A4;
-    [FieldOffset(0x5A5)] public byte nextReplaySaveSlot;
-    [FieldOffset(0x5A8)] public FFXIVReplay.Header* savedReplayHeaders; // Pointer to the three saved replay headers
-    [FieldOffset(0x5B0)] public nint u0x5B0; // Pointer right after the file headers
-    [FieldOffset(0x5B8)] public nint u0x5B8; // Same as above?
-    [FieldOffset(0x5C0)] public byte u0x5C0;
-    [FieldOffset(0x5C4)] public uint localPlayerObjectID;
-    [FieldOffset(0x5C8)] public InitZonePacket initZonePacket; // The last received InitZone is saved here
-    [FieldOffset(0x630)] public long u0x630;
-    [FieldOffset(0x638)] public UnknownPacket u0x638; // Probably a packet
-    [FieldOffset(0x6F8)] public int u0x6F8;
-    [FieldOffset(0x6FC)] public float seek; // Determines current time, but always seems to be slightly ahead
-    [FieldOffset(0x700)] public float seekDelta; // Stores how far the seek moves per second
-    [FieldOffset(0x704)] public float speed;
-    [FieldOffset(0x708)] public float u0x708; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
-    [FieldOffset(0x70C)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
-    [FieldOffset(0x710)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
-    [FieldOffset(0x714)] public int u0x714;
-    [FieldOffset(0x718)] public short u0x718;
-    [FieldOffset(0x71A)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
-    [FieldOffset(0x71B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
-    [FieldOffset(0x71C)] public byte u0x71C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
+    [FieldOffset(0xB0)] public FFXIVReplay.ChapterArray chapters; // ms of the first chapter determines the displayed time, but doesn't affect chapter times
+    [FieldOffset(0x3B8)] public Utf8String contentTitle; // Current content name
+    [FieldOffset(0x420)] public long nextDataSection; // 0x100000 if the lower half of the save/read area is next to be loaded into, 0x80000 if the upper half is
+    [FieldOffset(0x428)] public long numberBytesRead; // How many bytes have been read from the file
+    [FieldOffset(0x430)] public int currentFileSection; // Currently playing section starting at 1 (each section is 512 kb)
+    [FieldOffset(0x434)] public int dataLoadType; // 5 = save replay?, 6 = save replay header + chapters?, 7 = Load header + chapters, 8 = Load section, 10 = Load header (3-6 and 11 are used for saving?)
+    [FieldOffset(0x438)] public long dataLoadOffset; // Starting offset to load the next section into
+    [FieldOffset(0x440)] public long dataLoadLength; // 0x100000 or replayLength if initially loading, 0x80000 afterwards
+    [FieldOffset(0x448)] public long dataLoadFileOffset; // Offset to begin loading data from
+    [FieldOffset(0x450)] public long localCID;
+    [FieldOffset(0x458)] public byte currentReplaySlot; // 0-2 depending on which replay it is, 255 otherwise
+    // 0x459-0x460 Padding?
+    [FieldOffset(0x460)] public Utf8String characterRecordingName; // "<Character name> Duty Record #<Slot>" but only when recording, not when replaying
+    [FieldOffset(0x4C8)] public Utf8String replayTitle; // contentTitle + the date and time, but only when recording, not when replaying
+    [FieldOffset(0x530)] public Utf8String u0x530;
+    [FieldOffset(0x598)] public float recordingTime; // Only used when recording
+    [FieldOffset(0x5A0)] public long recordingLength; // Only used when recording
+    [FieldOffset(0x5A8)] public int u0x5A8;
+    [FieldOffset(0x5AC)] public byte u0x5AC;
+    [FieldOffset(0x5AD)] public byte nextReplaySaveSlot;
+    [FieldOffset(0x5B0)] public FFXIVReplay.Header* savedReplayHeaders; // Pointer to the three saved replay headers
+    [FieldOffset(0x5B8)] public nint u0x5B8; // Pointer right after the file headers
+    [FieldOffset(0x5C0)] public nint u0x5C0; // Same as above?
+    [FieldOffset(0x5C8)] public byte u0x5C8;
+    [FieldOffset(0x5CC)] public uint localPlayerObjectID;
+    [FieldOffset(0x5D0)] public InitZonePacket initZonePacket; // The last received InitZone is saved here
+    [FieldOffset(0x638)] public long u0x638;
+    [FieldOffset(0x640)] public UnknownPacket u0x640; // Probably a packet
+    [FieldOffset(0x700)] public int u0x700;
+    [FieldOffset(0x704)] public float seek; // Determines current time, but always seems to be slightly ahead
+    [FieldOffset(0x708)] public float seekDelta; // Stores how far the seek moves per second
+    [FieldOffset(0x70C)] public float speed;
+    [FieldOffset(0x710)] public float u0x710; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
+    [FieldOffset(0x714)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
+    [FieldOffset(0x718)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
+    [FieldOffset(0x71C)] public int u0x71C;
+    [FieldOffset(0x720)] public short u0x720;
+    [FieldOffset(0x722)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
+    [FieldOffset(0x723)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
+    [FieldOffset(0x724)] public byte u0x724; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
     // 0x71D-0x720 is padding
 
     public bool InPlayback => (playbackControls & 4) != 0;
