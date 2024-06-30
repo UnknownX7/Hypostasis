@@ -107,5 +107,8 @@ public enum PronounID : uint
     Stop = 1082,
     LastEnemy = 1084,
     Plus = 1116, // Alt name for Cross
-    E = 1118 // Don't know what this is
+    E = 1118, // Don't know what this is
+    Attack6 = 1122,
+    Attack7 = 1124,
+    Attack8 = 1126
 }
