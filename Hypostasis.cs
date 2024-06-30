@@ -25,7 +25,7 @@ public static class Hypostasis
         = true;
 #endif
 
-    public static void Initialize(IDalamudPlugin plugin, DalamudPluginInterface pluginInterface)
+    public static void Initialize(IDalamudPlugin plugin, IDalamudPluginInterface pluginInterface)
     {
         PluginName = pluginInterface.InternalName;
         DalamudApi.Initialize(pluginInterface);

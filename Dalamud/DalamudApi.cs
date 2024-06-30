@@ -14,7 +14,7 @@ namespace Hypostasis.Dalamud;
 public class DalamudApi
 {
     //[PluginService]
-    public static DalamudPluginInterface PluginInterface { get; private set; }
+    public static IDalamudPluginInterface PluginInterface { get; private set; }
 
     [PluginService]
     public static IAddonEventManager AddonEventManager { get; private set; }
@@ -120,7 +120,7 @@ public class DalamudApi
     private static readonly string printName = Hypostasis.PluginName;
     private static readonly string printHeader = $"[{printName}] ";
 
-    public DalamudApi(DalamudPluginInterface pluginInterface)
+    public DalamudApi(IDalamudPluginInterface pluginInterface)
     {
         PluginInterface = pluginInterface;
         if (!pluginInterface.Inject(this))
@@ -151,7 +151,7 @@ public class DalamudApi
 
     public static void LogFatal(string message, Exception exception = null) => PluginLog.Fatal(exception, message);
 
-    public static void Initialize(DalamudPluginInterface pluginInterface) => _ = new DalamudApi(pluginInterface);
+    public static void Initialize(IDalamudPluginInterface pluginInterface) => _ = new DalamudApi(pluginInterface);
 
     public static void Dispose() => SigScanner?.Dispose();
 }

@@ -11,7 +11,7 @@ public abstract class DalamudPlugin : IDisposable
 {
     private readonly PluginCommandManager pluginCommandManager;
 
-    protected DalamudPlugin(DalamudPluginInterface pluginInterface)
+    protected DalamudPlugin(IDalamudPluginInterface pluginInterface)
     {
 #if DEBUG
         var stopwatch = Stopwatch.StartNew();
@@ -120,7 +120,7 @@ public abstract class DalamudPlugin : IDisposable
     }
 }
 
-public abstract class DalamudPlugin<C>(DalamudPluginInterface pluginInterface) : DalamudPlugin(pluginInterface) where C : PluginConfiguration, new()
+public abstract class DalamudPlugin<C>(IDalamudPluginInterface pluginInterface) : DalamudPlugin(pluginInterface) where C : PluginConfiguration, new()
 {
     public static C Config { get; private set; }
     protected sealed override void SetupConfig() => Config = PluginConfiguration.LoadConfig<C>();
@@ -130,5 +130,5 @@ public abstract class DalamudPlugin<C>(DalamudPluginInterface pluginInterface) :
 public abstract class DalamudPlugin<P, C> : DalamudPlugin<C> where P : DalamudPlugin where C : PluginConfiguration, new()
 {
     public static P Plugin { get; private set; }
-    protected DalamudPlugin(DalamudPluginInterface pluginInterface) : base(pluginInterface) => Plugin = this as P;
+    protected DalamudPlugin(IDalamudPluginInterface pluginInterface) : base(pluginInterface) => Plugin = this as P;
 }
