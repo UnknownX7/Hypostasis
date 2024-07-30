@@ -151,12 +151,12 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate FFXIVReplay.DataSegment* GetReplayDataSegmentDelegate(ContentsReplayModule* contentsReplayModule);
-    public static readonly GameFunction<GetReplayDataSegmentDelegate> getReplayDataSegment = new("40 53 48 83 EC 20 8B 81 90 00 00 00");
+    /*public static readonly GameFunction<GetReplayDataSegmentDelegate> getReplayDataSegment = new(""); // No longer exists, inlined at 48 39 43 38 0F 83 ?? ?? ?? ?? 48 8B 4B 30
     public FFXIVReplay.DataSegment* GetReplayDataSegment()
     {
         fixed (ContentsReplayModule* ptr = &this)
             return getReplayDataSegment.Invoke(ptr);
-    }
+    }*/
 
     public delegate Bool SetChapterDelegate(ContentsReplayModule* contentsReplayModule, byte chapter);
     public static readonly GameFunction<SetChapterDelegate> setChapter = new("E8 ?? ?? ?? ?? 84 C0 E9 ?? ?? ?? ?? 48 8D 4F 10");
