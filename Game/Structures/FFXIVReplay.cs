@@ -9,14 +9,15 @@ namespace Hypostasis.Game.Structures;
 [StructLayout(LayoutKind.Sequential)]
 public unsafe partial struct FFXIVReplay
 {
+    public const short CurrentReplayFormatVersion = 5;
+
     [StructLayout(LayoutKind.Explicit, Size = 0x68)]
     public struct Header
     {
-        private const short currentReplayVersion = 5;
         private static readonly byte[] validBytes = "FFXIVREPLAY"u8.ToArray();
 
         [FieldOffset(0x0)] public fixed byte FFXIVREPLAY[12]; // FFXIVREPLAY
-        [FieldOffset(0xC)] public short replayVersion;
+        [FieldOffset(0xC)] public short replayFormatVersion;
         [FieldOffset(0xE)] public short operatingSystemType; // 3 = Windows, 5 = Mac
         [FieldOffset(0x10)] public int gameBuildNumber; // Has to match
         [FieldOffset(0x14)] public uint timestamp; // Unix timestamp
@@ -47,7 +48,9 @@ public unsafe partial struct FFXIVReplay
             }
         }
 
-        public bool IsPlayable => gameBuildNumber == Common.ContentsReplayModule->gameBuildNumber && replayVersion == currentReplayVersion;
+        public bool IsPlayable => gameBuildNumber == Common.ContentsReplayModule->gameBuildNumber && IsCurrentFormatVersion;
+
+        public bool IsCurrentFormatVersion => replayFormatVersion == CurrentReplayFormatVersion;
 
         public bool IsLocked => IsValid && IsPlayable && (info & 2) != 0;
 
