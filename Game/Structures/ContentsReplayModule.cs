@@ -90,7 +90,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     // E8 ?? ?? ?? ?? 44 0F B6 D8 C7 03 02 00 00 00 Function handling the UI buttons
 
     public delegate void BeginRecordingDelegate(ContentsReplayModule* contentsReplayModule, Bool saveRecording);
-    public static readonly GameFunction<BeginRecordingDelegate> beginRecording = new("40 ?? 48 ?? ?? ?? 0F ?? ?? ?? ?? ?? ?? 48 ?? ?? A8 ?? 74 ?? A8 ?? 75 ?? 80");
+    public static readonly GameFunction<BeginRecordingDelegate> beginRecording = new("E8 ?? ?? ?? ?? 48 8B 5C 24 ?? 48 83 C4 20 41 5C");
     public void BeginRecording(bool saveRecording = true)
     {
         fixed (ContentsReplayModule* ptr = &this)
@@ -105,8 +105,11 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             endRecording.Invoke(ptr);
     }
 
+    public delegate void OnLoginPacketDelegate(ContentsReplayModule* contentsReplayModule, uint gameObject, nint packet);
+    public static readonly GameFunction<OnLoginPacketDelegate> onLoginPacket = new("E8 ?? ?? ?? ?? 45 33 C0 48 8D 53 10 8B CE E8 ?? ?? ?? ?? 48 8D 4B 64");
+
     public delegate Bool OnLoginDelegate(ContentsReplayModule* contentsReplayModule);
-    public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 ?? 48 ?? ?? ?? F6 81 ?? ?? ?? ?? ?? 48 ?? ?? 0F 85 ?? ?? ?? ?? F6 81");
+    public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 53 48 83 EC 20 F6 81 ?? ?? ?? ?? ?? 48 8B D9 0F 85 ?? ?? ?? ?? F6 81 ?? ?? ?? ?? ??"); // Inlined, hook onLoginPacket instead
     public bool OnLogin()
     {
         fixed (ContentsReplayModule* ptr = &this)
@@ -129,8 +132,11 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             return requestPlayback.Invoke(ptr, slot);
     }
 
+    public delegate void ReceiveActorControlPacketDelegate(ContentsReplayModule* contentsReplayModule, uint gameObject, nint packet);
+    public static readonly GameFunction<ReceiveActorControlPacketDelegate> receiveActorControlPacket = new("40 53 48 83 EC 30 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 01 0F 84 ?? ?? ?? ?? 24 FE");
+
     public delegate void BeginPlaybackDelegate(ContentsReplayModule* contentsReplayModule, Bool allowed);
-    public static readonly GameFunction<BeginPlaybackDelegate> beginPlayback = new("40 ?? 48 ?? ?? ?? 0F ?? ?? ?? ?? ?? ?? 48 ?? ?? A8 ?? 0F 84 ?? ?? ?? ?? 24 ?? 88 81");
+    public static readonly GameFunction<BeginPlaybackDelegate> beginPlayback = new("40 53 48 83 EC 30 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 01 0F 84 ?? ?? ?? ?? 24 FE"); // Inlined, use receiveActorControlPacket and check *(ushort*)packet == 931 to hook instead
     public void BeginPlayback(bool allowed = true)
     {
         fixed (ContentsReplayModule* ptr = &this)
