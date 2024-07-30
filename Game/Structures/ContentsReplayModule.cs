@@ -133,7 +133,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate void ReceiveActorControlPacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, nint packet);
-    public static readonly GameFunction<ReceiveActorControlPacketDelegate> receiveActorControlPacket = new("40 53 48 83 EC 30 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 01 0F 84 ?? ?? ?? ?? 24 FE");
+    public static readonly GameFunction<ReceiveActorControlPacketDelegate> receiveActorControlPacket = new("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 41 56 41 57 48 83 EC 30 33 FF 48 8B D9");
 
     public delegate void BeginPlaybackDelegate(ContentsReplayModule* contentsReplayModule, Bool allowed);
     public static readonly GameFunction<BeginPlaybackDelegate> beginPlayback = new("40 53 48 83 EC 30 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 01 0F 84 ?? ?? ?? ?? 24 FE"); // Inlined, use receiveActorControlPacket and check *(ushort*)packet == 931 to hook instead
