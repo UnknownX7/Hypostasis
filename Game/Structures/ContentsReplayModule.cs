@@ -105,11 +105,11 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             endRecording.Invoke(ptr);
     }
 
-    public delegate void OnLoginPacketDelegate(ContentsReplayModule* contentsReplayModule, uint gameObject, nint packet);
-    public static readonly GameFunction<OnLoginPacketDelegate> onLoginPacket = new("E8 ?? ?? ?? ?? 45 33 C0 48 8D 53 10 8B CE E8 ?? ?? ?? ?? 48 8D 4B 64");
+    public delegate void OnZoneInPacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, nint packet);
+    public static readonly GameFunction<OnZoneInPacketDelegate> onZoneInPacket = new("E8 ?? ?? ?? ?? 45 33 C0 48 8D 53 10 8B CE E8 ?? ?? ?? ?? 48 8D 4B 64");
 
     public delegate Bool OnLoginDelegate(ContentsReplayModule* contentsReplayModule);
-    public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 53 48 83 EC 20 F6 81 ?? ?? ?? ?? ?? 48 8B D9 0F 85 ?? ?? ?? ?? F6 81 ?? ?? ?? ?? ??"); // Inlined, hook onLoginPacket instead
+    public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 53 48 83 EC 20 F6 81 ?? ?? ?? ?? ?? 48 8B D9 0F 85 ?? ?? ?? ?? F6 81 ?? ?? ?? ?? ??"); // Inlined, hook onZoneInPacket instead
     public bool OnLogin()
     {
         fixed (ContentsReplayModule* ptr = &this)
@@ -132,7 +132,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
             return requestPlayback.Invoke(ptr, slot);
     }
 
-    public delegate void ReceiveActorControlPacketDelegate(ContentsReplayModule* contentsReplayModule, uint gameObject, nint packet);
+    public delegate void ReceiveActorControlPacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, nint packet);
     public static readonly GameFunction<ReceiveActorControlPacketDelegate> receiveActorControlPacket = new("40 53 48 83 EC 30 0F B6 81 ?? ?? ?? ?? 48 8B D9 A8 01 0F 84 ?? ?? ?? ?? 24 FE");
 
     public delegate void BeginPlaybackDelegate(ContentsReplayModule* contentsReplayModule, Bool allowed);
