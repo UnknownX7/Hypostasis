@@ -10,7 +10,7 @@ namespace ImGuiNET;
 
 public static partial class ImGuiEx
 {
-    public record ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetOptions<T> where T : struct, IExcelRow<T>
     {
         public Func<T, string> FormatRow { get; init; } = row => row.ToString();
         public Func<T, string, bool> SearchPredicate { get; init; } = null;
@@ -19,13 +19,13 @@ public static partial class ImGuiEx
         public Vector2? Size { get; init; } = null;
     }
 
-    public record ExcelSheetComboOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetComboOptions<T> : ExcelSheetOptions<T> where T : struct, IExcelRow<T>
     {
         public Func<T, string> GetPreview { get; init; } = null;
         public ImGuiComboFlags ComboFlags { get; init; } = ImGuiComboFlags.None;
     }
 
-    public record ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : ExcelRow
+    public record ExcelSheetPopupOptions<T> : ExcelSheetOptions<T> where T : struct, IExcelRow<T> 
     {
         public ImGuiPopupFlags PopupFlags { get; init; } = ImGuiPopupFlags.None;
         public bool CloseOnSelection { get; init; } = false;
@@ -33,11 +33,11 @@ public static partial class ImGuiEx
     }
 
     private static string sheetSearchText;
-    private static ExcelRow[] filteredSearchSheet;
+    private static RowRef[] filteredSearchSheet;
     private static string prevSearchID;
     private static Type prevSearchType;
 
-    private static void ExcelSheetSearchInput<T>(string id, IEnumerable<T> filteredSheet, Func<T, string, bool> searchPredicate) where T : ExcelRow
+    private static void ExcelSheetSearchInput<T>(string id, IEnumerable<T> filteredSheet, Func<T, string, bool> searchPredicate) where T : struct, IExcelRow<T>
     {
         if (ImGui.IsWindowAppearing() && ImGui.IsWindowFocused() && !ImGui.IsAnyItemActive())
         {
@@ -59,10 +59,11 @@ public static partial class ImGuiEx
         if (ImGui.InputTextWithHint("##ExcelSheetSearch", "Search", ref sheetSearchText, 128, ImGuiInputTextFlags.AutoSelectAll))
             filteredSearchSheet = null;
 
-        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Cast<ExcelRow>().ToArray();
+        var module = DalamudApi.DataManager.GetExcelSheet<T>().Module;
+        filteredSearchSheet ??= filteredSheet.Where(s => searchPredicate(s, sheetSearchText)).Select(s => new RowRef(module, s.RowId, s.GetType())).ToArray();
     }
 
-    public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : ExcelRow
+    public static bool ExcelSheetCombo<T>(string id, ref uint selectedRow, ExcelSheetComboOptions<T> options = null) where T : struct, IExcelRow<T> 
     {
         options ??= new ExcelSheetComboOptions<T>();
         var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
@@ -81,10 +82,11 @@ public static partial class ImGuiEx
         {
             foreach (var i in clipper.Rows)
             {
-                var row = (T)filteredSearchSheet[i];
+                var row = filteredSearchSheet[i].GetValueOrDefault<T>();
+                if (row == null || !row.HasValue) continue;
                 using var _ = IDBlock.Begin(i);
-                if (!drawSelectable(row, selectedRow == row.RowId)) continue;
-                selectedRow = row.RowId;
+                if (!drawSelectable(row.Value, selectedRow == row.Value.RowId)) continue;
+                selectedRow = row.Value.RowId;
                 ret = true;
                 break;
             }
@@ -99,7 +101,7 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    public static bool ExcelSheetPopup<T>(string id, out uint selectedRow, ExcelSheetPopupOptions<T> options = null) where T : ExcelRow
+    public static bool ExcelSheetPopup<T>(string id, out uint selectedRow, ExcelSheetPopupOptions<T> options = null) where T : struct, IExcelRow<T>
     {
         options ??= new ExcelSheetPopupOptions<T>();
         var sheet = options.FilteredSheet ?? DalamudApi.DataManager.GetExcelSheet<T>();
@@ -119,10 +121,11 @@ public static partial class ImGuiEx
         {
             foreach (var i in clipper.Rows)
             {
-                var row = (T)filteredSearchSheet[i];
+                var row = filteredSearchSheet[i].GetValueOrDefault<T>();
+                if (row == null || !row.HasValue) continue;
                 using var _ = IDBlock.Begin(i);
-                if (!drawSelectable(row, options.IsRowSelected(row))) continue;
-                selectedRow = row.RowId;
+                if (!drawSelectable(row.Value, options.IsRowSelected(row.Value))) continue;
+                selectedRow = row.Value.RowId;
                 ret = true;
             }
         }
@@ -136,7 +139,7 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    public static bool ExcelSheetMultiselectPopup<T>(string id, ICollection<uint> selectedRows, ExcelSheetPopupOptions<T> options = null) where T : ExcelRow
+    public static bool ExcelSheetMultiselectPopup<T>(string id, ICollection<uint> selectedRows, ExcelSheetPopupOptions<T> options = null) where T : struct, IExcelRow<T> 
     {
         options ??= new ExcelSheetPopupOptions<T>();
         options = options with { IsRowSelected = row => selectedRows.Contains(row.RowId) };
@@ -147,12 +150,12 @@ public static partial class ImGuiEx
     }
 
     private static string tableSearchText = string.Empty;
-    private static ExcelRow[] filteredTableSearchSheet;
+    private static RowRef[] filteredTableSearchSheet;
     private static string prevTableSearchID;
     private static Type prevTableSearchType;
     private static bool tableCompatMode = false;
 
-    public static void ExcelSheetTable<T>(string id) where T : ExcelRow
+    public static void ExcelSheetTable<T>(string id) where T: struct, IExcelRow<T>
     {
         var properties = typeof(T).GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public);
         var columns = properties.Length;
@@ -187,7 +190,7 @@ public static partial class ImGuiEx
 
         static string GetObjectAsString(object o) => o switch
         {
-            ILazyRow lazyRow => $"{lazyRow.GetType().GenericTypeArguments[0].Name}#{lazyRow.Row}",
+            T lazyRow => $"{lazyRow.GetType().GenericTypeArguments[0].Name}#{lazyRow.RowId}",
             //Lumina.Text.SeString seString => seString.ToDalamudString().ToString(),
             _ => o?.ToString() ?? string.Empty
         };
@@ -198,7 +201,7 @@ public static partial class ImGuiEx
                 yield return GetObjectAsString(propertyInfo.GetValue(o));
         }
 
-        static IComparable GetComparable(object o) => o is ILazyRow lazyRow ? lazyRow.Row : o as IComparable ?? GetObjectAsString(o);
+        static IComparable GetComparable(object o) => o is T lazyRow ? lazyRow.RowId : o as IComparable ?? GetObjectAsString(o);
 
         ImGui.TableSetupScrollFreeze(1, 1);
         ImGui.TableSetupColumn("Row");
@@ -246,13 +249,13 @@ public static partial class ImGuiEx
                     sortSpecs.SpecsDirty = false;
                 }
 
-                filteredTableSearchSheet = rows.Cast<ExcelRow>().ToArray();
+                filteredTableSearchSheet = rows.Select(s => new RowRef(sheet.Module, s.RowId, s.GetType())).ToArray();
             }
             using var clipper = new ListClipper(filteredTableSearchSheet.Length);
             foreach (var i in clipper.Rows)
             {
                 var row = filteredTableSearchSheet[i];
-                if (row == null) continue;
+                if (row.Equals(null)) continue;
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
