@@ -38,7 +38,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public delegate Bool CanUseActionOnGameObjectDelegate(uint actionID, GameObject* o);
     public static readonly GameFunction<CanUseActionOnGameObjectDelegate> canUseActionOnGameObject = new("48 89 5C 24 08 57 48 83 EC 20 48 8B DA 8B F9 E8 ?? ?? ?? ?? 4C 8B C3");
     public static bool CanUseActionOnGameObject(uint actionID, GameObject* o) =>
-        canUseActionOnGameObject.Invoke(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID) is { TargetArea: true };
+        canUseActionOnGameObject.Invoke(actionID, o) || DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.Action>().GetRow(actionID) is { TargetArea: true };
 
     public delegate uint GetAdjustedRecastTimeDelegate(uint actionType, uint actionID, Bool useStats);
     public static readonly GameFunction<GetAdjustedRecastTimeDelegate> getAdjustedRecastTime = new("E8 ?? ?? ?? ?? 8B D6 8B CD");

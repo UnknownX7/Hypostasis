@@ -54,18 +54,15 @@ public unsafe partial struct FFXIVReplay
 
         public bool IsLocked => IsValid && IsPlayable && (info & 2) != 0;
 
-        public Lumina.Excel.GeneratedSheets.ContentFinderCondition ContentFinderCondition => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ContentFinderCondition>()!.GetRow(contentID);
+        public Lumina.Excel.Sheets.ContentFinderCondition ContentFinderCondition => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ContentFinderCondition>()!.GetRow(contentID);
 
-        public Lumina.Excel.GeneratedSheets.ClassJob LocalPlayerClassJob =>
-            DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(jobs[playerIndex])
-            ?? DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(0);
+        public Lumina.Excel.Sheets.ClassJob LocalPlayerClassJob => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ClassJob>().GetRow(jobs[playerIndex]);
 
         private byte GetJobSafe(int i) => jobs[i];
 
-        public IEnumerable<Lumina.Excel.GeneratedSheets.ClassJob> ClassJobs => Enumerable.Range(0, 8)
+        public IEnumerable<Lumina.Excel.Sheets.ClassJob> ClassJobs => Enumerable.Range(0, 8)
             .Select(GetJobSafe).TakeWhile(id => id != 0)
-            .Select(id => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(id)
-                ?? DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob>()!.GetRow(0));
+            .Select(id => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ClassJob>().GetRow(id));
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x4 + 0xC * 64)]
