@@ -68,7 +68,7 @@ public static partial class ImGuiEx
         var sheet = DalamudApi.DataManager.GetExcelSheet<T>();
 
         var getPreview = options.GetPreview ?? options.FormatRow;
-        if (!ImGui.BeginCombo(id, sheet.GetRow(selectedRow) is { } r ? getPreview(r) : selectedRow.ToString(), options.ComboFlags | ImGuiComboFlags.HeightLargest)) return false;
+        if (!ImGui.BeginCombo(id, sheet.GetRowOrDefault(selectedRow) is { } r ? getPreview(r) : selectedRow.ToString(), options.ComboFlags | ImGuiComboFlags.HeightLargest)) return false;
 
         ExcelSheetSearchInput(id, options.FilteredSheet ?? sheet, options.SearchPredicate ?? ((row, s) => options.FormatRow(row).Contains(s, StringComparison.CurrentCultureIgnoreCase)));
 
@@ -80,7 +80,8 @@ public static partial class ImGuiEx
         {
             foreach (var i in clipper.Rows)
             {
-                var row = sheet.GetRow(filteredSearchIDs[i]);
+                if (sheet.GetRowOrDefault(filteredSearchIDs[i]) is not { } row) continue;
+
                 using var _ = IDBlock.Begin(i);
                 if (!drawSelectable(row, selectedRow == row.RowId)) continue;
                 selectedRow = row.RowId;
@@ -117,7 +118,8 @@ public static partial class ImGuiEx
         {
             foreach (var i in clipper.Rows)
             {
-                var row = sheet.GetRow(filteredSearchIDs[i]);
+                if (sheet.GetRowOrDefault(filteredSearchIDs[i]) is not { } row) continue;
+
                 using var _ = IDBlock.Begin(i);
                 if (!drawSelectable(row, options.IsRowSelected(row))) continue;
                 selectedRow = row.RowId;
@@ -248,7 +250,7 @@ public static partial class ImGuiEx
         using var clipper = new ListClipper(filteredTableSearchSheetIDs.Length);
         foreach (var i in clipper.Rows)
         {
-            var row = sheet.GetRow(filteredTableSearchSheetIDs[i]);
+            if (sheet.GetRowOrDefault(filteredTableSearchSheetIDs[i]) is not { } row) continue;
 
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
