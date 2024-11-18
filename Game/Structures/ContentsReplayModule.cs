@@ -3,10 +3,10 @@ using FFXIVClientStructs.FFXIV.Client.System.String;
 
 namespace Hypostasis.Game.Structures;
 
-[StructLayout(LayoutKind.Explicit, Size = 0x728), GameStructure("48 89 5C 24 ?? 57 48 83 EC 20 33 FF 48 8B D9 89 39 48 89 79 08")]
+[StructLayout(LayoutKind.Explicit, Size = 0x730), GameStructure("48 89 5C 24 ?? 57 48 83 EC 20 33 FF 48 8B D9 89 39 48 89 79 08")]
 public unsafe partial struct ContentsReplayModule : IHypostasisStructure
 {
-    [StructLayout(LayoutKind.Explicit, Size = 0x68)]
+    [StructLayout(LayoutKind.Explicit, Size = 0x70)]
     public struct InitZonePacket
     {
         [FieldOffset(0x0)] public ushort u0x0;
@@ -54,21 +54,21 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     [FieldOffset(0x5C8)] public byte u0x5C8;
     [FieldOffset(0x5CC)] public uint localPlayerObjectID;
     [FieldOffset(0x5D0)] public InitZonePacket initZonePacket; // The last received InitZone is saved here
-    [FieldOffset(0x638)] public long u0x638;
-    [FieldOffset(0x640)] public UnknownPacket u0x640; // Probably a packet
-    [FieldOffset(0x700)] public int u0x700;
-    [FieldOffset(0x704)] public float seek; // Determines current time, but always seems to be slightly ahead
-    [FieldOffset(0x708)] public float seekDelta; // Stores how far the seek moves per second
-    [FieldOffset(0x70C)] public float speed;
-    [FieldOffset(0x710)] public float u0x710; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
-    [FieldOffset(0x714)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
-    [FieldOffset(0x718)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
-    [FieldOffset(0x71C)] public int u0x71C;
-    [FieldOffset(0x720)] public short u0x720;
-    [FieldOffset(0x722)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
-    [FieldOffset(0x723)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
-    [FieldOffset(0x724)] public byte u0x724; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
-    // 0x71D-0x720 is padding
+    [FieldOffset(0x640)] public long u0x640;
+    [FieldOffset(0x648)] public UnknownPacket u0x648; // Probably a packet
+    [FieldOffset(0x708)] public int u0x708;
+    [FieldOffset(0x70C)] public float seek; // Determines current time, but always seems to be slightly ahead
+    [FieldOffset(0x710)] public float seekDelta; // Stores how far the seek moves per second
+    [FieldOffset(0x714)] public float speed;
+    [FieldOffset(0x718)] public float u0x718; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
+    [FieldOffset(0x71C)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
+    [FieldOffset(0x720)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
+    [FieldOffset(0x724)] public int u0x724;
+    [FieldOffset(0x728)] public short u0x728;
+    [FieldOffset(0x72A)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
+    [FieldOffset(0x72B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
+    [FieldOffset(0x72C)] public byte u0x72C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
+    // 0x72D-0x730 is padding
 
     public bool InPlayback => (playbackControls & 4) != 0;
     public bool IsPaused => (playbackControls & 8) != 0;
@@ -117,7 +117,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate void InitializeRecordingDelegate(ContentsReplayModule* contentsReplayModule);
-    public static readonly GameFunction<InitializeRecordingDelegate> initializeRecording = new("40 55 57 48 8D 6C 24 B1 48 81 EC 98 00 00 00");
+    public static readonly GameFunction<InitializeRecordingDelegate> initializeRecording = new("40 55 57 48 8D 6C 24 ?? 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 45 27 F6 81");
     public void InitializeRecording()
     {
         fixed (ContentsReplayModule* ptr = &this)
