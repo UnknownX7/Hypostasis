@@ -54,7 +54,7 @@ public unsafe partial struct FFXIVReplay
 
         public bool IsLocked => IsValid && IsPlayable && (info & 2) != 0;
 
-        public Lumina.Excel.Sheets.ContentFinderCondition ContentFinderCondition => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ContentFinderCondition>()!.GetRow(contentID);
+        public Lumina.Excel.Sheets.ContentFinderCondition ContentFinderCondition => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ContentFinderCondition>().GetRow(contentID);
 
         public Lumina.Excel.Sheets.ClassJob LocalPlayerClassJob => DalamudApi.DataManager.GetExcelSheet<Lumina.Excel.Sheets.ClassJob>().GetRow(jobs[playerIndex]);
 
