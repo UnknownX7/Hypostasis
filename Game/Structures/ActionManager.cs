@@ -20,14 +20,14 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x6C)] public uint queuedActionType;
     [FieldOffset(0x70)] public uint queuedActionID;
     [FieldOffset(0x78)] public ulong queuedTargetObjectID;
-    [FieldOffset(0x98)] public ulong queuedGroundTargetObjectID;
-    [FieldOffset(0xB8)] public byte activateGroundTarget;
-    [FieldOffset(0x110)] public ushort currentSequence;
-    //[FieldOffset(0x112)] public ushort unknownSequence; // ???
-    [FieldOffset(0x5E8)] public bool isGCDRecastActive;
-    [FieldOffset(0x5EC)] public uint currentGCDAction;
-    [FieldOffset(0x5F0)] public float elapsedGCDRecastTime;
-    [FieldOffset(0x5F4)] public float gcdRecastTime;
+    [FieldOffset(0xA8)] public ulong queuedGroundTargetObjectID;
+    [FieldOffset(0xC8)] public byte activateGroundTarget;
+    [FieldOffset(0x120)] public ushort currentSequence;
+    //[FieldOffset(0x122)] public ushort unknownSequence; // ???
+    [FieldOffset(0x5F8)] public bool isGCDRecastActive;
+    [FieldOffset(0x5FC)] public uint currentGCDAction;
+    [FieldOffset(0x600)] public float elapsedGCDRecastTime;
+    [FieldOffset(0x604)] public float gcdRecastTime;
 
     public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
 
@@ -45,7 +45,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GetAdjustedRecastTime(uint actionType, uint actionID, bool useStats) => getAdjustedRecastTime.Invoke(actionType, actionID, useStats);
 
     public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
-    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 84 C0 74 37 8B 84 24 ?? ?? 00 00");
+    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 3C 01 0F 85 ?? ?? ?? ?? 88 46 68");
     public bool CanQueueAction(uint actionType, uint actionID)
     {
         fixed (ActionManager* ptr = &this)

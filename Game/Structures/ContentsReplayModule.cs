@@ -106,7 +106,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate void OnZoneInPacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, nint packet);
-    public static readonly GameFunction<OnZoneInPacketDelegate> onZoneInPacket = new("E8 ?? ?? ?? ?? 45 33 C0 48 8D 53 10 8B CE E8 ?? ?? ?? ?? 48 8D 4B 6C");
+    public static readonly GameFunction<OnZoneInPacketDelegate> onZoneInPacket = new("E8 ?? ?? ?? ?? 45 33 C0 48 8D 56 10 8B CF E8 ?? ?? ?? ?? 48 8D 4E 6C");
 
     public delegate Bool OnLoginDelegate(ContentsReplayModule* contentsReplayModule);
     public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 53 48 83 EC 20 F6 81 ?? ?? ?? ?? ?? 48 8B D9 0F 85 ?? ?? ?? ?? F6 81 ?? ?? ?? ?? ??"); // Inlined, hook onZoneInPacket instead

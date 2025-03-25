@@ -23,7 +23,7 @@ public unsafe partial struct InputData : IHypostasisStructure
             return isInputIDPressed.Invoke(ptr, id);
     }
 
-    public static readonly GameFunction<InputIDDelegate> isInputIDLongPressed = new("E8 ?? ?? ?? ?? 84 DB 44 0F B6 C0");
+    public static readonly GameFunction<InputIDDelegate> isInputIDLongPressed = new("E8 ?? ?? ?? ?? 84 C0 74 37 EB 06");
     public bool IsInputIDLongPressed(uint id)
     {
         fixed (InputData* ptr = &this)

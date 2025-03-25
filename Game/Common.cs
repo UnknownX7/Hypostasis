@@ -117,7 +117,7 @@ public static unsafe class Common
 
     public static IEnumerable<nint> GetPartyMembers()
     {
-        static nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(43 + i));
+        static unsafe nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(43 + i));
         for (uint i = 0; i < 8; i++)
         {
             var address = f(i);
@@ -128,7 +128,7 @@ public static unsafe class Common
 
     public static IEnumerable<nint> GetEnemies()
     {
-        static nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(9 + i));
+        static unsafe nint f(uint i) => (nint)GetGameObjectFromPronounID((PronounID)(9 + i));
         for (uint i = 0; i < 26; i++)
         {
             var address = f(i);
