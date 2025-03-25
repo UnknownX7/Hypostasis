@@ -151,7 +151,7 @@ public static unsafe class Common
     public static bool IsMacroRunning => RaptureShellModule->MacroCurrentLine >= 0;
 
     [HypostasisDebuggable]
-    public static GameObject* UITarget => (GameObject*)*(nint*)((nint)PronounModule + 0x290);
+    public static GameObject* UITarget => PronounModule->UiMouseOverTarget;
 
     private static void InjectMember(string member) => DalamudApi.SigScanner.InjectMember(typeof(Common), null, member);
 
