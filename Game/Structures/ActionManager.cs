@@ -20,8 +20,8 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0x6C)] public uint queuedActionType;
     [FieldOffset(0x70)] public uint queuedActionID;
     [FieldOffset(0x78)] public ulong queuedTargetObjectID;
-    [FieldOffset(0xA8)] public ulong queuedGroundTargetObjectID;
-    [FieldOffset(0xC8)] public byte activateGroundTarget;
+    [FieldOffset(0xA0)] public ulong queuedGroundTargetObjectID;
+    [FieldOffset(0xC0)] public byte activateGroundTarget;
     [FieldOffset(0x120)] public ushort currentSequence;
     //[FieldOffset(0x122)] public ushort unknownSequence; // ???
     [FieldOffset(0x5F8)] public bool isGCDRecastActive;
