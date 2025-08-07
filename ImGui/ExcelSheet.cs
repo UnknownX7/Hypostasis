@@ -6,7 +6,7 @@ using System.Reflection;
 using Dalamud.Interface.Utility;
 using Lumina.Excel;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 public static partial class ImGuiEx
 {
@@ -220,7 +220,7 @@ public static partial class ImGuiEx
         bool usingSort;
         unsafe
         {
-            usingSort = sortSpecs.NativePtr != null;
+            usingSort = !sortSpecs.IsNull;
         }
 
         if (filteredTableSearchSheetIDs == null || (usingSort && sortSpecs.SpecsDirty))

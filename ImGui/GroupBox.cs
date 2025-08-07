@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 public static partial class ImGuiEx
 {

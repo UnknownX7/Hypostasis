@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 public static partial class ImGuiEx
 {
@@ -55,7 +55,7 @@ public static partial class ImGuiEx
             columns = cols;
             rows = twoDimensional ? items : (int)MathF.Ceiling((float)items / columns);
             itemRemainder = !twoDimensional ? items % columns : 0;
-            clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper_ImGuiListClipper());
+            clipper = new ImGuiListClipperPtr(ImGuiNative.ImGuiListClipper());
             clipper.Begin(rows, itemHeight);
         }
 

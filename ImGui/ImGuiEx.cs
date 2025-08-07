@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 public static partial class ImGuiEx
 {
@@ -168,7 +168,7 @@ public static partial class ImGuiEx
         if (IsItemReleased(ImGuiMouseButton.Right)) return true;
 
         using var __ = StyleVarBlock.Begin(ImGuiStyleVar.PopupBorderSize, 1);
-        if (!ImGui.BeginPopupContextItem(null, ImGuiPopupFlags.MouseButtonLeft)) return false;
+        if (!ImGui.BeginPopupContextItem(ImU8String.Empty, ImGuiPopupFlags.MouseButtonLeft)) return false;
         var ret = ImGui.Selectable(FontAwesomeIcon.TrashAlt.ToIconString());
         ImGui.EndPopup();
         return ret;
@@ -322,9 +322,9 @@ public static partial class ImGuiEx
         return ret;
     }
 
-    public static unsafe void FloatingDrawable(Action<ImDrawListPtr, float, Vector2> draw, uint timerMS = 1000)
+    public static void FloatingDrawable(Action<ImDrawListPtr, float, Vector2> draw, uint timerMS = 1000)
     {
-        var viewport = ImGui.GetWindowViewport() is { NativePtr: not null } v ? v : ImGui.GetMainViewport();
+        var viewport = ImGui.GetWindowViewport() is { IsNull: false } v ? v : ImGui.GetMainViewport();
         var pos = ImGui.GetMousePos();
         var timer = Stopwatch.StartNew();
 

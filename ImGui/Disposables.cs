@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 public static partial class ImGuiEx
 {
@@ -34,7 +34,7 @@ public static partial class ImGuiEx
 
         public static unsafe IDBlock Begin(void* ptr)
         {
-            ImGuiNative.igPushID_Ptr(ptr);
+            ImGui.PushID(ptr);
             return instance;
         }
 

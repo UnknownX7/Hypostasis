@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace ImGuiNET;
+namespace Dalamud.Bindings.ImGui;
 
 [StructLayout(LayoutKind.Explicit)]
 public struct ImGuiWindow
