@@ -45,7 +45,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GetAdjustedRecastTime(uint actionType, uint actionID, bool useStats) => getAdjustedRecastTime.Invoke(actionType, actionID, useStats);
 
     public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
-    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 3C 01 0F 85 ?? ?? ?? ?? 88 46 68");
+    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 3C 01 0F 85 ?? ?? ?? ?? 88 45 68");
     public bool CanQueueAction(uint actionType, uint actionID)
     {
         fixed (ActionManager* ptr = &this)
