@@ -54,20 +54,20 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     [FieldOffset(0x5C8)] public byte u0x5C8;
     [FieldOffset(0x5CC)] public uint localPlayerObjectID;
     [FieldOffset(0x5D0)] public InitZonePacket initZonePacket; // The last received InitZone is saved here
-    [FieldOffset(0x640)] public long u0x640;
-    [FieldOffset(0x648)] public UnknownPacket u0x648; // Probably a packet
-    [FieldOffset(0x708)] public int u0x708;
-    [FieldOffset(0x70C)] public float seek; // Determines current time, but always seems to be slightly ahead
-    [FieldOffset(0x710)] public float seekDelta; // Stores how far the seek moves per second
-    [FieldOffset(0x714)] public float speed;
-    [FieldOffset(0x718)] public float u0x718; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
-    [FieldOffset(0x71C)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
-    [FieldOffset(0x720)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
-    [FieldOffset(0x724)] public int u0x724;
-    [FieldOffset(0x728)] public short u0x728;
-    [FieldOffset(0x72A)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
-    [FieldOffset(0x72B)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
-    [FieldOffset(0x72C)] public byte u0x72C; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
+    [FieldOffset(0x658)] public long u0x658;
+    [FieldOffset(0x660)] public UnknownPacket u0x660; // Probably a packet
+    [FieldOffset(0x720)] public int u0x720;
+    [FieldOffset(0x724)] public float seek; // Determines current time, but always seems to be slightly ahead
+    [FieldOffset(0x728)] public float seekDelta; // Stores how far the seek moves per second
+    [FieldOffset(0x72C)] public float speed;
+    [FieldOffset(0x730)] public float u0x730; // Seems to be 1 or 0, depending on if the speed is greater than 1 (Probably sound timescale)
+    [FieldOffset(0x734)] public byte selectedChapter; // 64 when playing, otherwise determines the current chapter being seeked to
+    [FieldOffset(0x738)] public uint startingMS; // The ms considered 00:00:00, is NOT set if seek would be below the value (as in currently replaying the zone in packets)
+    [FieldOffset(0x73C)] public int u0x73C;
+    [FieldOffset(0x740)] public short u0x740;
+    [FieldOffset(0x742)] public byte status; // Bitfield determining the current status of the system (1 Just logged in?, 2 Can record, 4 Saving packets, 8 ???, 16 Record Ready Checked?, 32 Save recording?, 64 Barrier down, 128 In playback after barrier drops?)
+    [FieldOffset(0x743)] public byte playbackControls; // Bitfield determining the current playback controls (1 Waiting to enter playback, 2 Waiting to leave playback, 4 In playback (blocks packets), 8 Paused, 16 Chapter???, 32 Chapter???, 64 In duty?, 128 In playback???)
+    [FieldOffset(0x744)] public byte u0x744; // Bitfield? (1 Used to apply the initial chapter the moment the barrier drops while recording)
     // 0x72D-0x730 is padding
 
     public bool InPlayback => (playbackControls & 4) != 0;
@@ -106,7 +106,7 @@ public unsafe partial struct ContentsReplayModule : IHypostasisStructure
     }
 
     public delegate void OnZoneInPacketDelegate(ContentsReplayModule* contentsReplayModule, uint objectID, nint packet);
-    public static readonly GameFunction<OnZoneInPacketDelegate> onZoneInPacket = new("48 89 5C 24 08 48 89 74 24 18 57 48 83 EC 20 49 8B F8");
+    public static readonly GameFunction<OnZoneInPacketDelegate> onZoneInPacket = new("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 49 8B F8 8B F2 48 8B D9 E8 ?? ?? ?? ?? F6 83");
 
     public delegate Bool OnLoginDelegate(ContentsReplayModule* contentsReplayModule);
     public static readonly GameFunction<OnLoginDelegate> onLogin = new("40 53 48 83 EC 20 F6 81 ?? ?? ?? ?? ?? 48 8B D9 0F 85 ?? ?? ?? ?? F6 81 ?? ?? ?? ?? ??"); // Inlined, hook onZoneInPacket instead
