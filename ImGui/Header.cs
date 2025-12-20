@@ -34,9 +34,11 @@ public static partial class ImGuiEx
             headerLastFrame = DalamudApi.PluginInterface.UiBuilder.FrameCount;
             headerCurrentPos = 0;
             headerImGuiButtonWidth = 0f;
-            if (CurrentWindowHasCloseButton())
+
+            var currentWindow = ImGuiP.GetCurrentWindow();
+            if (currentWindow.HasCloseButton)
                 headerImGuiButtonWidth += 17 * scale;
-            if (!GetCurrentWindowFlags().HasFlag(ImGuiWindowFlags.NoCollapse))
+            if (!currentWindow.Flags.HasFlag(ImGuiWindowFlags.NoCollapse))
                 headerImGuiButtonWidth += 17 * scale;
         }
 

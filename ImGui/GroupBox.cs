@@ -94,8 +94,8 @@ public static partial class ImGuiEx
 
         if (!autoAdjust)
         {
-            var window = GetCurrentWindow();
-            window->CursorMaxPos = window->CursorMaxPos with { X = options.MaxX };
+            var currentWindow = ImGuiP.GetCurrentWindow();
+            currentWindow.DC.CursorMaxPos = currentWindow.DC.CursorMaxPos with { X = options.MaxX };
         }
 
         ImGui.EndGroup();
