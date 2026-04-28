@@ -138,7 +138,7 @@ public static unsafe class Common
     }
 
     public delegate Bool GetWorldBonePositionDelegate(GameObject* o, uint bone, Vector3* outPosition);
-    public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? 48 8B C3 48 83 C4 20 5B C3 CC 0F 57 C0 C3");
+    public static readonly GameFunction<GetWorldBonePositionDelegate> getWorldBonePosition = new("E8 ?? ?? ?? ?? 84 C0 74 61 F3 0F 10 44 24");
     public static Vector3 GetBoneWorldPosition(GameObject* o, uint bone)
     {
         var ret = Vector3.Zero;

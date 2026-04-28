@@ -32,7 +32,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
 
     public delegate uint GetSpellIDForActionDelegate(uint actionType, uint actionID);
-    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 83 FD 02 75 2D");
+    public static readonly GameFunction<GetSpellIDForActionDelegate> getSpellIDForAction = new("E8 ?? ?? ?? ?? 33 D2 89 44 24 20");
     public static uint GetSpellIDForAction(uint actionType, uint actionID) => getSpellIDForAction.Invoke(actionType, actionID);
 
     public delegate Bool CanUseActionOnGameObjectDelegate(uint actionID, GameObject* o);
@@ -45,7 +45,7 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     public static uint GetAdjustedRecastTime(uint actionType, uint actionID, bool useStats) => getAdjustedRecastTime.Invoke(actionType, actionID, useStats);
 
     public delegate Bool CanQueueActionDelegate(ActionManager* actionManager, uint actionType, uint actionID);
-    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 3C 01 0F 85 ?? ?? ?? ?? 88 45 68");
+    public static readonly GameFunction<CanQueueActionDelegate> canQueueAction = new ("E8 ?? ?? ?? ?? 84 C0 0F 84 ?? ?? ?? ?? F6 05 ?? ?? ?? ?? ?? 74 2A");
     public bool CanQueueAction(uint actionType, uint actionID)
     {
         fixed (ActionManager* ptr = &this)
