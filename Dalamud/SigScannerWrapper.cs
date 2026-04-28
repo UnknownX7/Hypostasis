@@ -49,21 +49,50 @@ public sealed class HypostasisClientStructsInjectionAttribute<T> : HypostasisCli
 [AttributeUsage(AttributeTargets.Struct)]
 public class GameStructureAttribute(string ctor) : Attribute
 {
-    public string CtorSignature { get; init; } = ctor;
+    public string CtorSignature { get; } = ctor;
 }
 
-public class SigScannerWrapper(ISigScanner s) : IDisposable
+public class SigScannerWrapper : IDisposable
 {
+    private struct RUNTIME_FUNCTION
+    {
+        public uint StartOffset;
+        public uint EndOffset;
+        public uint UnwindData;
+    }
+
     private readonly Dictionary<string, nint> sigCache = [];
     private readonly Dictionary<string, nint> staticSigCache = [];
     private readonly List<IDisposable> disposableHooks = [];
 
-    public ISigScanner DalamudSigScanner { get; init; } = s;
-    public ProcessModule Module => DalamudSigScanner.Module;
-    public nint BaseAddress => Module.BaseAddress;
-    public nint BaseTextAddress => (nint)(BaseAddress + DalamudSigScanner.TextSectionOffset);
-    public nint BaseDataAddress => (nint)(BaseAddress + DalamudSigScanner.DataSectionOffset);
-    public nint BaseRDataAddress => (nint)(BaseAddress + DalamudSigScanner.RDataSectionOffset);
+    public ISigScanner DalamudSigScanner { get; init; }
+    public ProcessModule Module { get; init; }
+    public nint BaseAddress { get; init; }
+    public nint BaseTextAddress { get; init; }
+    public nint BaseRDataAddress { get; init; }
+    public nint BaseDataAddress { get; init; }
+    public int PDataSectionSize { get; init; }
+    public long PDataSectionOffset { get; init; }
+    public nint PDataSectionBase { get; init; }
+    public nint BasePDataAddress { get; init; }
+    public int TotalPDataFunctions { get; init; }
+
+    public unsafe SigScannerWrapper(ISigScanner s)
+    {
+        DalamudSigScanner = s;
+        Module = s.Module;
+        BaseAddress = Module.BaseAddress;
+        BaseTextAddress = (nint)(BaseAddress + s.TextSectionOffset);
+        BaseRDataAddress = (nint)(BaseAddress + s.RDataSectionOffset);
+        BaseDataAddress = (nint)(BaseAddress + s.DataSectionOffset);
+
+        var pdataSection = Scan(BaseAddress, 0x1000, string.Join(' ', ".pdata"u8.ToArray().Select(b => b.ToString("X2"))));
+        PDataSectionSize = *(int*)(pdataSection + 0x8);
+        PDataSectionOffset = *(int*)(pdataSection + 0xC);
+        PDataSectionBase = (nint)(s.SearchBase + PDataSectionOffset);
+        BasePDataAddress = (nint)(BaseAddress + PDataSectionOffset);
+        TotalPDataFunctions = PDataSectionSize / sizeof(RUNTIME_FUNCTION);
+    }
 
     public nint Scan(nint address, int size, string signature)
     {
@@ -170,6 +199,8 @@ public class SigScannerWrapper(ISigScanner s) : IDisposable
         AddSignatureInfo(signature, result, offset, true);
         return b;
     }
+
+    public nint[] ScanAllText(string signature) => DalamudSigScanner.ScanAllText(signature);
 
     private Hook<T> HookAddress<T>(nint address, T detour, bool startEnabled = true, bool autoDispose = true, IGameInteropProvider.HookBackend backend = IGameInteropProvider.HookBackend.Automatic) where T : Delegate
     {
@@ -362,6 +393,70 @@ public class SigScannerWrapper(ISigScanner s) : IDisposable
     }
 
     public unsafe bool IsValidHookAddress(nint address) => address == BaseTextAddress || (address > BaseTextAddress && address < BaseRDataAddress && *(byte*)address != 0xCC && *(byte*)(address - 1) == 0xCC);
+
+    private unsafe RUNTIME_FUNCTION* FindRuntimeFunction(nint target)
+    {
+        var ptr = (RUNTIME_FUNCTION*)BasePDataAddress;
+        if (ptr == null) return null;
+
+        var targetOffset = target - BaseAddress;
+        if (targetOffset < 0x1000) return null;
+
+        var i = 0;
+        var j = TotalPDataFunctions / 2;
+        while (true)
+        {
+            var f = ptr + i + j;
+            var offset = f->StartOffset;
+            if (targetOffset == offset) return f;
+            if (j <= 0) break;
+
+            if (targetOffset > offset)
+            {
+                i += j;
+                if (j >= 2)
+                    j /= 2;
+            }
+            else
+            {
+                j /= 2;
+            }
+        }
+
+        return null;
+    }
+
+    private unsafe (nint start, int length, nint next) GetRuntimeFunctionInfo(RUNTIME_FUNCTION* ptr)
+    {
+        if (ptr == null) return default;
+
+        var startOffset = ptr->StartOffset;
+        var start = (nint)(BaseAddress + startOffset);
+        while (*(byte*)(BaseAddress + ptr->EndOffset) != 0xCC)
+        {
+            ptr++;
+            if (ptr->EndOffset == 0) return default;
+        }
+        return (start, (int)(ptr->EndOffset - startOffset), (nint)(ptr + 1));
+    }
+
+    private unsafe (nint start, int length, nint next) GetRuntimeFunctionInfo(nint ptr) => GetRuntimeFunctionInfo((RUNTIME_FUNCTION*)ptr);
+
+    public IEnumerable<(nint start, int length)> GetFunctions(nint startingFunction)
+    {
+        nint a;
+        unsafe
+        {
+            a = (nint)FindRuntimeFunction(startingFunction);
+        }
+
+        var (address, length, next) = GetRuntimeFunctionInfo(a);
+        while (address != 0)
+        {
+            yield return (address, length);
+            (address, length, next) = GetRuntimeFunctionInfo(next);
+        }
+    }
 
     public void Dispose()
     {
