@@ -346,7 +346,7 @@ public class SigScannerWrapper : IDisposable
             }
         }
 
-        var hook = type.GetMethod("FromAddress", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, [ address, detour, false ]);
+        var hook = type.GetMethod("FromAddress", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, [ address, detour, false, null ]);
         assignableInfo.SetValue(hook);
 
         if (attribute.EnableHook)
