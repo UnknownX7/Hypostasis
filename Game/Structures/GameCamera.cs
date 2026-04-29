@@ -50,19 +50,19 @@ public unsafe partial struct GameCamera : IHypostasisStructure
     public class GameCameraVTable(nint* v) : VirtualTable(v)
     {
         public delegate void SetCameraLookAtDelegate(GameCamera* camera, Vector3* lookAtPosition, Vector3* cameraPosition, Vector3* a4);
-        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 14, "40 53 48 83 EC 30 44 8B 89 ?? ?? ?? ?? 48 8B DA");
+        public readonly VirtualFunction<SetCameraLookAtDelegate> setCameraLookAt = new(v, 15, "40 53 48 83 EC 30 44 8B 89 ?? ?? ?? ?? 48 8B DA");
 
         public delegate void GetCameraPositionDelegate(GameCamera* camera, GameObject* target, Vector3* position, Bool swapPerson);
-        public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition = new(v, 15);
+        public readonly VirtualFunction<GetCameraPositionDelegate> getCameraPosition = new(v, 16);
 
         public delegate GameObject* GetCameraTargetDelegate(GameCamera* camera);
-        public readonly VirtualFunction<GetCameraTargetDelegate> getCameraTarget = new(v, 17);
+        public readonly VirtualFunction<GetCameraTargetDelegate> getCameraTarget = new(v, 18);
 
         public delegate Bool CanChangePerspectiveDelegate();
-        public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective = new(v, 22);
+        public readonly VirtualFunction<CanChangePerspectiveDelegate> canChangePerspective = new(v, 23);
 
         public delegate float GetZoomDeltaDelegate();
-        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 28, "F3 0F 10 05 ?? ?? ?? ?? C3"); // This sig is meant to match multiple things
+        public readonly VirtualFunction<GetZoomDeltaDelegate> getZoomDelta = new(v, 29, "F3 0F 10 05 ?? ?? ?? ?? C3"); // This sig is meant to match multiple things
     }
 
     private static GameCameraVTable vtable;
