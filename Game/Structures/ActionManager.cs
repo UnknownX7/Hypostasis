@@ -24,10 +24,10 @@ public unsafe partial struct ActionManager : IHypostasisStructure
     [FieldOffset(0xC0)] public byte activateGroundTarget;
     [FieldOffset(0x120)] public ushort currentSequence;
     //[FieldOffset(0x122)] public ushort unknownSequence; // ???
-    [FieldOffset(0x5F8)] public bool isGCDRecastActive;
-    [FieldOffset(0x5FC)] public uint currentGCDAction;
-    [FieldOffset(0x600)] public float elapsedGCDRecastTime;
-    [FieldOffset(0x604)] public float gcdRecastTime;
+    [FieldOffset(0x5FC)] public bool isGCDRecastActive;
+    [FieldOffset(0x600)] public uint currentGCDAction;
+    [FieldOffset(0x604)] public float elapsedGCDRecastTime;
+    [FieldOffset(0x608)] public float gcdRecastTime;
 
     public static uint GCDRecast => Math.Min(GetAdjustedRecastTime(1, 9, true), GetAdjustedRecastTime(1, 14, true));
 
